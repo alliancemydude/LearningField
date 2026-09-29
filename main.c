@@ -15,7 +15,6 @@
 int clone_wins = 0;
 int droid_wins = 0;
 int timeouts = 0;
-int cover_amount = 0;
 
 // Basic adjustable values
 int battles                     = 10000;
@@ -82,7 +81,6 @@ int main() {
 
         if (battle_type == 'n') {
             clock_t start = clock();
-            cover_amount = roll(10, 20);
 
             load_strategy_from_file(STRATEGY_FILE);
             start_match();
@@ -95,7 +93,6 @@ int main() {
 
         } else if (battle_type == 't') {
             turn_based = true;
-            cover_amount = roll(10, 20);
 
             load_strategy_from_file(STRATEGY_FILE);
             start_match();
@@ -104,7 +101,6 @@ int main() {
         } else if (battle_type == 'v') {
             turn_based = true;
             print_battle_summary_flag = true;
-            cover_amount = roll(10, 20);
 
             load_strategy_from_file(STRATEGY_FILE);
             start_match();
