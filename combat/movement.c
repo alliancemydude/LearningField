@@ -18,7 +18,7 @@ void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y) {
             cur_x = next_x;
             steps--;
         } else {
-            break; // blocked by cover or unit
+            break; // blocked by unit
         }
     }
     // Then Y direction
@@ -63,32 +63,6 @@ void execute_retreat(Unit* unit, Unit* target, Battlefield* field) {
     unit->x = cur_x;
     unit->y = cur_y;
     clamp_unit_position(unit, field);
-}
-
-void execute_move_to_cover(Unit* unit, Battlefield* field) {
-    int cover_x, cover_y;
-    int dist_to_cover = find_nearest_cover(unit, field, &cover_x, &cover_y);
-    if (dist_to_cover == 9999) return;  // No cover
-
-    int best_adj_x = -1, best_adj_y = -1;
-    int best_dist_sq = 9999;
-    for (int dy = -1; dy <= 1; dy++) {
-        for (int dx = -1; dx <= 1; dx++) {
-            if (dx == 0 && dy == 0) continue;
-            int nx = cover_x + dx;
-            int ny = cover_y + dy;
-            if (!is_tile_walkable(field, nx, ny, unit)) continue;
-            int dist_sq = (nx - unit->x)*(nx - unit->x) + (ny - unit->y)*(ny - unit->y);
-            if (dist_sq < best_dist_sq) {
-                best_dist_sq = dist_sq;
-                best_adj_x = nx;
-                best_adj_y = ny;
-            }
-        }
-    }
-    if (best_adj_x != -1) {
-        execute_move(unit, field, best_adj_x, best_adj_y);
-    }
 }
 
 void execute_dash(Unit* unit, Unit* target, Battlefield* field) {

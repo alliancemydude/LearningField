@@ -138,9 +138,7 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
         int penetration = w->penetration_bonus;
         int damage_bonus = w->damage_bonus;
         int hits = 0;
-
-        int cover_bonus = get_cover_bonus_between(unit, target, field);
-        int effective_armor = target->armor_class + cover_bonus;
+        int effective_armor = target->armor_class;
 
         // Roll attack for each shot
         if (!target->is_armor) { // if the target is not armor, roll normally
@@ -192,22 +190,6 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
                     if (enemy == target) continue;   // primary already takes direct damage
 
                     if (enemy->is_armor) continue;
-
-                    int cover_bonus = get_cover_bonus_between(target, enemy, field);
-
-                    if (cover_bonus == -1) {
-                        // line of sight is blocked, so try the next weapon
-                        continue;
-                    }
-
-                    // Cover saves
-                    bool cover_save = false;
-                    if (cover_bonus > 0) {
-                        int save_target = enemy->armor_class - cover_bonus;
-                        if (save_target < 2) save_target = 2;
-                        if (roll(1, 6) >= save_target) cover_save = true;
-                    }
-                    if (cover_save) continue;   // no damage
 
                     int kills = 0;
                     if (enemy->is_armor) {
@@ -314,9 +296,7 @@ bool execute_explosive(Unit* unit, Unit* target, bool advanced, Battlefield* fie
         }
     }
 
-    // Determine if the explosive hits the enemy or not (with cover)
-    int cover_bonus = get_cover_bonus_between(unit, target, field);
-    int effective_armor = target->armor_class + cover_bonus;
+    int effective_armor = target->armor_class;
 
     int hit_roll = roll(1, 6);
     if (target->is_armor) {
@@ -363,22 +343,6 @@ bool execute_explosive(Unit* unit, Unit* target, bool advanced, Battlefield* fie
             // Armor units are not damaged by AOE (except primary)
             if (enemy->is_armor && enemy != target) {
                 continue;
-            }
-
-            // Cover saves using line-of-sight from explosion center (target)
-            int cover_bonus_splash = get_cover_bonus_between(target, enemy, field);
-            bool cover_save = false;
-            if (cover_bonus_splash > 0 && !enemy->is_armor) {
-                int save_target = enemy->armor_class - cover_bonus_splash;
-                if (save_target < 2) {
-                    save_target = 2;
-                }
-                if (roll(1, 6) >= save_target) {
-                    cover_save = true;
-                }
-            }
-            if (cover_save) {
-                continue; // take no damage
             }
 
             // Apply damage
