@@ -40,9 +40,6 @@ bool is_tile_walkable(Battlefield* field, int x, int y, Unit* exclude) {
     // Check bounds
     if (x < 0 || x >= field->width || y < 0 || y >= field->height)
         return false;
-    // Check terrain: only open tiles are walkable
-    if (field->battlefield[y][x] != TERRAIN_OPEN)
-        return false;
     // Check occupancy by other units
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
@@ -82,7 +79,7 @@ void print_screen(Battlefield* field) {
            turn_count, rep_count, rep_hp, sep_count, sep_hp);
     printf("Legend: T=Clone Trooper, E=Elite, O=Officer, S=Sniper, L=Light MG, H=Heavy MG, "
            "R=Rocket, W=Swamp Speeder, B=BARC/Saber/STAP/AAT, P=Spider Droid\n");
-    printf("Green = Republic, Red = Separatist, = full cover, + half cover, . open\n\n");
+    printf("Green = Republic, Red = Separatist, . open\n\n");
 
     // Print column headers
     printf("   ");
@@ -122,12 +119,6 @@ void print_screen(Battlefield* field) {
                 printf("%s%2s%s ", color, buf, COLOR_RESET);
             } else if (is_dead) {
                 printf(" $ ");
-            } else {
-                TerrainType terrain = field->battlefield[y][x];
-                const char* terrain_str = ".";
-                if (terrain == TERRAIN_FULL_COVER) terrain_str = "=";
-                else if (terrain == TERRAIN_HALF_COVER) terrain_str = "+";
-                printf("%2s ", terrain_str);
             }
         }
         printf("\n");
@@ -144,7 +135,7 @@ void print_screen_to_file(Battlefield* field, const char* filename) {
 
     // Print header with map dimensions and turn number
     fprintf(f, "Battlefield: %d x %d  |  Turn: %d\n", field->width, field->height, turn_count);
-    fprintf(f, "Legend: [R]epublic (green), [S]eparatist (red), = full cover, + half cover, . open\n\n");
+    fprintf(f, "Legend: [R]epublic (green), [S]eparatist (red), . open\n\n");
 
     // Print column headers (only if width is manageable)
     fprintf(f, "   ");
@@ -176,17 +167,8 @@ void print_screen_to_file(Battlefield* field, const char* filename) {
                 const char* symbol = get_unit_symbol(unit_on_tile);
                 const char* color = (unit_on_tile->faction == FACTION_REPUBLIC) ? COLOR_GREEN : COLOR_RED;
                 fprintf(f, "%s %s %s", color, symbol, COLOR_RESET);
-            } else if (is_dead) {
-                fprintf(f, " $ ");
             } else {
-                TerrainType terrain = field->battlefield[y][x];
-                if (terrain == TERRAIN_FULL_COVER) {
-                    fprintf(f, " = ");
-                } else if (terrain == TERRAIN_HALF_COVER) {
-                    fprintf(f, " + ");
-                } else {
-                    fprintf(f, " . ");
-                }
+                fprintf(f, " $ ");
             }
         }
         fprintf(f, "\n");

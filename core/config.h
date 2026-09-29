@@ -72,12 +72,6 @@ typedef enum {
     FACTION_UNKNOWN
 } Faction;
 
-// Terrain
-typedef enum { 
-    TERRAIN_OPEN, 
-    TERRAIN_HALF_COVER, 
-    TERRAIN_FULL_COVER } TerrainType;
-
 // Constants
 #define MAX_UNITS 100
 #define MAX_ROWS 60
