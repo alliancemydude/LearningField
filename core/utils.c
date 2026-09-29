@@ -119,6 +119,8 @@ void print_screen(Battlefield* field) {
                 printf("%s%2s%s ", color, buf, COLOR_RESET);
             } else if (is_dead) {
                 printf(" $ ");
+            } else {
+                printf(" . ");   // empty tile
             }
         }
         printf("\n");
@@ -167,8 +169,11 @@ void print_screen_to_file(Battlefield* field, const char* filename) {
                 const char* symbol = get_unit_symbol(unit_on_tile);
                 const char* color = (unit_on_tile->faction == FACTION_REPUBLIC) ? COLOR_GREEN : COLOR_RED;
                 fprintf(f, "%s %s %s", color, symbol, COLOR_RESET);
-            } else {
+            } else if (is_dead) {
+                // Unit is dead
                 fprintf(f, " $ ");
+            } else {
+                printf(" . ");   // empty tile
             }
         }
         fprintf(f, "\n");

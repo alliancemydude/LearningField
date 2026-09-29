@@ -694,7 +694,7 @@ void set_separatist_strategy(const float weights[20]) {
     separatist_strategy.strategic.flank_right_weight       = weights[13];
     separatist_strategy.strategic.breakthrough_weight      = weights[14];
     separatist_strategy.strategic.fallback_weight          = weights[15];
-    separatist_strategy.strategic.edge_avoidance_weight      = weights[16];
+    separatist_strategy.strategic.edge_avoidance_weight    = weights[16];
 
     // Deployment (indices 18-20)
     separatist_strategy.deployment.deploy_horizontal_spread = weights[17];
@@ -710,8 +710,8 @@ void load_strategy_from_file(const char* filename) {
         return;
     }
 
-    float rep_weights[22] = {0};
-    float sep_weights[22] = {0};
+    float rep_weights[20] = {0};
+    float sep_weights[20] = {0};
     int rep_count = 0, sep_count = 0;
     int current_faction = -1; // 0 = Republic, 1 = Separatist
     char line[256];
@@ -735,9 +735,9 @@ void load_strategy_from_file(const char* filename) {
         char key[64];
         float value;
         if (sscanf(line, "%s %f", key, &value) == 2) {
-            if (current_faction == 0 && rep_count < 21) {
+            if (current_faction == 0 && rep_count < 20) {
                 rep_weights[rep_count++] = value;
-            } else if (current_faction == 1 && sep_count < 21) {
+            } else if (current_faction == 1 && sep_count < 20) {
                 sep_weights[sep_count++] = value;
             }
         }
@@ -745,8 +745,8 @@ void load_strategy_from_file(const char* filename) {
     fclose(f);
 
     // Apply if we have complete genomes
-    while (rep_count < 22) rep_weights[rep_count++] = 0.6f;
-    while (sep_count < 22) sep_weights[sep_count++] = 0.6f;
+    while (rep_count < 20) rep_weights[rep_count++] = 0.6f;
+    while (sep_count < 20) sep_weights[sep_count++] = 0.6f;
     set_republic_strategy(rep_weights);
     set_separatist_strategy(sep_weights);
     printf("Loaded strategies from %s\n", filename);

@@ -180,7 +180,7 @@ void initialize_battlefield(Battlefield* field) {
     // Populate the battlefield with open terrain
     for (int i = 0; i < MAX_ROWS; i++) {
         for (int j = 0; j < MAX_COLS; j++) {
-            field->battlefield[i][j] = TERRAIN_OPEN;
+            field->battlefield[i][j] = 0;
         }
     }
 }

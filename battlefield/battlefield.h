@@ -30,7 +30,7 @@ typedef struct {
 
 typedef struct Battlefield {
     int width, height;
-    TerrainType battlefield[MAX_ROWS][MAX_COLS];
+    char battlefield[MAX_ROWS][MAX_COLS];
     Unit* units[MAX_UNITS];
     int unit_count;
 } Battlefield;

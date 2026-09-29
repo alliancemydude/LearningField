@@ -50,8 +50,8 @@ extern FactionStrategy republic_strategy;
 extern FactionStrategy separatist_strategy;
 
 // 
-void set_republic_strategy(const float weights[22]);
-void set_separatist_strategy(const float weights[22]);
+void set_republic_strategy(const float weights[20]);
+void set_separatist_strategy(const float weights[20]);
 void load_strategy_from_file(const char* filename);
 
 float evaluate_matchup(const float* rep_weights, const float* sep_weights, int num_battles);
