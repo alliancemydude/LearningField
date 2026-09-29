@@ -50,7 +50,6 @@ typedef struct Unit {
     float effective_aggression;
     float effective_explosive_threshold;
     float effective_ally_proximity;
-    float effective_cover_preference;
     float effective_retreat_hp_ratio;
     struct Unit* focus_target;
 
