@@ -26,8 +26,4 @@ Unit* find_closest_pinned_ally(Unit* unit, Battlefield* field);
 int get_distance_to_specific_ally(Unit* unit, Unit* target);
 Unit* find_closest_ally(Unit* unit, Battlefield* field);
 
-// Environmental queries:
-int find_nearest_cover(Unit* unit, Battlefield* field, int* target_x, int* target_y);
-int get_cover_bonus_between(Unit* shooter, Unit* target, Battlefield* field);
-
 #endif
