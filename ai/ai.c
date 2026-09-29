@@ -85,64 +85,6 @@ bool evaluate_enemies(Unit* unit, Battlefield* field, char type, FactionStrategy
             target = select_enemy_by_preference(unit, field, max_range, &strat->strategic);
             return (target != NULL);
 
-
-        case 'c': // Cover
-        // Get the distance to the closest enemy
-            Unit* closest_enemy = find_closest_enemy(unit, field);
-            if (!closest_enemy) {
-                return false;
-            }
-            int current_dist_to_enemy = get_distance(unit, closest_enemy);
-
-            int best_cover_dist = 9999;
-            int best_x = -1;
-            for (int y = 0; y < field->height; y++) {
-                for (int x = 0; x < field->width; x++) {
-                    if (field->battlefield[y][x] != TERRAIN_HALF_COVER && field->battlefield[y][x] != TERRAIN_FULL_COVER) {
-                        continue;
-                    }
-                    // Check if that spot is occupied another unit
-                    bool enemy_on_cover = false;
-                    for (int i = 0; i < field->unit_count; i++) {
-                        Unit* other = field->units[i];
-                        if (!other || other == unit || other->hp <= 0) {
-                            continue;
-                        }
-                        if (other->x == x && other->y == y) { 
-                            enemy_on_cover = true; 
-                            break; 
-                        }
-                    }
-                    if (enemy_on_cover) {
-                        continue;
-                    }
-
-                    // Check if the cover can be reached in movement
-                    int dx = unit->x - x;
-                    int dy = unit->y - y;
-                    int dist_to_cover = abs(dx) + abs(dy);
-                    if (dist_to_cover > unit->movement) {
-                        continue;
-                    }
-                    // Compute distance from cover to enemy
-                    int dce = abs(closest_enemy->x - x) + abs(closest_enemy->y - y);
-                    if (dce < current_dist_to_enemy) {
-                        // Choose the cover with minimal distance to enemy
-                        if (dce < best_cover_dist) {
-                            best_cover_dist = dce;
-                            best_x = x;
-                        }
-                    }
-                }
-            }
-
-            // Return if the spot is valid
-            if (best_x != -1) {
-                return true;
-            }
-            return false;
-
-
         case 'd': // Dash
             // Select a target and run (maybe)
             target = select_enemy_by_preference(unit, field, 100, &strat->strategic);
@@ -185,7 +127,6 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
     // Multiply global by unit-specific modifier
     float final_explosive_threshold = strat->tactical.use_explosive_threshold * unit->effective_explosive_threshold;
     float final_ally_proximity = strat->strategic.ally_proximity * unit->effective_ally_proximity;
-    float final_cover_preference = strat->tactical.cover_preference * unit->effective_cover_preference;
     float final_retreat_hp_ratio = strat->tactical.retreat_hp_ratio * unit->effective_retreat_hp_ratio;
 
     // Adjust values to valid ranges
@@ -200,12 +141,6 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
     }
     if (final_ally_proximity > 8.0f) {
         final_ally_proximity = 8.0f;
-    }
-    if (final_cover_preference < 0.0f) {
-        final_cover_preference = 0.0f;
-    }
-    if (final_cover_preference > 1.0f) {
-        final_cover_preference = 1.0f;
     }
     if (final_retreat_hp_ratio < 0.1f) {
         final_retreat_hp_ratio = 0.1f;
@@ -344,28 +279,7 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
         }
     }
 
-    // 7. Move to cover (only if defending and low HP/pins)
-    if (!acted) {
-        if (effective_order && effective_order->type == ORDER_DEFEND) {
-            if (unit->hp < unit->max_hp * 0.4f || unit->pin_markers >= 2) {
-                execute_move_to_cover(unit, field);
-                acted = true;
-                action_taken = ACTION_COVER;
-                goto action_done;
-            }
-        }
-        // move to cover if low HP
-        if (!acted && (unit->hp < unit->max_hp * 0.3f || unit->pin_markers >= 3)) {
-            if (evaluate_enemies(unit, field, 'c', strat, 0.0f)) {
-                execute_move_to_cover(unit, field);
-                acted = true;
-                action_taken = ACTION_COVER;
-                goto action_done;
-            }
-        }
-    }
-
-    // 8. If still not acted, rally (if pinned) or do nothing
+    // 7. If still not acted, rally (if pinned) or do nothing
     if (!acted) {
         if (unit->pin_markers > 0) {
             execute_rally(unit, field);
@@ -381,7 +295,7 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
     if (turn_based) {
         const char* action_names[] = {
             "Fire", "Advance+Fire", "Explosive",
-            "Rally", "Dash", "Retreat", "Cover", "Advance+Cover"
+            "Rally", "Dash", "Retreat"
         };
         char msg[128];
         const char* action_name;
@@ -422,8 +336,6 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
             case 3: action_counts.rally++; break;
             case 4: action_counts.dash++; break;
             case 5: action_counts.retreat++; break;
-            case 6: action_counts.cover++; break;
-            case 7: action_counts.advance_cover++; break;
         }
         action_counts.total++;
     }
@@ -472,7 +384,7 @@ int compare_enemies_by_preference(const Unit* a, const Unit* b, int preference_d
 Unit* select_enemy_by_preference(Unit* unit, Battlefield* field, int max_range, StrategicGenome* strat) {
     if (!unit) return NULL;
 
-    // Stage 1: gather candidates and compute rough scores (no cover)
+    // Stage 1: gather candidates and compute rough scores
     typedef struct { Unit* u; float rough_score; } Candidate;
     Candidate candidates[MAX_UNITS];
     int count = 0;
@@ -485,7 +397,7 @@ Unit* select_enemy_by_preference(Unit* unit, Battlefield* field, int max_range, 
         if (other->faction == unit->faction) continue;
         int dist_sq = get_distance_squared(unit, other);
         if (dist_sq > max_range * max_range) continue;
-        // Rough score: HP + distance threat (no cover)
+        // Rough score: HP + distance threat
         float hp_score = 1.0f - ((float)other->hp / other->max_hp);
         float dist = sqrt((float)dist_sq);
         float dist_threat = 1.0f - (dist / max_dist);
@@ -515,7 +427,7 @@ Unit* select_enemy_by_preference(Unit* unit, Battlefield* field, int max_range, 
         }
     }
 
-    // Stage 3: compute refined score with cover for top n
+    // Stage 3: compute refined score
     float best_score = -9999.0f;
     Unit* best = candidates[0].u;
     for (int i = 0; i < top_n; i++) {
@@ -527,21 +439,12 @@ Unit* select_enemy_by_preference(Unit* unit, Battlefield* field, int max_range, 
         if (dist_threat < 0.0f) dist_threat = 0.0f;
         float base_score = (1.0f - strat->threat_weight) * hp_score + strat->threat_weight * dist_threat;
 
-        int cover_bonus = get_cover_bonus_between(unit, candidate, field);
-        float cover_penalty;
-        if (cover_bonus == -1) {
-            cover_penalty = 1.0f; // penalized
-        } else {
-            cover_penalty = (float)cover_bonus / 2.0f;
-        }
-        float cover_modifier = 1.0f - cover_penalty * 0.6f;
-
         // Pin and value modifiers
         float pin_score = (float)candidate->pin_markers / 5.0f; // max pins ~? 
         float pin_modifier = 1.0f + pin_score * 0.3f;
         float value_modifier = 1.0f + ((float)candidate->point_value / 100.0f) * 0.2f;
 
-        float score = base_score * cover_modifier * pin_modifier * value_modifier;
+        float score = base_score * pin_modifier * value_modifier;
         if (score > best_score) {
             best_score = score;
             best = candidate;
