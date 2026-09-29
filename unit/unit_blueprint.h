@@ -23,7 +23,7 @@ typedef struct {
     int point_value;
     bool is_armor;
     int units_count;
-    int shots_per_unit;
+    int attacks_per_unit;
     int attack_order;
     int preferred_range;
     int danger_range;

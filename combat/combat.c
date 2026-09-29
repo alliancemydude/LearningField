@@ -107,6 +107,126 @@ void add_pin_marker(Unit* unit) {
 
 
 // Action executions
+bool execute_attack(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
+    if (target == NULL) {
+        return false;
+    }
+
+    if (unit->hp <= 0) return false;
+
+    bool attacked = false;
+
+    if (unit == NULL || target == NULL || field == NULL) return false;
+
+    // Find a usable weapon
+    for (int i = 0; i < unit->weapon_count; i++) {
+        Weapon* w = &unit->weapons[i];
+        int distance_sq = get_distance_squared(unit, target);
+
+        // Check that the range is valid
+        if (distance_sq > w->range * w->range) {
+            continue;
+        }
+
+        // This weapon is valid, load its stats
+        int current_soldiers = unit->units_count;
+        int attacks = current_soldiers * unit->attacks_per_unit;
+        int penetration = w->penetration_bonus;
+        int damage_bonus = w->damage_bonus;
+        int hits = 0;
+
+        // Roll attack for each shot
+        if (!target->is_armor) { // if the target is not armor, roll normally
+            for (int attack_number = 0; attack_number < attacks; attack_number++) {
+                int attack_roll = roll(1, 6) + damage_bonus;
+                if (advanced) {
+                    attack_roll -= 1;  // Penalty for advancing
+                }
+
+                if (attack_roll >= target->armor_class) {
+                    hits++;
+                    battle_stats.shots_hit++;
+                }
+            }
+        } else { // the target is armor, which uses penetration
+            for (int attack_number = 0; attack_number < attacks; attack_number++) {
+                int attack_roll = roll(1, 6) + penetration;
+                if (advanced) {
+                    attack_roll -= 1;  // Penalty for advancing
+                }
+
+                if (attack_roll >= target->armor_class) {
+                    hits++;
+                    battle_stats.shots_hit++;
+                }
+            }
+        }
+
+        battle_stats.shots_fired += attacks;
+
+        if (hits == 0) {
+            continue;
+        }
+        
+
+        // Give the enemy a pin marker (if any hits were scored)
+        if (hits > 0) {
+            add_pin_marker(target);
+        }
+
+        // Deal damage
+        int kills = 0;
+        bool critical = (w->type == WEAPON_SNIPER);
+        
+        if (target->is_armor && !critical) { // Armored target (vehicle)
+            for (int h = 0; h < hits; h++) {
+                int damage = roll(1, 6);
+
+                if (damage == 1) {
+                    // Crew stunned, extra pin marker
+                    add_pin_marker(target);
+                } else if (damage == 2) {
+                    // Vehicle immobilized, extra pin
+                    target->is_immobilized = true;
+                    add_pin_marker(target);
+                } else if (damage == 3) {
+                    // Vehicle on fire, extra pin + morale check
+                    add_pin_marker(target);
+                    if (morale_check(target, field) == 0) {
+                        kills++;
+                    }
+                } else {
+                    // Vehicle destroyed
+                    kills++;
+                }
+            }
+        } else if (critical) {
+            // Snipers always kill on a hit
+            kills = hits;
+        } else { // Soft target (infantry)
+            for (int h = 0; h < hits; h++) {
+                int damage = roll(1, 6);
+                if (damage >= 4) {
+                    kills++;
+                }
+            }
+        }
+
+        if (kills > 0) {
+            battle_stats.kills += kills;
+            battle_stats.kills_by_type[target->type] += kills;
+            take_damage(target, kills, critical);
+        }
+
+        // Exit the function after firing
+        attacked = true;
+        break;
+    }
+
+    // If no valid weapon is found:
+    return attacked;
+}
+
 bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
     if (target == NULL) {
         return false;
@@ -122,10 +242,6 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
     for (int i = 0; i < unit->weapon_count; i++) {
         Weapon* w = &unit->weapons[i];
         int distance_sq = get_distance_squared(unit, target);
-        
-        if (w->ammo == 0) {
-            continue; // skip this weapon if it does not have ammo
-        }
 
         // Check that the range is valid
         if (distance_sq > w->range * w->range) {
@@ -134,11 +250,10 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
 
         // This weapon is valid, load its stats
         int current_soldiers = unit->units_count;
-        int shots = current_soldiers * unit->shots_per_unit * w->weapon_shots;
+        int shots = current_soldiers * unit->attacks_per_unit * w->weapon_shots;
         int penetration = w->penetration_bonus;
         int damage_bonus = w->damage_bonus;
         int hits = 0;
-        int effective_armor = target->armor_class;
 
         // Roll attack for each shot
         if (!target->is_armor) { // if the target is not armor, roll normally
@@ -148,7 +263,7 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
                     attack_roll -= 1;  // Penalty for advancing
                 }
 
-                if (attack_roll >= effective_armor) {
+                if (attack_roll >= target->armor_class) {
                     hits++;
                     battle_stats.shots_hit++;
                 }
@@ -160,7 +275,7 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
                     attack_roll -= 1;  // Penalty for advancing
                 }
 
-                if (attack_roll >= effective_armor) {
+                if (attack_roll >= target->armor_class) {
                     hits++;
                     battle_stats.shots_hit++;
                 }

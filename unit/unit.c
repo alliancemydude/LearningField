@@ -43,7 +43,7 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->point_value = bp->point_value;
     unit->is_armor = bp->is_armor;
     unit->units_count = bp->units_count;
-    unit->shots_per_unit = bp->shots_per_unit;
+    unit->attacks_per_unit = bp->attacks_per_unit;
 
     // Create a unit genome array
     UnitGenome* ug = &unit_genomes[type];

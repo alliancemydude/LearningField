@@ -35,7 +35,7 @@ typedef struct Unit {
     int point_value;
     bool is_armor;
     int units_count;
-    int shots_per_unit;
+    int attacks_per_unit;
     int max_range;
     int max_range_sq;
 
