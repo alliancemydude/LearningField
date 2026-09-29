@@ -24,9 +24,6 @@ EvolutionMode current_mode = EVOLVE_ALL;
 const GeneInfo STRATEGY_GENES[] = {
     // Tactical (CAT_TACTICAL)
     {"advance_distance", 8.0f, 25.0f, 12.00f, CAT_TACTICAL},    // If the enemy center > than advance_dist * aggr_bias, advance. Smaller = aggressive
-    {"defend_distance", 3.0f, 12.0f, 6.05f, CAT_TACTICAL},      // If an enemy is within this distance, the unit goes to cover. lower = in fight longer
-    {"cover_radius", 1.0f, 8.0f, 4.14f, CAT_TACTICAL},  // When defending, the unit looks for cover in movement * cover_radius. larger = further travel
-    {"cover_preference", 0.0f, 1.0f, 0.5f, CAT_TACTICAL},       // How much a unit prefers full vs half cover. 0 = don't care, 1 = full cover always
     {"flanking_bias", 0.5f, 2.0f, 1.3f, CAT_TACTICAL},          // Lateral movement when advancing 0.5 = straight, 2.0 da long way
     {"explosive_threshold", 1.0f, 4.0f, 2.0f, CAT_TACTICAL},   // Minimum enemies in a blast radius. 1 = single enemies, 4 = dense enemies
     {"retreat_hp_ratio", 0.1f, 0.6f, 0.3f, CAT_TACTICAL},      // If HP is below max_hp * retreat_hp_ratio, retreat. lower = in fight longer
@@ -56,7 +53,6 @@ const GeneInfo UNIT_GENES[] = {
     {"aggression", 0.0f, 1.0f, 0.5f, CAT_ALL},
     {"explosive_threshold", 1.0f, 4.0f, 2.0f, CAT_ALL},
     {"ally_proximity", 2.0f, 8.0f, 5.0f, CAT_ALL},
-    {"cover_preference", 0.0f, 1.0f, 0.5f, CAT_ALL},
     {"retreat_hp_ratio", 0.1f, 0.6f, 0.3f, CAT_ALL},
     {"preferred_range", 0.0f, 36.0f, 12.0f, CAT_ALL},
     {"danger_range", 0.0f, 20.0f, 4.0f, CAT_ALL}
@@ -187,9 +183,6 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
             unit_genomes[i].unit_ally_proximity = rep_weights[base + 2];
             CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);
 
-            unit_genomes[i].unit_cover_preference = rep_weights[base + 3];
-            CLAMP(unit_genomes[i].unit_cover_preference, 0.0f, 1.0f);
-
             unit_genomes[i].unit_retreat_hp_ratio = rep_weights[base + 4];
             CLAMP(unit_genomes[i].unit_retreat_hp_ratio, 0.1f, 0.6f);
 
@@ -208,9 +201,6 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
 
             unit_genomes[i].unit_ally_proximity = sep_weights[base + 2];
             CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);
-
-            unit_genomes[i].unit_cover_preference = sep_weights[base + 3];
-            CLAMP(unit_genomes[i].unit_cover_preference, 0.0f, 1.0f);
 
             unit_genomes[i].unit_retreat_hp_ratio = sep_weights[base + 4];
             CLAMP(unit_genomes[i].unit_retreat_hp_ratio, 0.1f, 0.6f);
