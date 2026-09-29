@@ -64,145 +64,6 @@ char battle_action_log[4096] = {0};
 bool turn_based = false;
 bool print_battle_summary_flag = false;
 
-
-// Map modifiers and such
-typedef void (*TerrainPattern)(Battlefield* field);
-void terrain_central_ridge(Battlefield* field);
-void terrain_left_flank_cover(Battlefield* field);
-void terrain_right_flank_cover(Battlefield* field);
-void terrain_open_center(Battlefield* field);
-void terrain_no_mans_land(Battlefield* field);
-void terrain_scattered(Battlefield* field);
-
-TerrainPattern patterns[] = {
-    terrain_central_ridge,
-    terrain_left_flank_cover,
-    terrain_right_flank_cover,
-    terrain_open_center,
-    terrain_no_mans_land,
-    terrain_scattered
-};
-int pattern_count = sizeof(patterns) / sizeof(patterns[0]);
-
-static const MapModifiers rep_map_modifiers[MAP_COUNT] = {
-    [MAP_OPEN] = {
-        .aggr_mult = 1.0f,
-        .advance_mult = 1.0f,
-        .defend_mult = 1.0f
-    },
-    [MAP_DEFENSIVE_REPUBLIC] = {
-        .aggr_mult = 0.7f,
-        .advance_mult = 1.3f,   // less aggressive (larger advance distance)
-        .defend_mult = 1.4f     // more defensive (larger defend distance)
-    },
-    [MAP_DEFENSIVE_SEPARATIST] = {
-        .aggr_mult = 1.2f,      // Republic should push harder
-        .advance_mult = 0.8f,   // more aggressive
-        .defend_mult = 0.7f
-    },
-    [MAP_FLANKING] = {
-        .aggr_mult = 1.1f,
-        .advance_mult = 0.9f,
-        .defend_mult = 0.9f
-    },
-    [MAP_RIDGE] = {
-        .aggr_mult = 0.9f,
-        .advance_mult = 1.1f,
-        .defend_mult = 1.2f
-    },
-    [MAP_SCATTERED] = {
-        .aggr_mult = 1.0f,
-        .advance_mult = 1.0f,
-        .defend_mult = 1.0f
-    }
-};
-
-static const MapModifiers sep_map_modifiers[MAP_COUNT] = {
-    [MAP_OPEN] = {
-        .aggr_mult = 1.0f,
-        .advance_mult = 1.0f,
-        .defend_mult = 1.0f
-    },
-    [MAP_DEFENSIVE_REPUBLIC] = {
-        .aggr_mult = 1.2f,      // Separatists push harder
-        .advance_mult = 0.8f,
-        .defend_mult = 0.7f
-    },
-    [MAP_DEFENSIVE_SEPARATIST] = {
-        .aggr_mult = 0.7f,
-        .advance_mult = 1.3f,
-        .defend_mult = 1.4f
-    },
-    [MAP_FLANKING] = {
-        .aggr_mult = 1.1f,
-        .advance_mult = 0.9f,
-        .defend_mult = 0.9f
-    },
-    [MAP_RIDGE] = {
-        .aggr_mult = 0.9f,
-        .advance_mult = 1.1f,
-        .defend_mult = 1.2f
-    },
-    [MAP_SCATTERED] = {
-        .aggr_mult = 1.0f,
-        .advance_mult = 1.0f,
-        .defend_mult = 1.0f
-    }
-};
-
-const MapModifiers* get_map_modifiers(MapType map, Faction faction) {
-    if (faction == FACTION_REPUBLIC) {
-        return &rep_map_modifiers[map];
-    } else {
-        return &sep_map_modifiers[map];
-    }
-}
-
-// Map generation by type
-void terrain_central_ridge(Battlefield* field) {
-    // Central ridge: a line of cover down the middle
-    for (int i = 0; i < 8; i++) {
-        spawn_cover_relative(field, 0.45f, 0.55f, 0.1f + i * 0.1f, 0.15f + i * 0.1f);
-    }
-}
-
-void terrain_left_flank_cover(Battlefield* field) {
-    // Heavy cover on the left flank
-    for (int i = 0; i < 12; i++) {
-        spawn_cover_relative(field, 0.05f, 0.25f, 0.2f + i * 0.05f, 0.25f + i * 0.05f);
-    }
-}
-
-void terrain_right_flank_cover(Battlefield* field) {
-    // Heavy cover on the right flank
-    for (int i = 0; i < 12; i++) {
-        spawn_cover_relative(field, 0.75f, 0.95f, 0.2f + i * 0.05f, 0.25f + i * 0.05f);
-    }
-}
-
-void terrain_open_center(Battlefield* field) {
-    // Cover near the edges, open center
-    spawn_cover_relative(field, 0.0f, 0.2f, 0.0f, 1.0f);   // left edge
-    spawn_cover_relative(field, 0.8f, 1.0f, 0.0f, 1.0f);   // right edge
-    spawn_cover_relative(field, 0.0f, 1.0f, 0.8f, 1.0f);   // bottom edge (Republic spawn)
-    spawn_cover_relative(field, 0.0f, 1.0f, 0.0f, 0.2f);   // top edge (Separatist spawn)
-}
-
-void terrain_no_mans_land(Battlefield* field) {
-    // Cover only in the middle third
-    spawn_cover_relative(field, 0.35f, 0.65f, 0.2f, 0.8f);
-}
-
-void terrain_scattered(Battlefield* field) {
-    // Scattered small clusters
-    for (int i = 0; i < 20; i++) {
-        float cx = 0.1f + (float)rand() / RAND_MAX * 0.8f;
-        float cy = 0.15f + (float)rand() / RAND_MAX * 0.7f;
-        spawn_cover_relative(field, cx - 0.05f, cx + 0.05f, cy - 0.05f, cy + 0.05f);
-    }
-}
-
-
 // Initialization
 void resolve_overlaps(Battlefield* field) {
     // check if any units overlap
@@ -321,70 +182,6 @@ void initialize_battlefield(Battlefield* field) {
         for (int j = 0; j < MAX_COLS; j++) {
             field->battlefield[i][j] = TERRAIN_OPEN;
         }
-    }
-
-    generate_terrain(field);
-}
-
-void generate_terrain(Battlefield* field) {
-    int idx;
-    if (RANDOM_SEED) {
-        idx = roll(0, pattern_count - 1);
-    } else {
-        idx = MAP_OPEN;
-    }
-    field->map_type = (MapType)idx;
-    if (idx >= 0 && idx < pattern_count) {
-        patterns[idx](field);
-    }
-}
-
-void spawn_cover_relative(Battlefield* field, float x_start, float x_end, float y_start, float y_end) {
-    int x_min = (int)(x_start * field->width);
-    int x_max = (int)(x_end * field->width);
-    int y_min = (int)(y_start * field->height);
-    int y_max = (int)(y_end * field->height);
-    // clamp to safe margins
-    if (x_min < 2) x_min = 2;
-    if (x_max >= field->width - 2) x_max = field->width - 3;
-    if (y_min < 2) y_min = 2;
-    if (y_max >= field->height - 2) y_max = field->height - 3;
-    // call original spawn_cover with these bounds
-    spawn_cover(field, x_min, x_max, y_min, y_max);
-}
-
-void spawn_cover(Battlefield* field, int x_min, int x_max, int y_min, int y_max) {
-    // Determine where the cover will spawn
-    int cover_x = roll(x_min, x_max);
-    int cover_y = roll(y_min, y_max);
-
-    // If cover is already at this location, try again (I'll add elevation later)
-    if (field->battlefield[cover_y][cover_x] == TERRAIN_HALF_COVER || field->battlefield[cover_y][cover_x] == TERRAIN_FULL_COVER) {
-        return;
-    }
-
-    // Decide what shape the cover will take
-    int cover_type = roll(1, 3);
-
-    // Create cover at that location (none so large that they override the map)
-    if (cover_type == 1) {
-        // Create a small wall (4 x 1)
-        field->battlefield[cover_y][cover_x] = TERRAIN_HALF_COVER;
-        field->battlefield[cover_y][cover_x + 1] = TERRAIN_HALF_COVER;
-        field->battlefield[cover_y][cover_x + 2] = TERRAIN_HALF_COVER;
-        field->battlefield[cover_y][cover_x + 3] = TERRAIN_HALF_COVER;
-    } else if (cover_type == 2) {
-        // Create a tall wall (4 x 1)
-        field->battlefield[cover_y][cover_x] = TERRAIN_FULL_COVER;
-        field->battlefield[cover_y][cover_x + 1] = TERRAIN_FULL_COVER;
-        field->battlefield[cover_y][cover_x + 2] = TERRAIN_FULL_COVER;
-        field->battlefield[cover_y][cover_x + 3] = TERRAIN_FULL_COVER;
-    } else if (cover_type == 3) {
-        // Create a tree (2 x 2)
-        field->battlefield[cover_y][cover_x] = TERRAIN_HALF_COVER;
-        field->battlefield[cover_y + 1][cover_x] = TERRAIN_HALF_COVER;
-        field->battlefield[cover_y][cover_x + 1] = TERRAIN_HALF_COVER;
-        field->battlefield[cover_y + 1][cover_x + 1] = TERRAIN_HALF_COVER;
     }
 }
 
@@ -752,8 +549,6 @@ void reset_stats() {
     action_counts.rally = 0;
     action_counts.dash = 0;
     action_counts.retreat = 0;
-    action_counts.cover = 0;
-    action_counts.advance_cover = 0;
     action_counts.total = 0;
 }
 
@@ -769,7 +564,7 @@ void print_action_stats() {
     
     // Categories
     int aggressive = action_counts.fire + action_counts.advance_fire + action_counts.explosive;
-    int movement = action_counts.dash + action_counts.cover + action_counts.advance_cover;
+    int movement = action_counts.dash;
     int defensive = action_counts.rally + action_counts.retreat;
     
     printf("Category breakdown:\n");
@@ -794,10 +589,6 @@ void print_action_stats() {
            (action_counts.rally * 100.0f) / action_counts.total);
     printf("  Retreat:              %.1f%%\n", 
            (action_counts.retreat * 100.0f) / action_counts.total);
-    printf("  Cover:                %.1f%%\n", 
-           (action_counts.cover * 100.0f) / action_counts.total);
-    printf("  Advance+Cover:        %.1f%%\n", 
-           (action_counts.advance_cover * 100.0f) / action_counts.total);
     printf("\n");
 }
 
