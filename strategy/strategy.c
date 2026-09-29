@@ -12,8 +12,6 @@ FactionStrategy republic_strategy = {
     .tactical = {
         .advance_distance = 8.0f,
         .defend_distance = 9.0f,
-        .cover_radius = 6.78f,
-        .cover_preference = 0.72f,
         .flanking_bias = 0.51f,
         .use_explosive_threshold = 1.92f,
         .retreat_hp_ratio = 0.25f,
@@ -43,8 +41,6 @@ FactionStrategy separatist_strategy = {
     .tactical = {
         .advance_distance = 12.86f,
         .defend_distance = 9.61f,
-        .cover_radius = 7.35f,
-        .cover_preference = 0.19f,
         .flanking_bias = 0.77f,
         .use_explosive_threshold = 1.79f,
         .retreat_hp_ratio = 0.21f,
@@ -345,9 +341,8 @@ void assign_faction_orders(Battlefield* field, Faction faction) {
     FactionStrategy* strat = (faction == FACTION_REPUBLIC) ? &republic_strategy : &separatist_strategy;
 
     // Apply map modifiers
-    const MapModifiers* mod = get_map_modifiers(field->map_type, faction);
-    float adjusted_aggression = strat->strategic.aggression_bias * mod->aggr_mult;
-    float adjusted_advance = strat->tactical.advance_distance * mod->advance_mult;
+    float adjusted_aggression = strat->strategic.aggression_bias;
+    float adjusted_advance = strat->tactical.advance_distance;
     float advance_threshold = adjusted_advance * adjusted_aggression;
 
     // Gather formation units and group by squad
@@ -651,64 +646,60 @@ bool should_use_formation(Unit* u) {
     }
 }
 
-void set_republic_strategy(const float weights[22]) {
-    // Tactical (indices 0-7)
+void set_republic_strategy(const float weights[20]) {
+    // Tactical (indices 0-5)
     republic_strategy.tactical.advance_distance          = weights[0];
     republic_strategy.tactical.defend_distance           = weights[1];
-    republic_strategy.tactical.cover_radius              = weights[2];
-    republic_strategy.tactical.cover_preference          = weights[3];
-    republic_strategy.tactical.flanking_bias             = weights[4];
-    republic_strategy.tactical.use_explosive_threshold   = weights[5];
-    republic_strategy.tactical.retreat_hp_ratio          = weights[6];
-    republic_strategy.tactical.cohesion_threshold        = weights[7];
+    republic_strategy.tactical.flanking_bias             = weights[2];
+    republic_strategy.tactical.use_explosive_threshold   = weights[3];
+    republic_strategy.tactical.retreat_hp_ratio          = weights[4];
+    republic_strategy.tactical.cohesion_threshold        = weights[5];
 
-    // Strategic (indices 8-17)
-    republic_strategy.strategic.aggression_bias          = weights[8];
-    republic_strategy.strategic.aggression_curve         = weights[9];
-    republic_strategy.strategic.target_priority          = weights[10];
-    republic_strategy.strategic.ally_proximity           = weights[11];
-    republic_strategy.strategic.threat_weight            = weights[12];
-    republic_strategy.strategic.focus_fire_tendency      = weights[13];
-    republic_strategy.strategic.flank_left_weight        = weights[14];
-    republic_strategy.strategic.flank_right_weight       = weights[15];
-    republic_strategy.strategic.breakthrough_weight      = weights[16];
-    republic_strategy.strategic.fallback_weight          = weights[17];
-    republic_strategy.strategic.edge_avoidance_weight    = weights[21];
+    // Strategic (indices 6-16)
+    republic_strategy.strategic.aggression_bias          = weights[6];
+    republic_strategy.strategic.aggression_curve         = weights[7];
+    republic_strategy.strategic.target_priority          = weights[8];
+    republic_strategy.strategic.ally_proximity           = weights[9];
+    republic_strategy.strategic.threat_weight            = weights[10];
+    republic_strategy.strategic.focus_fire_tendency      = weights[11];
+    republic_strategy.strategic.flank_left_weight        = weights[12];
+    republic_strategy.strategic.flank_right_weight       = weights[13];
+    republic_strategy.strategic.breakthrough_weight      = weights[14];
+    republic_strategy.strategic.fallback_weight          = weights[15];
+    republic_strategy.strategic.edge_avoidance_weight    = weights[16];
 
-    // Deployment (indices 18-20)
-    republic_strategy.deployment.deploy_horizontal_spread = weights[18];
-    republic_strategy.deployment.deploy_vertical_offset   = weights[19];
-    republic_strategy.deployment.deploy_flanking_bias     = weights[20];
+    // Deployment (indices 17-19)
+    republic_strategy.deployment.deploy_horizontal_spread = weights[17];
+    republic_strategy.deployment.deploy_vertical_offset   = weights[18];
+    republic_strategy.deployment.deploy_flanking_bias     = weights[19];
 }
 
-void set_separatist_strategy(const float weights[22]) {
+void set_separatist_strategy(const float weights[20]) {
     // Tactical (indices 0-7)
     separatist_strategy.tactical.advance_distance          = weights[0];
     separatist_strategy.tactical.defend_distance           = weights[1];
-    separatist_strategy.tactical.cover_radius              = weights[2];
-    separatist_strategy.tactical.cover_preference          = weights[3];
-    separatist_strategy.tactical.flanking_bias             = weights[4];
-    separatist_strategy.tactical.use_explosive_threshold   = weights[5];
-    separatist_strategy.tactical.retreat_hp_ratio          = weights[6];
-    separatist_strategy.tactical.cohesion_threshold        = weights[7];
+    separatist_strategy.tactical.flanking_bias             = weights[2];
+    separatist_strategy.tactical.use_explosive_threshold   = weights[3];
+    separatist_strategy.tactical.retreat_hp_ratio          = weights[4];
+    separatist_strategy.tactical.cohesion_threshold        = weights[5];
 
     // Strategic (indices 8-17)
-    separatist_strategy.strategic.aggression_bias          = weights[8];
-    separatist_strategy.strategic.aggression_curve         = weights[9];
-    separatist_strategy.strategic.target_priority          = weights[10];
-    separatist_strategy.strategic.ally_proximity           = weights[11];
-    separatist_strategy.strategic.threat_weight            = weights[12];
-    separatist_strategy.strategic.focus_fire_tendency      = weights[13];
-    separatist_strategy.strategic.flank_left_weight        = weights[14];
-    separatist_strategy.strategic.flank_right_weight       = weights[15];
-    separatist_strategy.strategic.breakthrough_weight      = weights[16];
-    separatist_strategy.strategic.fallback_weight          = weights[17];
-    separatist_strategy.strategic.edge_avoidance_weight      = weights[21];
+    separatist_strategy.strategic.aggression_bias          = weights[6];
+    separatist_strategy.strategic.aggression_curve         = weights[7];
+    separatist_strategy.strategic.target_priority          = weights[8];
+    separatist_strategy.strategic.ally_proximity           = weights[9];
+    separatist_strategy.strategic.threat_weight            = weights[10];
+    separatist_strategy.strategic.focus_fire_tendency      = weights[11];
+    separatist_strategy.strategic.flank_left_weight        = weights[12];
+    separatist_strategy.strategic.flank_right_weight       = weights[13];
+    separatist_strategy.strategic.breakthrough_weight      = weights[14];
+    separatist_strategy.strategic.fallback_weight          = weights[15];
+    separatist_strategy.strategic.edge_avoidance_weight      = weights[16];
 
     // Deployment (indices 18-20)
-    separatist_strategy.deployment.deploy_horizontal_spread = weights[18];
-    separatist_strategy.deployment.deploy_vertical_offset   = weights[19];
-    separatist_strategy.deployment.deploy_flanking_bias     = weights[20];
+    separatist_strategy.deployment.deploy_horizontal_spread = weights[17];
+    separatist_strategy.deployment.deploy_vertical_offset   = weights[18];
+    separatist_strategy.deployment.deploy_flanking_bias     = weights[19];
 }
 
 // Load files
