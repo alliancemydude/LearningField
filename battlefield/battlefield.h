@@ -19,7 +19,8 @@ extern int default_separatist_composition_count;
 typedef struct {
     int fire;
     int advance_fire;
-    int explosive;
+    int attack;
+    int advance_attack;
     int rally;
     int retreat;
     int dash;
@@ -40,7 +41,6 @@ typedef struct {
     int shots_fired;
     int shots_hit;
     int kills;
-    int explosives_used;
     int damage_dealt_rep;
     int damage_dealt_sep;
     int casualties_rep;

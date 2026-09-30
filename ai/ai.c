@@ -14,71 +14,17 @@
 static Unit* target = NULL;
 
 // Evaluations
-bool evaluate_enemies(Unit* unit, Battlefield* field, char type, FactionStrategy* strat, float effective_threshold) {
+bool evaluate_enemies(Unit* unit, Battlefield* field, char type, FactionStrategy* strat) {
+    int max_range = unit->max_range;
     switch(type) {
-        case 'e': // Explosives
-            // Check for explosives
-            if (!has_explosives(unit)) {
+        case 'a': // Attack
+            if (max_range == 0) {
                 return false;
             }
-
-            // Find the closest enemy, if they exist
-            target = find_closest_enemy(unit, field);
-            if (!target) {
-                return false;
-            }
-
-            // Get all possible splash damage
-            Unit* nearby[MAX_UNITS];
-            int enemy_count = get_enemies_in_range(target, field, 2, nearby);
-            int total_nearby = enemy_count + 1;
-            if (total_nearby < (int)effective_threshold) {
-                return false; // not enough enemies clustered
-            }
-
-            // Find the maximum range among all explosive weapons (grenade or rocket)
-            int max_explosive_range = 0;
-            for (int i = 0; i < unit->weapon_count; i++) {
-                Weapon* w = &unit->weapons[i];
-                if (w->ammo <= 0) {
-                    continue;
-                }
-                if (w->type == WEAPON_GRENADE || w->type == WEAPON_ROCKET) {
-                    if (w->range > max_explosive_range) {
-                        max_explosive_range = w->range;
-                    }
-                }
-            }
-            if (max_explosive_range == 0) {
-                return false;
-            }
-
-            // Select the highest-HP enemy within that range
-            Unit* best = NULL;
-            int best_hp = -1;
-            for (int i = 0; i < field->unit_count; i++) {
-                Unit* other = field->units[i];
-                if (!other || other == unit || other->hp <= 0) {
-                    continue;
-                }
-                if (other->faction == unit->faction) {
-                    continue;
-                }
-                int d = get_distance_squared(unit, other);
-                if (d > max_explosive_range * max_explosive_range || d <= 1) {
-                    continue; // avoid suicide
-                }
-                if (other->hp > best_hp) {
-                    best_hp = other->hp;
-                    best = other;
-                }
-            }
-            target = best;
+            target = select_enemy_by_preference(unit, field, max_range, &strat->strategic);
             return (target != NULL);
 
-
         case 'f': // Fire
-            int max_range = unit->max_range;
             if (max_range == 0) {
                 return false;
             }
@@ -86,7 +32,7 @@ bool evaluate_enemies(Unit* unit, Battlefield* field, char type, FactionStrategy
             return (target != NULL);
 
         case 'd': // Dash
-            // Select a target and run (maybe)
+            // Select a target and run
             target = select_enemy_by_preference(unit, field, 100, &strat->strategic);
             return (target != NULL);
 
@@ -125,17 +71,10 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
     }
 
     // Multiply global by unit-specific modifier
-    float final_explosive_threshold = strat->tactical.use_explosive_threshold * unit->effective_explosive_threshold;
     float final_ally_proximity = strat->strategic.ally_proximity * unit->effective_ally_proximity;
     float final_retreat_hp_ratio = strat->tactical.retreat_hp_ratio * unit->effective_retreat_hp_ratio;
 
     // Adjust values to valid ranges
-    if (final_explosive_threshold < 1.0f) {
-        final_explosive_threshold = 1.0f;
-    }
-    if (final_explosive_threshold > 4.0f) {
-        final_explosive_threshold = 4.0f;
-    }
     if (final_ally_proximity < 2.0f) {
         final_ally_proximity = 2.0f;
     }
@@ -178,28 +117,18 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
     }
 
     // Do normal actions
-    // 1. Emergency rally (officer or heavily pinned)
-    if ((unit->type == UNIT_CLONE_OFFICER || unit->type == UNIT_DROID_OFFICER) && unit->pin_markers == 0) {
-        acted = execute_rally(unit, field);
-        if (acted) { action_taken = ACTION_RALLY; goto action_done; }
-    }
+    // 1. Emergency rally
     if (unit->pin_markers >= 3) {
-        acted = execute_rally(unit, field);
+        acted = execute_rally(unit);
         if (acted) { action_taken = ACTION_RALLY; goto action_done; }
     }
 
-    // 2. Explosive (if has explosives and enemy cluster meets threshold)
-    if (!acted && has_explosives(unit)) {
-        if (evaluate_enemies(unit, field, 'e', strat, final_explosive_threshold)) {
-            acted = execute_explosive(unit, target, false, field);
-            if (acted) { action_taken = ACTION_EXPLOSIVE; goto action_done; }
-        }
-    }
-
-    // 3. Fire (if enemy in range)
+    // 2. Fire or attack, if an enemy is in range
     int max_range = unit->max_range;
-    if (max_range > 0) {
+    if (max_range > 4) {
+        // Fire at range
         Unit* fire_target = NULL;
+
         // Check focus fire order first
         if (effective_order && effective_order->type == ORDER_FOCUS_FIRE) {
             if (unit->focus_target && (get_distance_squared(unit, unit->focus_target) <= max_range * max_range)) {
@@ -207,7 +136,7 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
             }
         }
         if (!fire_target) {
-            if (evaluate_enemies(unit, field, 'f', strat, 0.0f)) {
+            if (evaluate_enemies(unit, field, 'f', strat)) {
                 fire_target = target;
             }
         }
@@ -215,9 +144,24 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
             acted = execute_fire(unit, fire_target, false, field);
             if (acted) { action_taken = ACTION_FIRE; goto action_done; }
         }
+
+    } else {
+        // Melee attack
+        Unit* fire_target = NULL;
+
+        if (!fire_target) {
+            if (evaluate_enemies(unit, field, 'a', strat)) {
+                fire_target = target;
+            }
+        }
+
+        if (fire_target) {
+            acted = execute_attack(unit, fire_target, false, field);
+            if (acted) { action_taken = ACTION_ATTACK; goto action_done; }
+        }
     }
 
-    // 4. Advance & Fire (if enemy beyond preferred range but within max range + half movement)
+    // 3. Advance & Fire (if enemy beyond preferred range but within max range + half movement)
     if (!acted && !(effective_order && effective_order->type == ORDER_DEFEND)) {
         Unit* enemy = find_closest_enemy(unit, field);
         if (enemy) {
@@ -225,15 +169,21 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
             int max_advance_dist = max_range + unit->half_movement;
             if (dist_sq > unit->preferred_range_sq && dist_sq <= max_advance_dist * max_advance_dist) {
                 move_toward_target(unit, enemy, unit->half_movement, field);
-                acted = execute_fire(unit, enemy, true, field);
-                if (acted) { action_taken = ACTION_ADVANCE_FIRE; goto action_done; }
+                if (max_range > 4) {
+                    acted = execute_fire(unit, enemy, true, field);
+                    if (acted) { action_taken = ACTION_ADVANCE_FIRE; goto action_done; }
+                } else {
+                    acted = execute_attack(unit, enemy, true, field);
+                    if (acted) { action_taken = ACTION_ADVANCE_ATTACK; goto action_done; }
+                }
+                
             }
         }
     }
 
-    // 5. Retreat (if enemy is within danger range)
+    // 4. Retreat (if enemy is within danger range)
     if (!acted && !(effective_order && effective_order->type == ORDER_ADVANCE)) {
-        if (evaluate_enemies(unit, field, 'r', strat, 0.0f)) {
+        if (evaluate_enemies(unit, field, 'r', strat)) {
             if (unit->hp < unit->max_hp * 0.3f || unit->pin_markers >= 2) {
                 execute_retreat(unit, target, field);
                 acted = true;
@@ -243,32 +193,30 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
         }
     }
 
-    // 6. Dash (move toward enemy if no target in range)
+    // 5. Dash (move toward enemy if no target in range)
     if (!acted && !(effective_order && effective_order->type == ORDER_DEFEND)) {
         bool moved_formation = false;
-        if (should_use_formation(unit)) {
-            if (effective_order && (effective_order->type == ORDER_ADVANCE || effective_order->type == ORDER_MOVE_TO
-                || effective_order->type == ORDER_FLANK_LEFT || effective_order->type == ORDER_FLANK_RIGHT
-                || effective_order->type == ORDER_BREAKTHROUGH || effective_order->type == ORDER_FALLBACK)) {
-                if (!unit->squad_moved) {
-                    int move_amount = unit->half_movement;
-                    if (move_amount < 1) move_amount = 1;
-                    execute_squad_move(unit, field, effective_order->target_x, effective_order->target_y, move_amount);
-                    int sid = unit->squad_id;
-                    for (int i = 0; i < field->unit_count; i++) {
-                        Unit* other = field->units[i];
-                        if (other != NULL && other->hp > 0 && other->squad_id == sid) {
-                            other->squad_moved = true;
-                        }
+        if (effective_order && (effective_order->type == ORDER_ADVANCE || effective_order->type == ORDER_MOVE_TO
+            || effective_order->type == ORDER_FLANK_LEFT || effective_order->type == ORDER_FLANK_RIGHT
+            || effective_order->type == ORDER_BREAKTHROUGH || effective_order->type == ORDER_FALLBACK)) {
+            if (!unit->squad_moved) {
+                int move_amount = unit->half_movement;
+                if (move_amount < 1) move_amount = 1;
+                execute_squad_move(unit, field, effective_order->target_x, effective_order->target_y, move_amount);
+                int sid = unit->squad_id;
+                for (int i = 0; i < field->unit_count; i++) {
+                    Unit* other = field->units[i];
+                    if (other != NULL && other->hp > 0 && other->squad_id == sid) {
+                        other->squad_moved = true;
                     }
-                    moved_formation = true;
-                    acted = true;
-                    action_taken = ACTION_DASH;
-                    goto action_done;
                 }
+                moved_formation = true;
+                acted = true;
+                action_taken = ACTION_DASH;
+                goto action_done;
             }
         }
-        if (!moved_formation && evaluate_enemies(unit, field, 'd', strat, 0.0f)) {
+        if (!moved_formation && evaluate_enemies(unit, field, 'd', strat)) {
             if (target && unit->movement > 0 && !unit->is_immobilized) {
                 execute_dash(unit, target, field);
                 clamp_unit_position(unit, field);
@@ -279,10 +227,10 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
         }
     }
 
-    // 7. If still not acted, rally (if pinned) or do nothing
+    // 6. If still not acted, rally (if pinned) or do nothing
     if (!acted) {
         if (unit->pin_markers > 0) {
-            execute_rally(unit, field);
+            execute_rally(unit);
             action_taken = ACTION_RALLY;
         } else {
             action_taken = -1;
@@ -294,12 +242,19 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
 
     if (turn_based) {
         const char* action_names[] = {
-            "Fire", "Advance+Fire", "Explosive",
-            "Rally", "Dash", "Retreat"
+            "Fire",             // 0 ACTION_FIRE
+            "Advance+Fire",     // 1 ACTION_ADVANCE_FIRE
+            "Attack",           // 2 ACTION_ATTACK
+            "Advance+Attack",   // 3 ACTION_ADVANCE_ATTACK
+            "Rally",            // 4 ACTION_RALLY
+            "Dash",             // 5 ACTION_DASH
+            "Retreat",          // 6 ACTION_RETREAT
+            "Cover",            // 7 ACTION_COVER
+            "Advance+Cover"     // 8 ACTION_ADVANCE_COVER
         };
         char msg[128];
         const char* action_name;
-        if (action_taken >= 0 && action_taken < 8) {
+        if (action_taken >= 0 && action_taken < 9) {
             action_name = action_names[action_taken];
         } else {
             action_name = "Nothing";
@@ -332,10 +287,11 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
         switch(action_taken) {
             case 0: action_counts.fire++; break;
             case 1: action_counts.advance_fire++; break;
-            case 2: action_counts.explosive++; break;
-            case 3: action_counts.rally++; break;
-            case 4: action_counts.dash++; break;
-            case 5: action_counts.retreat++; break;
+            case 2: action_counts.attack++; break;
+            case 3: action_counts.advance_attack++; break;
+            case 4: action_counts.rally++; break;
+            case 5: action_counts.dash++; break;
+            case 6: action_counts.retreat++; break;
         }
         action_counts.total++;
     }

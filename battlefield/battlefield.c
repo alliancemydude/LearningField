@@ -11,20 +11,18 @@
 
 // Default force compositions
 ForceComposition default_republic_composition[] = {
-    {UNIT_CLONE_TROOPER,        8},
-    {UNIT_ELITE_CLONE,          0},
-    {UNIT_CLONE_OFFICER,        0},
-    {UNIT_CLONE_SNIPER,         0},
-    {UNIT_BARC_SPEEDER,         0}
+    {UNIT_SWORDSMAN,        12},
+    {UNIT_ELITE_SWORDSMAN,  0},
+    {UNIT_LONGBOWMAN,       0},
+    {UNIT_HORSEMAN,         0}
 };
 int default_republic_composition_count = sizeof(default_republic_composition) / sizeof(default_republic_composition[0]);
 
 ForceComposition default_separatist_composition[] = {
-    {UNIT_BATTLE_DROID,         8},
-    {UNIT_SUPER_BATTLE_DROID,   0},
-    {UNIT_DROID_OFFICER,        0},
-    {UNIT_DROID_SNIPER,         0},
-    {UNIT_STAP,                 0}
+    {UNIT_SPEARMAN,         6},
+    {UNIT_ELITE_SPEARMAN,   0},
+    {UNIT_SHORTBOWMAN,      0},
+    {UNIT_CAMELMAN,         0}
 };
 int default_separatist_composition_count = sizeof(default_separatist_composition) / sizeof(default_separatist_composition[0]);
 
@@ -534,7 +532,8 @@ void reset_stats() {
     // Reset action_counts
     action_counts.fire = 0;
     action_counts.advance_fire = 0;
-    action_counts.explosive = 0;
+    action_counts.attack = 0;
+    action_counts.advance_attack = 0;
     action_counts.rally = 0;
     action_counts.dash = 0;
     action_counts.retreat = 0;
@@ -552,7 +551,7 @@ void print_action_stats() {
     printf("\n");
     
     // Categories
-    int aggressive = action_counts.fire + action_counts.advance_fire + action_counts.explosive;
+    int aggressive = action_counts.fire + action_counts.advance_fire + action_counts.attack + action_counts.advance_attack;
     int movement = action_counts.dash;
     int defensive = action_counts.rally + action_counts.retreat;
     
@@ -570,8 +569,10 @@ void print_action_stats() {
            (action_counts.fire * 100.0f) / action_counts.total);
     printf("  Advance+Fire:         %.1f%%\n", 
            (action_counts.advance_fire * 100.0f) / action_counts.total);
-    printf("  Explosive:            %.1f%%\n", 
-           (action_counts.explosive * 100.0f) / action_counts.total);
+    printf("  Attack:               %.1f%%\n", 
+           (action_counts.attack * 100.0f) / action_counts.total);
+    printf("  Advance+Attack:       %.1f%%\n", 
+           (action_counts.advance_attack * 100.0f) / action_counts.total);
     printf("  Dash:                 %.1f%%\n", 
            (action_counts.dash * 100.0f) / action_counts.total);
     printf("  Rally:                %.1f%%\n", 
@@ -588,7 +589,6 @@ void print_battle_summary() {
     printf("Shots fired: %d\n", battle_stats.shots_fired);
     printf("Shots hit: %d\n", battle_stats.shots_hit);
     printf("Kills: %d\n", battle_stats.kills);
-    printf("Explosives used: %d\n", battle_stats.explosives_used);
     printf("Damage dealt: Republic %d, Separatist %d\n", battle_stats.damage_dealt_rep, battle_stats.damage_dealt_sep);
     printf("Casualties: Republic %d, Separatist %d\n", battle_stats.casualties_rep, battle_stats.casualties_sep);
     // Print kills by type

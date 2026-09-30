@@ -5,14 +5,14 @@
 #include "battlefield.h"
 
 // Combat mechanics
-int morale_check(Unit* unit, Battlefield* field);
+int morale_check(Unit* unit);
 bool has_explosives(Unit* unit);
-int take_damage(Unit* unit, int kills, bool critical);
+int take_damage(Unit* unit, int kills);
 void add_pin_marker(Unit* unit);
 
 // Actions
 bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field);
-bool execute_explosive(Unit* unit, Unit* target, bool advanced, Battlefield* field);
-bool execute_rally(Unit* unit, Battlefield* field);
+bool execute_attack(Unit* unit, Unit* target, bool advanced, Battlefield* field);
+bool execute_rally(Unit* unit);
 
 #endif

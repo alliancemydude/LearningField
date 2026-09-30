@@ -137,7 +137,6 @@ void move_toward_target(Unit* unit, Unit* target, int move_amount, Battlefield* 
 
 void execute_squad_move(Unit* unit, Battlefield* field, int target_x, int target_y, int move_amount) {
     if (!unit || !field || move_amount <= 0) return;
-    if (!should_use_formation(unit)) return;
     int squad_id = unit->squad_id;
     if (squad_id == -1) return;
 
@@ -147,7 +146,7 @@ void execute_squad_move(Unit* unit, Battlefield* field, int target_x, int target
     for (int i = 0; i < field->unit_count; i++) {
         Unit* other = field->units[i];
         if (other == NULL || other->hp <= 0) continue;
-        if (other->squad_id == squad_id && should_use_formation(other)) {
+        if (other->squad_id == squad_id) {
             squad_units[squad_count++] = other;
         }
     }

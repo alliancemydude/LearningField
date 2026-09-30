@@ -11,8 +11,8 @@
 
 const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
     // Republic Infantry
-    [UNIT_CLONE_TROOPER] = {
-        .type = UNIT_CLONE_TROOPER,
+    [UNIT_SWORDSMAN] = {
+        .type = UNIT_SWORDSMAN,
         .faction = FACTION_REPUBLIC,
         .hp = 4,
         .hp_per_soldier = 1,
@@ -24,17 +24,16 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 4,
         .attacks_per_unit = 1,
         .attack_order = 1234,
-        .preferred_range = 20,
-        .danger_range = 6,
+        .preferred_range = 2,
+        .danger_range = 0,
         .rally_bonus = 0,
         .weapons = {
-            {WEAPON_BLASTER, 4},
-            {WEAPON_GRENADE, 1}
+            {WEAPON_SWORD, 4}
         },
-        .weapon_count = 2 // total weapons, including grenades
+        .weapon_count = 1
     },
-    [UNIT_ELITE_CLONE] = {
-        .type = UNIT_ELITE_CLONE,
+    [UNIT_ELITE_SWORDSMAN] = {
+        .type = UNIT_ELITE_SWORDSMAN,
         .faction = FACTION_REPUBLIC,
         .hp = 8,
         .hp_per_soldier = 2,
@@ -44,22 +43,21 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .point_value = 20,
         .is_armor = false,
         .units_count = 4,
-        .attacks_per_unit = 1,
+        .attacks_per_unit = 2,
         .attack_order = 1234,
-        .preferred_range = 20,
-        .danger_range = 6,
+        .preferred_range = 2,
+        .danger_range = 0,
         .rally_bonus = 0,
         .weapons = {
-            {WEAPON_BLASTER, 4},
-            {WEAPON_GRENADE, 3}
+            {WEAPON_SWORD, 4}
         },
         .weapon_count = 2
     },
-    [UNIT_CLONE_SNIPER] = {
-        .type = UNIT_CLONE_SNIPER,
+    [UNIT_LONGBOWMAN] = {
+        .type = UNIT_LONGBOWMAN,
         .faction = FACTION_REPUBLIC,
-        .hp = 2,
-        .hp_per_soldier = 2,
+        .hp = 4,
+        .hp_per_soldier = 1,
         .movement = 12,
         .morale = 9,
         .armor_class = 4,
@@ -68,41 +66,18 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 1,
         .attacks_per_unit = 1,
         .attack_order = 3124,
-        .preferred_range = 32,
-        .danger_range = 24,
+        .preferred_range = 18,
+        .danger_range = 12,
         .rally_bonus = 0,
         .weapons = {
-            {WEAPON_SNIPER, 1}
+            {WEAPON_LONGBOW, 4}
         },
         .weapon_count = 1
     },
-    [UNIT_CLONE_OFFICER] = {
-        .type = UNIT_CLONE_OFFICER,
+    [UNIT_HORSEMAN] = {
+        .type = UNIT_HORSEMAN,
         .faction = FACTION_REPUBLIC,
-        .hp = 1,
-        .hp_per_soldier = 1,
-        .movement = 12,
-        .morale = 9,
-        .armor_class = 4,
-        .point_value = 15,
-        .is_armor = false,
-        .units_count = 1,
-        .attacks_per_unit = 1,
-        .attack_order = 1234,
-        .preferred_range = 20,
-        .danger_range = 12,
-        .rally_bonus = 4,
-        .weapons = {
-            {WEAPON_BLASTER, 1}
-        },
-        .weapon_count = 1
-    },
-
-    // Republic Armor
-    [UNIT_BARC_SPEEDER] = {
-        .type = UNIT_BARC_SPEEDER,
-        .faction = FACTION_REPUBLIC,
-        .hp = 1,
+        .hp = 2,
         .hp_per_soldier = 1,
         .movement = 24,
         .morale = 9,
@@ -110,25 +85,25 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .point_value = 35,
         .is_armor = true,
         .units_count = 1,
-        .attacks_per_unit = 2,
+        .attacks_per_unit = 1,
         .attack_order = 1234,
-        .preferred_range = 18,
-        .danger_range = 4,
+        .preferred_range = 4,
+        .danger_range = 0,
         .rally_bonus = 0,
         .weapons = {
-            {WEAPON_BLASTER, 1}
+            {WEAPON_SWORD, 2}
         },
-        .weapon_count = 3
+        .weapon_count = 1
     },
     
     
     // Separatist Infantry
-    [UNIT_BATTLE_DROID] = {
-        .type = UNIT_BATTLE_DROID,
+    [UNIT_SPEARMAN] = {
+        .type = UNIT_SPEARMAN,
         .faction = FACTION_SEPARATIST,
         .hp = 6,
         .hp_per_soldier = 1,
-        .movement = 12,
+        .movement = 10,
         .morale = 8,
         .armor_class = 4,
         .point_value = 5,
@@ -136,16 +111,16 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 6,
         .attacks_per_unit = 1,
         .attack_order = 1234,
-        .preferred_range = 16,
-        .danger_range = 6,
+        .preferred_range = 4,
+        .danger_range = 0,
         .rally_bonus = 0,
         .weapons = {
-            {WEAPON_CARBINE, 6}
+            {WEAPON_SPEAR, 6}
         },
         .weapon_count = 1
     },
-    [UNIT_SUPER_BATTLE_DROID] = {
-        .type = UNIT_SUPER_BATTLE_DROID,
+    [UNIT_ELITE_SPEARMAN] = {
+        .type = UNIT_ELITE_SPEARMAN,
         .faction = FACTION_SEPARATIST,
         .hp = 8,
         .hp_per_soldier = 2,
@@ -155,20 +130,20 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .point_value = 30,
         .is_armor = false,
         .units_count = 4,
-        .attacks_per_unit = 1,
+        .attacks_per_unit = 2,
         .attack_order = 1234,
-        .preferred_range = 12,
-        .danger_range = 6,
+        .preferred_range = 4,
+        .danger_range = 0,
         .rally_bonus = 0,
         .weapons = {
-            {WEAPON_ROCKET, 4}
+            {WEAPON_SPEAR, 4}
         },
-        .weapon_count = 2
+        .weapon_count = 1
     },
-    [UNIT_DROID_SNIPER] = {
-        .type = UNIT_DROID_SNIPER,
+    [UNIT_SHORTBOWMAN] = {
+        .type = UNIT_SHORTBOWMAN,
         .faction = FACTION_SEPARATIST,
-        .hp = 1,
+        .hp = 4,
         .hp_per_soldier = 1,
         .movement = 12,
         .morale = 9,
@@ -178,41 +153,18 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 1,
         .attacks_per_unit = 1,
         .attack_order = 3124,
-        .preferred_range = 32,
-        .danger_range = 24,
+        .preferred_range = 12,
+        .danger_range = 8,
         .rally_bonus = 0,
         .weapons = {
-            {WEAPON_SNIPER, 1}
+            {WEAPON_SHORTBOW, 4}
         },
         .weapon_count = 1
     },
-    [UNIT_DROID_OFFICER] = {
-        .type = UNIT_DROID_OFFICER,
+    [UNIT_CAMELMAN] = {
+        .type = UNIT_CAMELMAN,
         .faction = FACTION_SEPARATIST,
-        .hp = 1,
-        .hp_per_soldier = 1,
-        .movement = 12,
-        .morale = 9,
-        .armor_class = 4,
-        .point_value = 15,
-        .is_armor = false,
-        .units_count = 1,
-        .attacks_per_unit = 1,
-        .attack_order = 1234,
-        .preferred_range = 16,
-        .danger_range = 10,
-        .rally_bonus = 4,
-        .weapons = {
-            {WEAPON_CARBINE, 1}
-        },
-        .weapon_count = 1
-    },
-    
-    // Separatist Armor
-    [UNIT_STAP] = {
-        .type = UNIT_STAP,
-        .faction = FACTION_SEPARATIST,
-        .hp = 1,
+        .hp = 2,
         .hp_per_soldier = 1,
         .movement = 24,
         .morale = 9,
@@ -222,11 +174,11 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 1,
         .attacks_per_unit = 2,
         .attack_order = 3214,
-        .preferred_range = 18,
-        .danger_range = 6,
+        .preferred_range = 2,
+        .danger_range = 0,
         .rally_bonus = 0,
         .weapons = {
-            {WEAPON_CARBINE, 1}
+            {WEAPON_SWORD, 2}
         },
         .weapon_count = 1
     }

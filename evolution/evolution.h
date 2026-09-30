@@ -33,6 +33,8 @@ void save_genomes(const float* rep_weights, const float* sep_weights, const Gene
 void print_unit_genome(const float* w, Faction faction, const char* name);
 void save_unit_genome(const float* weights, Faction faction, const char* prefix);
 
+float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int num_battles);
+
 // Gene arrays
 extern const GeneInfo STRATEGY_GENES[];
 extern const size_t STRATEGY_GENE_COUNT;

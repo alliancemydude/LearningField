@@ -4,6 +4,6 @@
 #include "unit.h"
 
 void clear_weapons(Unit* unit);
-void add_weapon(Unit* unit, WeaponType type, int ammo);
+void add_weapon(Unit* unit, WeaponType type);
 
 #endif

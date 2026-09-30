@@ -20,9 +20,23 @@ static const char* SQUAD_COLORS[] = {
 };
 #define SQUAD_COLOR_COUNT (sizeof(SQUAD_COLORS)/sizeof(SQUAD_COLORS[0]))
 
-const char* get_squad_color(int squad_id) {
-    if (squad_id < 0 || squad_id >= SQUAD_COLOR_COUNT) return COLOR_RESET;
-    return SQUAD_COLORS[squad_id];
+const char* get_squad_color(int squad_id, Faction faction) {
+    static const char* republic_palette[] = {
+        COLOR_GREEN, COLOR_CYAN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_WHITE
+    };
+    static const char* separatist_palette[] = {
+        COLOR_RED, COLOR_MAGENTA, COLOR_YELLOW, COLOR_BLUE, COLOR_CYAN, COLOR_WHITE
+    };
+    const int palette_size = 6;
+
+    // Wrap negative or large squad IDs safely
+    int idx = ((squad_id % palette_size) + palette_size) % palette_size;
+
+    if (faction == FACTION_REPUBLIC) {
+        return republic_palette[idx];
+    } else {
+        return separatist_palette[idx];
+    }
 }
 
 int roll(int min, int max) {
@@ -77,7 +91,7 @@ void print_screen(Battlefield* field) {
     }
     printf("Turn %d | Republic: %d units (HP: %.1f) | Separatist: %d units (HP: %.1f)\n",
            turn_count, rep_count, rep_hp, sep_count, sep_hp);
-    printf("Legend: T=Clone Trooper, E=Elite, O=Officer, S=Sniper B=BARC/STAP,\n");
+    printf("Legend: S=Swordsman, E=Elite, H=Horseman, B=Bowman P = Spearman,\n");
     printf("Green = Republic, Red = Separatist, . open\n\n");
 
     // Print column headers
@@ -112,7 +126,7 @@ void print_screen(Battlefield* field) {
                 int soldier_count = unit_on_tile->units_count;
                 if (soldier_count < 0) soldier_count = 0;
                 if (soldier_count > 9) soldier_count = 9;
-                const char* color = get_squad_color(sid % 10);
+                const char* color = get_squad_color(sid, unit_on_tile->faction);
                 char buf[3];
                 snprintf(buf, sizeof(buf), "%s%d", symbol, soldier_count);
                 printf("%s%2s%s ", color, buf, COLOR_RESET);
@@ -172,7 +186,7 @@ void print_screen_to_file(Battlefield* field, const char* filename) {
                 // Unit is dead
                 fprintf(f, " $ ");
             } else {
-                printf(" . ");   // empty tile
+                fprintf(f, " . ");
             }
         }
         fprintf(f, "\n");
@@ -204,19 +218,14 @@ const char* get_unit_symbol(Unit* unit) {
     if (unit == NULL) return "?";
     
     switch (unit->type) {
-        // Republic (lowercase)
-        case UNIT_CLONE_TROOPER:       return "T";
-        case UNIT_ELITE_CLONE:         return "E";
-        case UNIT_CLONE_SNIPER:        return "S";
-        case UNIT_CLONE_OFFICER:       return "O";
-        case UNIT_BARC_SPEEDER:        return "B";
-        
-        // Separatist (uppercase)
-        case UNIT_BATTLE_DROID:        return "B";
-        case UNIT_SUPER_BATTLE_DROID:  return "S";
-        case UNIT_DROID_SNIPER:        return "S";
-        case UNIT_DROID_OFFICER:       return "O";
-        case UNIT_STAP:                return "T";
+        case UNIT_SWORDSMAN:        return "S";
+        case UNIT_ELITE_SWORDSMAN:  return "E";
+        case UNIT_HORSEMAN:         return "H";
+        case UNIT_LONGBOWMAN:       return "B";
+        case UNIT_SPEARMAN:         return "P";
+        case UNIT_ELITE_SPEARMAN:   return "E";
+        case UNIT_SHORTBOWMAN:      return "B";
+        case UNIT_CAMELMAN:         return "H";
         
         default: return "???";
     }

@@ -34,6 +34,8 @@ static inline int get_distance_squared(Unit* a, Unit* b) {
 }
 
 // Position utilities:
+const char* get_squad_color(int squad_id, Faction faction);
+
 bool is_tile_walkable(Battlefield* field, int x, int y, Unit* exclude);
 
 void clamp_unit_position(Unit* unit, Battlefield* field);

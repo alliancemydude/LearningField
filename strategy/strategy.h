@@ -40,7 +40,6 @@ typedef struct {
 } FactionStrategy;
 
 // Prototypes
-bool should_use_formation(struct Unit* u);
 void update_strategic_orders(struct Battlefield* field);
 void assign_faction_orders(struct Battlefield* field, Faction faction);
 void apply_squad_cohesion(struct Unit* acting_unit, struct Battlefield* field, FactionStrategy* strat);

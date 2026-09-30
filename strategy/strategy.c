@@ -135,9 +135,6 @@ void update_strategic_orders(Battlefield* field) {
         if (u->squad_id == -1) {
             continue;
         }
-        if (!should_use_formation(u)) {
-            continue;  // only formation units
-        }
 
         // Get the focus fire tendency from the correct faction
         float focus_tendency;
@@ -163,7 +160,7 @@ void update_strategic_orders(Battlefield* field) {
             if (member->faction != u->faction) {
                 continue; // Skip enemies
             }
-            if (member->squad_id == u->squad_id && should_use_formation(member)) {
+            if (member->squad_id == u->squad_id) {
                 squad_members[squad_count++] = member; // Group unit squads
             }
         }
@@ -236,9 +233,6 @@ void update_strategic_orders(Battlefield* field) {
             continue;
         }
         if (u->strategic_order.type != ORDER_ADVANCE) {
-            continue;
-        }
-        if (!should_use_formation(u)) {
             continue;
         }
 
@@ -314,9 +308,6 @@ void update_strategic_orders(Battlefield* field) {
         if (u->hp <= 0 || u->squad_id == -1) {
             continue;
         }
-        if (!should_use_formation(u)) {
-            continue;
-        }
         int sid = u->squad_id;
         if (!squad_cohesion_done[sid]) {
             squad_cohesion_done[sid] = true;
@@ -361,7 +352,6 @@ void assign_faction_orders(Battlefield* field, Faction faction) {
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
         if (u->hp <= 0 || u->faction != faction) continue;
-        if (!should_use_formation(u)) continue;
         int sid = u->squad_id;
         if (sid == -1) continue;
         // Find or create group
@@ -519,7 +509,6 @@ void assign_faction_orders(Battlefield* field, Faction faction) {
 void apply_squad_cohesion(Unit* acting_unit, Battlefield* field, FactionStrategy* strat) {
 
     if (acting_unit == NULL || strat == NULL) return;
-    if (!should_use_formation(acting_unit)) return;
     if (acting_unit->squad_id == -1) return;
 
     float cohesion_threshold = strat->tactical.cohesion_threshold;
@@ -627,22 +616,6 @@ void apply_squad_cohesion(Unit* acting_unit, Battlefield* field, FactionStrategy
                 clamp_unit_position(member, field);
             }
         }
-    }
-}
-
-bool should_use_formation(Unit* u) {
-    // Only infantry, elites, officers, light gunners for formations
-    switch (u->type) {
-        case UNIT_CLONE_TROOPER:
-        case UNIT_ELITE_CLONE:
-        case UNIT_CLONE_OFFICER:
-        case UNIT_BATTLE_DROID:
-        case UNIT_SUPER_BATTLE_DROID:
-        case UNIT_DROID_OFFICER:
-        case UNIT_LIGHT_CLONE_GUNNER:
-            return true;
-        default:
-            return false;
     }
 }
 

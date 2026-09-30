@@ -61,8 +61,8 @@ void print_results() {
 
     printf("Results for %d battles:\n", battles);
     printf("\n");
-    printf("Clones: %.1f%% (%d/%d)\n", clone_percent, clone_wins, battles);
-    printf("Droids: %.1f%% (%d/%d)\n", droid_percent, droid_wins, battles);
+    printf("Swordsmen: %.1f%% (%d/%d)\n", clone_percent, clone_wins, battles);
+    printf("Spearmen: %.1f%% (%d/%d)\n", droid_percent, droid_wins, battles);
     printf("Timeouts: %.1f%% (%d/%d)\n", timeout_percent, timeouts, battles);
     printf("\n");
 }

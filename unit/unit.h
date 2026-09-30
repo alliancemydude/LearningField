@@ -8,11 +8,9 @@
 // Weapon struct, where stats are kept
 typedef struct {
     WeaponType type;
-    int ammo;
     int penetration_bonus;
     int damage_bonus;
     int range;
-    int weapon_shots;
     bool equipped;
     int explosion_radius;
 } Weapon;
@@ -83,7 +81,7 @@ Unit* create_unit_squad(UnitType type, int id, int x, int y);
 
 // Useful functions
 const char* get_unit_type_name(UnitType type);
-void add_weapon(Unit* unit, WeaponType type, int ammo);
+void add_weapon(Unit* unit, WeaponType type);
 void clear_weapons(Unit* unit);
 void destroy_unit(Unit* unit);
 

@@ -177,9 +177,6 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
             unit_genomes[i].unit_aggression = rep_weights[base + 0];
             CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
 
-            unit_genomes[i].unit_explosive_threshold = rep_weights[base + 1];
-            CLAMP(unit_genomes[i].unit_explosive_threshold, 1.0f, 4.0f);
-
             unit_genomes[i].unit_ally_proximity = rep_weights[base + 2];
             CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);
 
@@ -195,9 +192,6 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
         } else if (f == FACTION_SEPARATIST) {
             unit_genomes[i].unit_aggression = sep_weights[base + 0];
             CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
-
-            unit_genomes[i].unit_explosive_threshold = sep_weights[base + 1];
-            CLAMP(unit_genomes[i].unit_explosive_threshold, 1.0f, 4.0f);
 
             unit_genomes[i].unit_ally_proximity = sep_weights[base + 2];
             CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);

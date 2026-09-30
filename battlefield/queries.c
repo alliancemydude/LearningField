@@ -7,12 +7,12 @@
 
 // Handle finding overall parameters
 Faction get_faction_of_unit(UnitType type) {
-    // Republic units: from 0 to UNIT_SABER_TANK inclusive
-    if (type <= UNIT_SABER_TANK) {
+    // Republic units: from 0 to UNIT_HORSEMAN inclusive
+    if (type <= UNIT_HORSEMAN) {
         return FACTION_REPUBLIC;
     }
-    // Separatist units: from UNIT_BATTLE_DROID to UNIT_AAT inclusive
-    if (type >= UNIT_BATTLE_DROID && type <= UNIT_AAT) {
+    // Separatist units: from UNIT_SPEARMAN to UNIT_CAMELMAN inclusive
+    if (type >= UNIT_SPEARMAN && type <= UNIT_CAMELMAN) {
         return FACTION_SEPARATIST;
     }
     return FACTION_UNKNOWN;
@@ -37,27 +37,11 @@ int get_weapon_range(Unit* unit) {
         Weapon* w = &unit->weapons[i];
         int range = 0;
         switch (w->type) {
-            // Small arms
-            case WEAPON_BLASTER: range = 24; break;
-            case WEAPON_CARBINE: range = 18; break;
-            case WEAPON_SNIPER: range = 36; break;
-            // Explosives
-            case WEAPON_GRENADE: range = 12; break;
-            case WEAPON_ROCKET: range = 16; break;
-            // Machine guns
-            case WEAPON_SUB_MG: range = 18; break;
-            case WEAPON_LIGHT_MG: range = 24; break;
-            case WEAPON_MEDIUM_MG: range = 36; break;
-            case WEAPON_HEAVY_MG: range = 36; break;
-            // Anti-Tank
-            case WEAPON_LIGHT_AT: range = 48; break;
-            case WEAPON_MEDIUM_AT: range = 60; break;
-            // Vehicle cannons
-            case WEAPON_BLASTER_CANNON: range = 48; break;
-            case WEAPON_DUAL_BLASTER_CANNON: range = 48; break;
-            case WEAPON_MISSILE_POD: range = 24; break;
-            case WEAPON_BEAM_CANNON: range = 72; break;
-            default: range = 24; break;
+            case WEAPON_SWORD: range = 2; break;
+            case WEAPON_SPEAR: range = 4; break;
+            case WEAPON_LONGBOW: range = 24; break;
+            case WEAPON_SHORTBOW: range = 16; break;
+            default: range = 2; break;
         }
         if (range > max_range) max_range = range;
     }

@@ -4,65 +4,22 @@
 
 // Weapon Types
 typedef enum { 
-    // Small arms
-    WEAPON_BLASTER, 
-    WEAPON_CARBINE, 
-    WEAPON_SNIPER, 
-
-    // Explosives
-    WEAPON_GRENADE, 
-    WEAPON_ROCKET,
-
-    // Machine Guns
-    WEAPON_SUB_MG,
-    WEAPON_LIGHT_MG, 
-    WEAPON_MEDIUM_MG,
-    WEAPON_HEAVY_MG, 
-
-    // Anti-tank weapons
-    WEAPON_LIGHT_AT,
-    WEAPON_MEDIUM_AT,
-    WEAPON_BLASTER_CANNON,
-    WEAPON_DUAL_BLASTER_CANNON,
-    WEAPON_MISSILE_POD,
-    WEAPON_BEAM_CANNON,
+    WEAPON_SWORD, 
+    WEAPON_SPEAR, 
+    WEAPON_LONGBOW, 
+    WEAPON_SHORTBOW,
     WEAPON_COUNT } WeaponType;
 
 // Unit Types
 typedef enum { 
-    // Republic Infantry
-    UNIT_CLONE_TROOPER, 
-    UNIT_ELITE_CLONE, 
-    UNIT_CLONE_SNIPER,
-    UNIT_CLONE_OFFICER, 
-    UNIT_CLONE_ROCKET,
-
-    // Republic Gunners
-    UNIT_LIGHT_CLONE_GUNNER,
-    UNIT_MEDIUM_CLONE_GUNNER, 
-    UNIT_HEAVY_CLONE_GUNNER,
-
-    // Republic Armor
-    UNIT_SWAMP_SPEEDER, 
-    UNIT_BARC_SPEEDER,
-    UNIT_SABER_TANK,
-
-    // Separatist Infantry
-    UNIT_BATTLE_DROID,
-    UNIT_SUPER_BATTLE_DROID, 
-    UNIT_DROID_SNIPER,
-    UNIT_DROID_OFFICER, 
-    UNIT_DROID_ROCKET,
-
-    // Separatist Gunners
-    UNIT_MEDIUM_DROID_GUNNER,
-    UNIT_HEAVY_DROID_GUNNER, 
-    
-    // Separatist Armor
-    UNIT_SPIDER_DROID, 
-    UNIT_STAP,
-    UNIT_AAT,
-
+    UNIT_SWORDSMAN, 
+    UNIT_ELITE_SWORDSMAN, 
+    UNIT_LONGBOWMAN,
+    UNIT_HORSEMAN, 
+    UNIT_SPEARMAN,
+    UNIT_ELITE_SPEARMAN,
+    UNIT_SHORTBOWMAN, 
+    UNIT_CAMELMAN,
     UNIT_TYPE_COUNT } UnitType;
 
 // Factions

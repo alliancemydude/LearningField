@@ -77,7 +77,7 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     // Give the unit weapons according to its specifications
     clear_weapons(unit);
     for (int i = 0; i < bp->weapon_count; i++) {
-        add_weapon(unit, bp->weapons[i].type, bp->weapons[i].ammo);
+        add_weapon(unit, bp->weapons[i].type);
     }
     
     // Compute max range for this unit
@@ -94,23 +94,20 @@ Unit* create_unit_squad(UnitType type, int id, int x, int y) {
 
 const char* get_unit_type_name(UnitType type) {
     switch(type) {
-        case UNIT_CLONE_TROOPER: return "UNIT_CLONE_TROOPER";
-        case UNIT_ELITE_CLONE: return "UNIT_ELITE_CLONE";
-        case UNIT_CLONE_SNIPER: return "UNIT_CLONE_SNIPER";
-        case UNIT_CLONE_OFFICER: return "UNIT_CLONE_OFFICER";
-        case UNIT_BARC_SPEEDER: return "UNIT_BARC_SPEEDER";
+        case UNIT_SWORDSMAN: return "UNIT_SWORDSMAN";
+        case UNIT_ELITE_SWORDSMAN: return "UNIT_ELITE_SWORDSMAN";
+        case UNIT_LONGBOWMAN: return "UNIT_LONGBOWMAN";
+        case UNIT_HORSEMAN: return "UNIT_HORSEMAN";
 
-        case UNIT_BATTLE_DROID: return "UNIT_BATTLE_DROID";
-        case UNIT_SUPER_BATTLE_DROID: return "UNIT_SUPER_BATTLE_DROID";
-        case UNIT_DROID_SNIPER: return "UNIT_DROID_SNIPER";
-        case UNIT_DROID_OFFICER: return "UNIT_DROID_OFFICER";
-
-        case UNIT_STAP: return "UNIT_STAP";
+        case UNIT_SPEARMAN: return "UNIT_SPEARMAN";
+        case UNIT_ELITE_SPEARMAN: return "UNIT_ELITE_SPEARMAN";
+        case UNIT_SHORTBOWMAN: return "UNIT_SHORTBOWMAN";
+        case UNIT_CAMELMAN: return "UNIT_CAMELMAN";
         default: return "UNKNOWN";
     }
 }
 
-void add_weapon(Unit* unit, WeaponType type, int ammo) {
+void add_weapon(Unit* unit, WeaponType type) {
     if (unit->weapon_count >= WEAPON_COUNT) {
         return;
     }
@@ -118,49 +115,39 @@ void add_weapon(Unit* unit, WeaponType type, int ammo) {
     // Create a weapon pointer to get type, ammo, and stats
     Weapon* w = &unit->weapons[unit->weapon_count];
     w->type = type;
-    w->ammo = ammo;
     w->equipped = true;
-    w->weapon_shots = 1;
     w->explosion_radius = 0;
     
     // Set stats based on weapon types
     switch (type) {
-        // Small arms
-        case WEAPON_BLASTER:
-            w->weapon_shots = 1;
+        case WEAPON_SWORD:
+            w->damage_bonus = 1;
+            w->penetration_bonus = 0;
+            w->range = 2;
+            w->explosion_radius = 0;
+            break;
+        case WEAPON_SPEAR:
             w->damage_bonus = 0;
             w->penetration_bonus = 0;
+            w->range = 4;
+            w->explosion_radius = 0;
+            break;
+        case WEAPON_LONGBOW:
+            w->damage_bonus = 0;
+            w->penetration_bonus = 1;
             w->range = 24;
             w->explosion_radius = 0;
             break;
-        case WEAPON_CARBINE:
-            w->weapon_shots = 1;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 0;
-            w->range = 18;
-            w->explosion_radius = 0;
-            break;
-        case WEAPON_SNIPER:
-            w->weapon_shots = 1;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 1;
-            w->range = 36;
-            w->explosion_radius = 0;
-            break;
-
-        // Explosives
-        case WEAPON_GRENADE:
-            w->weapon_shots = 1;
+        case WEAPON_SHORTBOW:
             w->damage_bonus = 1;
             w->penetration_bonus = 0;
-            w->range = 12;
-            w->explosion_radius = 2;
+            w->range = 16;
+            w->explosion_radius = 0;
             break;
         default:
-            w->weapon_shots = 1;
             w->damage_bonus = 0;
             w->penetration_bonus = 0;
-            w->range = 12;
+            w->range = 2;
             w->explosion_radius = 0;
             break;
     }
@@ -171,7 +158,6 @@ void clear_weapons(Unit* unit) {
     // Reset all weapons stats for a unit
     for (int i = 0; i < WEAPON_COUNT; i++) {
         unit->weapons[i].type = (WeaponType)i;
-        unit->weapons[i].ammo = 0;
         unit->weapons[i].penetration_bonus = 0;
         unit->weapons[i].range = 0;
         unit->weapons[i].damage_bonus = 0;
