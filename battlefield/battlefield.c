@@ -15,13 +15,7 @@ ForceComposition default_republic_composition[] = {
     {UNIT_ELITE_CLONE,          0},
     {UNIT_CLONE_OFFICER,        0},
     {UNIT_CLONE_SNIPER,         0},
-    {UNIT_LIGHT_CLONE_GUNNER,   0},
-    {UNIT_MEDIUM_CLONE_GUNNER,  0},
-    {UNIT_HEAVY_CLONE_GUNNER,   0},
-    {UNIT_CLONE_ROCKET,         0},
-    {UNIT_SWAMP_SPEEDER,        0},
-    {UNIT_BARC_SPEEDER,         0},
-    {UNIT_SABER_TANK,           0}
+    {UNIT_BARC_SPEEDER,         0}
 };
 int default_republic_composition_count = sizeof(default_republic_composition) / sizeof(default_republic_composition[0]);
 
@@ -30,12 +24,7 @@ ForceComposition default_separatist_composition[] = {
     {UNIT_SUPER_BATTLE_DROID,   0},
     {UNIT_DROID_OFFICER,        0},
     {UNIT_DROID_SNIPER,         0},
-    {UNIT_MEDIUM_DROID_GUNNER,  0},
-    {UNIT_HEAVY_DROID_GUNNER,   0},
-    {UNIT_DROID_ROCKET,         0},
-    {UNIT_SPIDER_DROID,         0},
-    {UNIT_STAP,                 0},
-    {UNIT_AAT,                  0}
+    {UNIT_STAP,                 0}
 };
 int default_separatist_composition_count = sizeof(default_separatist_composition) / sizeof(default_separatist_composition[0]);
 

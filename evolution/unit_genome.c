@@ -35,50 +35,6 @@ UnitGenome unit_genomes[UNIT_TYPE_COUNT] = {
         .preferred_range = 0.61f,
         .danger_range = 2.69f
     },
-    [UNIT_CLONE_ROCKET] = {
-        .unit_aggression = 0.4f,
-        .unit_explosive_threshold = 2.0f,
-        .unit_ally_proximity = 5.0f,
-        .unit_retreat_hp_ratio = 0.35f,
-        .preferred_range = 12.0f,
-        .danger_range = 2.0f
-    },
-
-    // === REPUBLIC GUNNERS ===
-    [UNIT_LIGHT_CLONE_GUNNER] = {
-        .unit_aggression = 0.6f,
-        .unit_explosive_threshold = 2.0f,
-        .unit_ally_proximity = 4.0f,
-        .unit_retreat_hp_ratio = 0.3f,
-        .preferred_range = 12.0f,
-        .danger_range = 2.0f
-    },
-    [UNIT_MEDIUM_CLONE_GUNNER] = {
-        .unit_aggression = 0.7f,
-        .unit_explosive_threshold = 1.5f,
-        .unit_ally_proximity = 5.0f,
-        .unit_retreat_hp_ratio = 0.3f,
-        .preferred_range = 12.0f,
-        .danger_range = 2.0f
-    },
-    [UNIT_HEAVY_CLONE_GUNNER] = {
-        .unit_aggression = 0.9f,
-        .unit_explosive_threshold = 1.0f,
-        .unit_ally_proximity = 6.0f, 
-        .unit_retreat_hp_ratio = 0.2f,
-        .preferred_range = 12.0f,
-        .danger_range = 2.0f
-    },
-    
-    // === REPUBLIC ARMOR ===
-    [UNIT_SWAMP_SPEEDER] = {
-        .unit_aggression = 0.00f,
-        .unit_explosive_threshold = 1.0f,
-        .unit_ally_proximity = 2.0f,
-        .unit_retreat_hp_ratio = 0.1f,
-        .preferred_range = 0.0f,
-        .danger_range = 0.0f
-    },
     [UNIT_BARC_SPEEDER] = {
         .unit_aggression = 0.0f,
         .unit_explosive_threshold = 1.0f,
@@ -86,14 +42,6 @@ UnitGenome unit_genomes[UNIT_TYPE_COUNT] = {
         .unit_retreat_hp_ratio = 0.1f,
         .preferred_range = 0.0f,
         .danger_range = 0.0f
-    },
-    [UNIT_SABER_TANK] = {
-        .unit_aggression = 0.7f,
-        .unit_explosive_threshold = 1.5f,
-        .unit_ally_proximity = 7.0f,
-        .unit_retreat_hp_ratio = 0.1f,
-        .preferred_range = 12.0f,
-        .danger_range = 2.0f
     },
 
     // === SEPARATIST INFANTRY ===
@@ -129,42 +77,6 @@ UnitGenome unit_genomes[UNIT_TYPE_COUNT] = {
         .preferred_range = 0.8f,
         .danger_range = 2.0f
     },
-    [UNIT_DROID_ROCKET] = {
-        .unit_aggression = 0.4f,
-        .unit_explosive_threshold = 2.0f,
-        .unit_ally_proximity = 5.0f,
-        .unit_retreat_hp_ratio = 0.35f,
-        .preferred_range = 12.0f,
-        .danger_range = 2.0f
-    },
-
-    // === SEPARATIST GUNNERS ===
-    [UNIT_MEDIUM_DROID_GUNNER] = {
-        .unit_aggression = 0.7f,
-        .unit_explosive_threshold = 1.5f,
-        .unit_ally_proximity = 5.0f,
-        .unit_retreat_hp_ratio = 0.3f,
-        .preferred_range = 12.0f,
-        .danger_range = 2.0f
-    },
-    [UNIT_HEAVY_DROID_GUNNER] = {
-        .unit_aggression = 0.9f,
-        .unit_explosive_threshold = 1.0f,
-        .unit_ally_proximity = 6.0f,
-        .unit_retreat_hp_ratio = 0.0f,
-        .preferred_range = 12.0f,
-        .danger_range = 0.0f
-    },
-
-    // === SEPARATIST ARMOR ===
-    [UNIT_SPIDER_DROID] = {
-        .unit_aggression = 1.0f,
-        .unit_explosive_threshold = 2.0f,
-        .unit_ally_proximity = 8.0f,
-        .unit_retreat_hp_ratio = 0.1f,
-        .preferred_range = 36.0f,
-        .danger_range = 20.0f
-    },
     [UNIT_STAP] = {
         .unit_aggression = 1.0f,
         .unit_explosive_threshold = 2.0f,
@@ -172,13 +84,5 @@ UnitGenome unit_genomes[UNIT_TYPE_COUNT] = {
         .unit_retreat_hp_ratio = 0.6f,
         .preferred_range = 0.0f,
         .danger_range = 20.0f
-    },
-    [UNIT_AAT] = {
-        .unit_aggression = 0.7f,
-        .unit_explosive_threshold = 1.5f,
-        .unit_ally_proximity = 7.0f,
-        .unit_retreat_hp_ratio = 0.1f,
-        .preferred_range = 12.0f,
-        .danger_range = 2.0f
     }
 };

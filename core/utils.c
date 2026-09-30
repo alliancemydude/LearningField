@@ -77,8 +77,7 @@ void print_screen(Battlefield* field) {
     }
     printf("Turn %d | Republic: %d units (HP: %.1f) | Separatist: %d units (HP: %.1f)\n",
            turn_count, rep_count, rep_hp, sep_count, sep_hp);
-    printf("Legend: T=Clone Trooper, E=Elite, O=Officer, S=Sniper, L=Light MG, H=Heavy MG, "
-           "R=Rocket, W=Swamp Speeder, B=BARC/Saber/STAP/AAT, P=Spider Droid\n");
+    printf("Legend: T=Clone Trooper, E=Elite, O=Officer, S=Sniper B=BARC/STAP,\n");
     printf("Green = Republic, Red = Separatist, . open\n\n");
 
     // Print column headers
@@ -210,25 +209,14 @@ const char* get_unit_symbol(Unit* unit) {
         case UNIT_ELITE_CLONE:         return "E";
         case UNIT_CLONE_SNIPER:        return "S";
         case UNIT_CLONE_OFFICER:       return "O";
-        case UNIT_LIGHT_CLONE_GUNNER:  return "L";
-        case UNIT_MEDIUM_CLONE_GUNNER: return "M";
-        case UNIT_HEAVY_CLONE_GUNNER:  return "H";
-        case UNIT_CLONE_ROCKET:        return "R";
-        case UNIT_SWAMP_SPEEDER:       return "W";
         case UNIT_BARC_SPEEDER:        return "B";
-        case UNIT_SABER_TANK:          return "B";
         
         // Separatist (uppercase)
         case UNIT_BATTLE_DROID:        return "B";
         case UNIT_SUPER_BATTLE_DROID:  return "S";
         case UNIT_DROID_SNIPER:        return "S";
         case UNIT_DROID_OFFICER:       return "O";
-        case UNIT_MEDIUM_DROID_GUNNER: return "M";
-        case UNIT_HEAVY_DROID_GUNNER:  return "H";
-        case UNIT_DROID_ROCKET:        return "R";
-        case UNIT_SPIDER_DROID:        return "P";
         case UNIT_STAP:                return "T";
-        case UNIT_AAT:                 return "T";
         
         default: return "???";
     }

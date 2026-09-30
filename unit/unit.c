@@ -98,28 +98,14 @@ const char* get_unit_type_name(UnitType type) {
         case UNIT_ELITE_CLONE: return "UNIT_ELITE_CLONE";
         case UNIT_CLONE_SNIPER: return "UNIT_CLONE_SNIPER";
         case UNIT_CLONE_OFFICER: return "UNIT_CLONE_OFFICER";
-
-        case UNIT_LIGHT_CLONE_GUNNER: return "UNIT_LIGHT_CLONE_GUNNER";
-        case UNIT_MEDIUM_CLONE_GUNNER: return "UNIT_MEDIUM_CLONE_GUNNER";
-        case UNIT_HEAVY_CLONE_GUNNER: return "UNIT_HEAVY_CLONE_GUNNER";
-        case UNIT_CLONE_ROCKET: return "UNIT_CLONE_ROCKET";
-
-        case UNIT_SWAMP_SPEEDER: return "UNIT_SWAMP_SPEEDER";
         case UNIT_BARC_SPEEDER: return "UNIT_BARC_SPEEDER";
-        case UNIT_SABER_TANK: return "UNIT_SABER_TANK";
 
         case UNIT_BATTLE_DROID: return "UNIT_BATTLE_DROID";
         case UNIT_SUPER_BATTLE_DROID: return "UNIT_SUPER_BATTLE_DROID";
         case UNIT_DROID_SNIPER: return "UNIT_DROID_SNIPER";
         case UNIT_DROID_OFFICER: return "UNIT_DROID_OFFICER";
 
-        case UNIT_MEDIUM_DROID_GUNNER: return "UNIT_MEDIUM_DROID_GUNNER";
-        case UNIT_HEAVY_DROID_GUNNER: return "UNIT_HEAVY_DROID_GUNNER";
-        case UNIT_DROID_ROCKET: return "UNIT_DROID_ROCKET";
-
-        case UNIT_SPIDER_DROID: return "UNIT_SPIDER_DROID";
         case UNIT_STAP: return "UNIT_STAP";
-        case UNIT_AAT: return "UNIT_AAT";
         default: return "UNKNOWN";
     }
 }
@@ -169,87 +155,6 @@ void add_weapon(Unit* unit, WeaponType type, int ammo) {
             w->penetration_bonus = 0;
             w->range = 12;
             w->explosion_radius = 2;
-            break;
-        case WEAPON_ROCKET:
-            w->weapon_shots = 1;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 1;
-            w->range = 16;
-            w->explosion_radius = 1;
-            break;
-
-        // Machine guns
-        case WEAPON_SUB_MG:
-            w->weapon_shots = 2;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 0;
-            w->range = 18;
-            w->explosion_radius = 0;
-            break;
-        case WEAPON_LIGHT_MG:
-            w->weapon_shots = 4;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 0;
-            w->range = 24;
-            w->explosion_radius = 0;
-            break;
-        case WEAPON_MEDIUM_MG:
-            w->weapon_shots = 6;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 0;
-            w->range = 36;
-            w->explosion_radius = 0;
-            break;
-        case WEAPON_HEAVY_MG:
-            w->weapon_shots = 6;
-            w->damage_bonus = 1;
-            w->penetration_bonus = 1;
-            w->range = 36;
-            w->explosion_radius = 0;
-            break;
-
-        // Anti-Tank weapons
-        case WEAPON_LIGHT_AT:
-            w->weapon_shots = 1;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 4;
-            w->range = 48;
-            w->explosion_radius = 1;
-            break;
-        case WEAPON_MEDIUM_AT:
-            w->weapon_shots = 1;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 5;
-            w->range = 60;
-            w->explosion_radius = 1;
-            break;
-        case WEAPON_BLASTER_CANNON:
-            w->weapon_shots = 2;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 2;
-            w->range = 48;
-            w->explosion_radius = 1;
-            break;
-        case WEAPON_DUAL_BLASTER_CANNON:
-            w->weapon_shots = 4;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 2;
-            w->range = 48;
-            w->explosion_radius = 1;
-            break;
-        case WEAPON_MISSILE_POD:
-            w->weapon_shots = 1;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 5;
-            w->range = 24;
-            w->explosion_radius = 1;
-            break;
-        case WEAPON_BEAM_CANNON:
-            w->weapon_shots = 2;
-            w->damage_bonus = 0;
-            w->penetration_bonus = 3;
-            w->range = 72;
-            w->explosion_radius = 1;
             break;
         default:
             w->weapon_shots = 1;
