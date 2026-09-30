@@ -1,0 +1,41 @@
+# Best co-evolved genomes for strategy
+
+[REPUBLIC]
+advance_distance 9.53
+flanking_bias 0.86
+retreat_hp_ratio 0.29
+cohesion_threshold 2.43
+aggression_bias 0.51
+aggression_curve 2.66
+target_priority 0.46
+ally_proximity 6.31
+threat_weight 0.98
+focus_fire_tendency 0.00
+flank_left_weight 4.71
+flank_right_weight 7.42
+breakthrough_weight 6.14
+fallback_weight 8.95
+edge_avoidance_weight 1.00
+deploy_horizontal_spread 6.96
+deploy_vertical_offset 5.06
+deploy_flank_bias -1.73
+
+[SEPARATIST]
+advance_distance 16.35
+flanking_bias 0.78
+retreat_hp_ratio 0.49
+cohesion_threshold 5.86
+aggression_bias 0.85
+aggression_curve 3.95
+target_priority 0.38
+ally_proximity 3.96
+threat_weight 0.13
+focus_fire_tendency 0.08
+flank_left_weight 2.48
+flank_right_weight 0.07
+breakthrough_weight 7.00
+fallback_weight 2.77
+edge_avoidance_weight 0.00
+deploy_horizontal_spread 4.54
+deploy_vertical_offset 1.82
+deploy_flank_bias -2.00

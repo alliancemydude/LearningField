@@ -1,0 +1,9 @@
+# Best unit genome for Separatist
+
+[UNIT_SPEARMAN]
+aggression 0.00
+ally_proximity 2.00
+retreat_hp_ratio 0.10
+preferred_range 0.00
+danger_range 0.00
+

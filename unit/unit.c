@@ -41,7 +41,7 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->rally_bonus = bp->rally_bonus;
     unit->armor_class = bp->armor_class;
     unit->point_value = bp->point_value;
-    unit->is_armor = bp->is_armor;
+    unit->is_ranged = bp->is_ranged;
     unit->units_count = bp->units_count;
     unit->attacks_per_unit = bp->attacks_per_unit;
 
@@ -50,7 +50,6 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
 
     // Unpack the array into usable variables
     unit->effective_aggression = ug->unit_aggression;
-    unit->effective_explosive_threshold = ug->unit_explosive_threshold;
     unit->effective_ally_proximity = ug->unit_ally_proximity;
     unit->effective_retreat_hp_ratio = ug->unit_retreat_hp_ratio;
     unit->preferred_range = ug->preferred_range;
@@ -122,31 +121,26 @@ void add_weapon(Unit* unit, WeaponType type) {
     switch (type) {
         case WEAPON_SWORD:
             w->damage_bonus = 1;
-            w->penetration_bonus = 0;
             w->range = 2;
             w->explosion_radius = 0;
             break;
         case WEAPON_SPEAR:
             w->damage_bonus = 0;
-            w->penetration_bonus = 0;
             w->range = 4;
             w->explosion_radius = 0;
             break;
         case WEAPON_LONGBOW:
             w->damage_bonus = 0;
-            w->penetration_bonus = 1;
             w->range = 24;
             w->explosion_radius = 0;
             break;
         case WEAPON_SHORTBOW:
             w->damage_bonus = 1;
-            w->penetration_bonus = 0;
             w->range = 16;
             w->explosion_radius = 0;
             break;
         default:
             w->damage_bonus = 0;
-            w->penetration_bonus = 0;
             w->range = 2;
             w->explosion_radius = 0;
             break;
@@ -158,7 +152,6 @@ void clear_weapons(Unit* unit) {
     // Reset all weapons stats for a unit
     for (int i = 0; i < WEAPON_COUNT; i++) {
         unit->weapons[i].type = (WeaponType)i;
-        unit->weapons[i].penetration_bonus = 0;
         unit->weapons[i].range = 0;
         unit->weapons[i].damage_bonus = 0;
         unit->weapons[i].equipped = false;

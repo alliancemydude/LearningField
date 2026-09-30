@@ -98,34 +98,19 @@ bool execute_attack(Unit* unit, Unit* target, bool advanced, Battlefield* field)
         // This weapon is valid, load its stats
         int current_soldiers = unit->units_count;
         int attacks = current_soldiers * unit->attacks_per_unit;
-        int penetration = w->penetration_bonus;
         int damage_bonus = w->damage_bonus;
         int hits = 0;
 
         // Roll attack for each shot
-        if (!target->is_armor) { // if the target is not armor, roll normally
-            for (int attack_number = 0; attack_number < attacks; attack_number++) {
-                int attack_roll = roll(1, 6) + damage_bonus;
-                if (advanced) {
-                    attack_roll -= 1;  // Penalty for advancing
-                }
-
-                if (attack_roll >= target->armor_class) {
-                    hits++;
-                    battle_stats.shots_hit++;
-                }
+        for (int attack_number = 0; attack_number < attacks; attack_number++) {
+            int attack_roll = roll(1, 6);
+            if (advanced) {
+                attack_roll -= 1;  // Penalty for advancing
             }
-        } else { // the target is armor, which uses penetration
-            for (int attack_number = 0; attack_number < attacks; attack_number++) {
-                int attack_roll = roll(1, 6) + penetration;
-                if (advanced) {
-                    attack_roll -= 1;  // Penalty for advancing
-                }
 
-                if (attack_roll >= target->armor_class) {
-                    hits++;
-                    battle_stats.shots_hit++;
-                }
+            if (attack_roll >= target->armor_class) {
+                hits++;
+                battle_stats.shots_hit++;
             }
         }
 
@@ -134,7 +119,6 @@ bool execute_attack(Unit* unit, Unit* target, bool advanced, Battlefield* field)
         if (hits == 0) {
             continue;
         }
-        
 
         // Give the enemy a pin marker (if any hits were scored)
         if (hits > 0) {
@@ -143,39 +127,11 @@ bool execute_attack(Unit* unit, Unit* target, bool advanced, Battlefield* field)
 
         // Deal damage
         int kills = 0;
-        bool critical = false;
         
-        if (target->is_armor && !critical) { // Armored target (vehicle)
-            for (int h = 0; h < hits; h++) {
-                int damage = roll(1, 6);
-
-                if (damage == 1) {
-                    // Crew stunned, extra pin marker
-                    add_pin_marker(target);
-                } else if (damage == 2) {
-                    // Vehicle immobilized, extra pin
-                    target->is_immobilized = true;
-                    add_pin_marker(target);
-                } else if (damage == 3) {
-                    // Vehicle on fire, extra pin + morale check
-                    add_pin_marker(target);
-                    if (morale_check(target) == 0) {
-                        kills++;
-                    }
-                } else {
-                    // Vehicle destroyed
-                    kills++;
-                }
-            }
-        } else if (critical) {
-            // Snipers always kill on a hit
-            kills = hits;
-        } else { // Soft target (infantry)
-            for (int h = 0; h < hits; h++) {
-                int damage = roll(1, 6);
-                if (damage >= 4) {
-                    kills++;
-                }
+        for (int h = 0; h < hits; h++) {
+            int damage = roll(1, 6) + damage_bonus;
+            if (damage >= target->armor_class) {
+                kills++;
             }
         }
 
@@ -218,34 +174,19 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
         // This weapon is valid, load its stats
         int current_soldiers = unit->units_count;
         int shots = current_soldiers * unit->attacks_per_unit;
-        int penetration = w->penetration_bonus;
         int damage_bonus = w->damage_bonus;
         int hits = 0;
 
         // Roll attack for each shot
-        if (!target->is_armor) { // if the target is not armor, roll normally
-            for (int shot = 0; shot < shots; shot++) {
-                int attack_roll = roll(1, 6) + damage_bonus;
-                if (advanced) {
-                    attack_roll -= 1;  // Penalty for advancing
-                }
-
-                if (attack_roll >= target->armor_class) {
-                    hits++;
-                    battle_stats.shots_hit++;
-                }
+        for (int shot = 0; shot < shots; shot++) {
+            int attack_roll = roll(1, 6) + damage_bonus;
+            if (advanced) {
+                attack_roll -= 1;  // Penalty for advancing
             }
-        } else { // the target is armor, which uses penetration
-            for (int shot = 0; shot < shots; shot++) {
-                int attack_roll = roll(1, 6) + penetration;
-                if (advanced) {
-                    attack_roll -= 1;  // Penalty for advancing
-                }
 
-                if (attack_roll >= target->armor_class) {
-                    hits++;
-                    battle_stats.shots_hit++;
-                }
+            if (attack_roll >= target->armor_class) {
+                hits++;
+                battle_stats.shots_hit++;
             }
         }
 
@@ -271,19 +212,12 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
                     Unit* enemy = nearby[j];
                     if (enemy == target) continue;   // primary already takes direct damage
 
-                    if (enemy->is_armor) continue;
-
                     int kills = 0;
-                    if (enemy->is_armor) {
-                        int damage = roll(1, 6);
-                        if (damage == 1) add_pin_marker(enemy);
-                        else if (damage == 2) { enemy->is_immobilized = true; add_pin_marker(enemy); }
-                        else if (damage == 3) { add_pin_marker(enemy); if (morale_check(enemy) == 0) kills = 1; }
-                        else kills = 1;
-                    } else {
-                        int damage_roll = roll(1, 6) + damage_bonus;   // splash uses weapon's damage bonus
-                        if (damage_roll >= 4) kills = 1;
-                    }
+                    int damage = roll(1, 6);
+                    if (damage == 1) add_pin_marker(enemy);
+                    else if (damage == 2) { enemy->is_immobilized = true; add_pin_marker(enemy); }
+                    else if (damage == 3) { add_pin_marker(enemy); if (morale_check(enemy) == 0) kills = 1; }
+                    else kills = 1;
 
                     if (kills > 0) take_damage(enemy, kills);
 
@@ -296,35 +230,10 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
 
         // Deal damage
         int kills = 0;
-        
-        if (target->is_armor) { // Armored target (vehicle)
-            for (int h = 0; h < hits; h++) {
-                int damage = roll(1, 6);
-
-                if (damage == 1) {
-                    // Crew stunned, extra pin marker
-                    add_pin_marker(target);
-                } else if (damage == 2) {
-                    // Vehicle immobilized, extra pin
-                    target->is_immobilized = true;
-                    add_pin_marker(target);
-                } else if (damage == 3) {
-                    // Vehicle on fire, extra pin + morale check
-                    add_pin_marker(target);
-                    if (morale_check(target) == 0) {
-                        kills++;
-                    }
-                } else {
-                    // Vehicle destroyed
-                    kills++;
-                }
-            }
-        } else { // Soft target (infantry)
-            for (int h = 0; h < hits; h++) {
-                int damage = roll(1, 6);
-                if (damage >= 4) {
-                    kills++;
-                }
+        for (int h = 0; h < hits; h++) {
+            int damage = roll(1, 6);
+            if (damage >= 4) {
+                kills++;
             }
         }
 

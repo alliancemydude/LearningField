@@ -6,7 +6,6 @@
 
 // Combat mechanics
 int morale_check(Unit* unit);
-bool has_explosives(Unit* unit);
 int take_damage(Unit* unit, int kills);
 void add_pin_marker(Unit* unit);
 

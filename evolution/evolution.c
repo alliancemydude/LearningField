@@ -25,7 +25,6 @@ const GeneInfo STRATEGY_GENES[] = {
     // Tactical (CAT_TACTICAL)
     {"advance_distance", 8.0f, 25.0f, 12.00f, CAT_TACTICAL},    // If the enemy center > than advance_dist * aggr_bias, advance. Smaller = aggressive
     {"flanking_bias", 0.5f, 2.0f, 1.3f, CAT_TACTICAL},          // Lateral movement when advancing 0.5 = straight, 2.0 da long way
-    {"explosive_threshold", 1.0f, 4.0f, 2.0f, CAT_TACTICAL},   // Minimum enemies in a blast radius. 1 = single enemies, 4 = dense enemies
     {"retreat_hp_ratio", 0.1f, 0.6f, 0.3f, CAT_TACTICAL},      // If HP is below max_hp * retreat_hp_ratio, retreat. lower = in fight longer
     {"cohesion_threshold", 2.0f, 8.0f, 5.0f, CAT_TACTICAL},    // Maximum distance from the squad center. 2 = tight formation, 8 = loose formation
     
@@ -51,7 +50,6 @@ const size_t STRATEGY_GENE_COUNT = sizeof(STRATEGY_GENES) / sizeof(GeneInfo);
 
 const GeneInfo UNIT_GENES[] = {
     {"aggression", 0.0f, 1.0f, 0.5f, CAT_ALL},
-    {"explosive_threshold", 1.0f, 4.0f, 2.0f, CAT_ALL},
     {"ally_proximity", 2.0f, 8.0f, 5.0f, CAT_ALL},
     {"retreat_hp_ratio", 0.1f, 0.6f, 0.3f, CAT_ALL},
     {"preferred_range", 0.0f, 36.0f, 12.0f, CAT_ALL},
@@ -61,19 +59,19 @@ const size_t UNIT_TYPE_GENE_COUNT = sizeof(UNIT_GENES) / sizeof(GeneInfo);
 const size_t UNIT_GENE_COUNT = UNIT_TYPE_COUNT * UNIT_TYPE_GENE_COUNT;
 
 // Evolution parameters
-int battles_min = 50;
-int battles_max = 100;
+int battles_min = 20;
+int battles_max = 40;
 int current_battles = 20;
 
-int pop_size = 30;
-int num_generations = 30;
+int pop_size = 20;
+int num_generations = 15;
 
 float mutation_rate_start = 0.5f;
 float mutation_rate_end = 0.2f;
 float mutation_delta_start = 0.4f;
 float mutation_delta_end = 0.1f;
 
-int max_plateau_generations = 25;
+int max_plateau_generations = 12;
 float improvement_threshold = 0.005f;
 float crossover_rate = 0.8f;
 
@@ -177,32 +175,32 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
             unit_genomes[i].unit_aggression = rep_weights[base + 0];
             CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
 
-            unit_genomes[i].unit_ally_proximity = rep_weights[base + 2];
+            unit_genomes[i].unit_ally_proximity = rep_weights[base + 1];
             CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);
 
-            unit_genomes[i].unit_retreat_hp_ratio = rep_weights[base + 4];
+            unit_genomes[i].unit_retreat_hp_ratio = rep_weights[base + 2];
             CLAMP(unit_genomes[i].unit_retreat_hp_ratio, 0.1f, 0.6f);
 
-            unit_genomes[i].preferred_range = rep_weights[base + 5];
+            unit_genomes[i].preferred_range = rep_weights[base + 3];
             CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
 
-            unit_genomes[i].danger_range = rep_weights[base + 6];
+            unit_genomes[i].danger_range = rep_weights[base + 4];
             CLAMP(unit_genomes[i].danger_range, 0.0f, 20.0f);
 
         } else if (f == FACTION_SEPARATIST) {
             unit_genomes[i].unit_aggression = sep_weights[base + 0];
             CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
 
-            unit_genomes[i].unit_ally_proximity = sep_weights[base + 2];
+            unit_genomes[i].unit_ally_proximity = sep_weights[base + 1];
             CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);
 
-            unit_genomes[i].unit_retreat_hp_ratio = sep_weights[base + 4];
+            unit_genomes[i].unit_retreat_hp_ratio = sep_weights[base + 2];
             CLAMP(unit_genomes[i].unit_retreat_hp_ratio, 0.1f, 0.6f);
 
-            unit_genomes[i].preferred_range = sep_weights[base + 5];
+            unit_genomes[i].preferred_range = sep_weights[base + 3];
             CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
 
-            unit_genomes[i].danger_range = sep_weights[base + 6];
+            unit_genomes[i].danger_range = sep_weights[base + 4];
             CLAMP(unit_genomes[i].danger_range, 0.0f, 20.0f);
         }
     }
@@ -429,33 +427,24 @@ void print_unit_genome(const float* w, Faction faction, const char* name) {
     for (unsigned int i = 0; i < UNIT_TYPE_COUNT; i++) {
         UnitType type = (UnitType)i;
         if (get_faction_of_unit(type) != faction) continue;
-        // Only print if this unit type is used in the composition
         if (!is_unit_used_in_composition(type)) continue;
+
         int base = i * UNIT_TYPE_GENE_COUNT;
         const char* type_name = get_unit_type_name(type);
         printf("  [%s]\n", type_name);
+
         for (size_t g = 0; g < UNIT_TYPE_GENE_COUNT; g++) {
-            // Clamp value to bounds for display
+            // Clamp to the gene's declared bounds so display is always valid
             float val = w[base + g];
-            // Apply clamping (same as in evaluate_unit_pair)
-            #define CLAMP_PRINT(value, min_val, max_val) \
-                do { if ((value) < (min_val)) (value) = (min_val); \
-                     if ((value) > (max_val)) (value) = (max_val); } while(0)
-            if (g == 0) CLAMP_PRINT(val, 0.0f, 1.0f);
-            else if (g == 1) CLAMP_PRINT(val, 1.0f, 4.0f);
-            else if (g == 2) CLAMP_PRINT(val, 2.0f, 8.0f);
-            else if (g == 3) CLAMP_PRINT(val, 0.0f, 1.0f);
-            else if (g == 4) CLAMP_PRINT(val, 0.1f, 0.6f);
-            else if (g == 5) CLAMP_PRINT(val, 0.0f, 36.0f);
-            else if (g == 6) CLAMP_PRINT(val, 0.0f, 20.0f);
-            #undef CLAMP_PRINT
+            if (val < UNIT_GENES[g].min) val = UNIT_GENES[g].min;
+            if (val > UNIT_GENES[g].max) val = UNIT_GENES[g].max;
             printf("    %s: %.2f\n", UNIT_GENES[g].name, val);
         }
     }
 }
 
 void save_unit_genome(const float* weights, Faction faction, const char* prefix) {
-    (void)prefix; // shut up about the parameters
+    (void)prefix;
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
     char filename[128];
@@ -463,36 +452,28 @@ void save_unit_genome(const float* weights, Faction faction, const char* prefix)
     strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", tm);
     const char* faction_name = (faction == FACTION_REPUBLIC) ? "republic" : "separatist";
     snprintf(filename, sizeof(filename), "best_unit_%s_%s.txt", faction_name, time_str);
+
     FILE* f = fopen(filename, "w");
     if (!f) {
         printf("Error: Could not save unit genome.\n");
         return;
     }
-    fprintf(f, "# Best unit genome for %s\n\n", (faction == FACTION_REPUBLIC) ? "Republic" : "Separatist");
+    fprintf(f, "# Best unit genome for %s\n\n",
+            (faction == FACTION_REPUBLIC) ? "Republic" : "Separatist");
 
     for (unsigned int i = 0; i < UNIT_TYPE_COUNT; i++) {
         UnitType type = (UnitType)i;
         if (get_faction_of_unit(type) != faction) continue;
-        // Only save units that are used in the composition
         if (!is_unit_used_in_composition(type)) continue;
 
         int base = i * UNIT_TYPE_GENE_COUNT;
         const char* type_name = get_unit_type_name(type);
         fprintf(f, "[%s]\n", type_name);
+
         for (size_t g = 0; g < UNIT_TYPE_GENE_COUNT; g++) {
-            // Clamp value to bounds before saving)
             float val = weights[base + g];
-            #define CLAMP_SAVE(value, min_val, max_val) \
-                do { if ((value) < (min_val)) (value) = (min_val); \
-                     if ((value) > (max_val)) (value) = (max_val); } while(0)
-            if (g == 0) CLAMP_SAVE(val, 0.0f, 1.0f);
-            else if (g == 1) CLAMP_SAVE(val, 1.0f, 4.0f);
-            else if (g == 2) CLAMP_SAVE(val, 2.0f, 8.0f);
-            else if (g == 3) CLAMP_SAVE(val, 0.0f, 1.0f);
-            else if (g == 4) CLAMP_SAVE(val, 0.1f, 0.6f);
-            else if (g == 5) CLAMP_SAVE(val, 0.0f, 36.0f);
-            else if (g == 6) CLAMP_SAVE(val, 0.0f, 20.0f);
-            #undef CLAMP_SAVE
+            if (val < UNIT_GENES[g].min) val = UNIT_GENES[g].min;
+            if (val > UNIT_GENES[g].max) val = UNIT_GENES[g].max;
             fprintf(f, "%s %.2f\n", UNIT_GENES[g].name, val);
         }
         fprintf(f, "\n");

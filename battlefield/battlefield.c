@@ -11,7 +11,7 @@
 
 // Default force compositions
 ForceComposition default_republic_composition[] = {
-    {UNIT_SWORDSMAN,        12},
+    {UNIT_SWORDSMAN,        16},
     {UNIT_ELITE_SWORDSMAN,  0},
     {UNIT_LONGBOWMAN,       0},
     {UNIT_HORSEMAN,         0}
@@ -19,7 +19,7 @@ ForceComposition default_republic_composition[] = {
 int default_republic_composition_count = sizeof(default_republic_composition) / sizeof(default_republic_composition[0]);
 
 ForceComposition default_separatist_composition[] = {
-    {UNIT_SPEARMAN,         6},
+    {UNIT_SPEARMAN,         12},
     {UNIT_ELITE_SPEARMAN,   0},
     {UNIT_SHORTBOWMAN,      0},
     {UNIT_CAMELMAN,         0}
@@ -52,104 +52,68 @@ bool turn_based = false;
 bool print_battle_summary_flag = false;
 
 // Initialization
-void resolve_overlaps(Battlefield* field) {
-    // check if any units overlap
-    bool any_overlap = false;
-    for (int i = 0; i < field->unit_count && !any_overlap; i++) {
-        Unit* a = field->units[i];
-        if (a == NULL || a->hp <= 0) continue;
-        for (int j = i + 1; j < field->unit_count; j++) {
-            Unit* b = field->units[j];
-            if (b == NULL || b->hp <= 0) continue;
-            if (a->x == b->x && a->y == b->y) {
-                any_overlap = true;
-                break;
+static bool try_relocate(Battlefield* field, Unit* u) {
+    // 1. Try the 8 adjacent tiles first
+    static const int dx[] = {0, 0, -1, 1, -1, -1, 1, 1};
+    static const int dy[] = {-1, 1, 0, 0, -1, 1, -1, 1};
+    for (int d = 0; d < 8; d++) {
+        int nx = u->x + dx[d];
+        int ny = u->y + dy[d];
+        if (is_tile_walkable(field, nx, ny, u)) {
+            u->x = nx;
+            u->y = ny;
+            return true;
+        }
+    }
+    // 2. Expand outward, perimeter of increasing radii
+    for (int radius = 2; radius <= 4; radius++) {
+        for (int d = -radius; d <= radius; d++) {
+            // Top and bottom edges of the ring
+            for (int sign = -1; sign <= 1; sign += 2) {
+                int nx = u->x + d;
+                int ny = u->y + sign * radius;
+                if (is_tile_walkable(field, nx, ny, u)) {
+                    u->x = nx; u->y = ny; return true;
+                }
+                nx = u->x + sign * radius;
+                ny = u->y + d;
+                if (is_tile_walkable(field, nx, ny, u)) {
+                    u->x = nx; u->y = ny; return true;
+                }
             }
         }
     }
-    if (!any_overlap) return; // nothing to resolve
+    // 3. Random fallback
+    for (int attempt = 0; attempt < 30; attempt++) {
+        int nx = roll(0, field->width - 1);
+        int ny = roll(0, field->height - 1);
+        if (is_tile_walkable(field, nx, ny, u)) {
+            u->x = nx;
+            u->y = ny;
+            return true;
+        }
+    }
+    return false; // map is full
+}
 
-    int max_iterations = 200;
-    while (any_overlap && max_iterations-- > 0) {
-        any_overlap = false;
+void resolve_overlaps(Battlefield* field) {
+    const int max_passes = 20;
+    for (int pass = 0; pass < max_passes; pass++) {
+        bool any_moved = false;
         for (int i = 0; i < field->unit_count; i++) {
             Unit* a = field->units[i];
             if (a == NULL || a->hp <= 0) continue;
             for (int j = i + 1; j < field->unit_count; j++) {
                 Unit* b = field->units[j];
                 if (b == NULL || b->hp <= 0) continue;
-                if (a->x == b->x && a->y == b->y) {
-                    any_overlap = true;
+                if (a->x != b->x || a->y != b->y) continue;
 
-                    // Try to move b to an adjacent free tile (cardinal directions first)
-                    bool moved = false;
-                    int dx_attempts[] = {0, 0, -1, 1};
-                    int dy_attempts[] = {-1, 1, 0, 0};
-                    for (int d = 0; d < 4; d++) {
-                        int nx = b->x + dx_attempts[d];
-                        int ny = b->y + dy_attempts[d];
-                        if (is_tile_walkable(field, nx, ny, b)) {
-                            b->x = nx;
-                            b->y = ny;
-                            moved = true;
-                            i = -1; // restart outer loop
-                            break;
-                        }
-                    }
-
-                    // If cardinal directions blocked, try diagonals
-                    if (!moved) {
-                        int dx_diag[] = {-1, -1, 1, 1};
-                        int dy_diag[] = {-1, 1, -1, 1};
-                        for (int d = 0; d < 4; d++) {
-                            int nx = b->x + dx_diag[d];
-                            int ny = b->y + dy_diag[d];
-                            if (is_tile_walkable(field, nx, ny, b)) {
-                                b->x = nx;
-                                b->y = ny;
-                                moved = true;
-                                i = -1;
-                                break;
-                            }
-                        }
-                    }
-
-                    // If still blocked, expand radius gradually (max 3)
-                    if (!moved) {
-                        for (int radius = 2; radius <= 3 && !moved; radius++) {
-                            for (int dy = -radius; dy <= radius && !moved; dy++) {
-                                for (int dx = -radius; dx <= radius && !moved; dx++) {
-                                    if (dx == 0 && dy == 0) continue;
-                                    int nx = b->x + dx;
-                                    int ny = b->y + dy;
-                                    if (is_tile_walkable(field, nx, ny, b)) {
-                                        b->x = nx;
-                                        b->y = ny;
-                                        moved = true;
-                                        i = -1;
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // Last resort: random placement (limited attempts)
-                    if (!moved) {
-                        for (int attempt = 0; attempt < 30; attempt++) {
-                            int nx = roll(0, field->width - 1);
-                            int ny = roll(0, field->height - 1);
-                            if (is_tile_walkable(field, nx, ny, b)) {
-                                b->x = nx;
-                                b->y = ny;
-                                moved = true;
-                                i = -1;
-                                break;
-                            }
-                        }
-                    }
+                if (try_relocate(field, b)) {
+                    any_moved = true;
                 }
             }
         }
+        if (!any_moved) return; // stable
     }
 }
 

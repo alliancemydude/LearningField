@@ -8,7 +8,6 @@
 // Weapon struct, where stats are kept
 typedef struct {
     WeaponType type;
-    int penetration_bonus;
     int damage_bonus;
     int range;
     bool equipped;
@@ -31,7 +30,7 @@ typedef struct Unit {
     int morale;
     int armor_class;
     int point_value;
-    bool is_armor;
+    bool is_ranged;
     int units_count;
     int attacks_per_unit;
     int max_range;

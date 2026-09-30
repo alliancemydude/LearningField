@@ -56,6 +56,7 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
     target = NULL;
     bool acted = false;
     int action_taken = -1;
+    bool is_ranged = unit->is_ranged;
 
     // Use normal strategic orders if none are given
     StrategicOrder* effective_order = order;
@@ -125,7 +126,7 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
 
     // 2. Fire or attack, if an enemy is in range
     int max_range = unit->max_range;
-    if (max_range > 4) {
+    if (is_ranged) {
         // Fire at range
         Unit* fire_target = NULL;
 
@@ -169,7 +170,7 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
             int max_advance_dist = max_range + unit->half_movement;
             if (dist_sq > unit->preferred_range_sq && dist_sq <= max_advance_dist * max_advance_dist) {
                 move_toward_target(unit, enemy, unit->half_movement, field);
-                if (max_range > 4) {
+                if (is_ranged) {
                     acted = execute_fire(unit, enemy, true, field);
                     if (acted) { action_taken = ACTION_ADVANCE_FIRE; goto action_done; }
                 } else {
@@ -184,7 +185,7 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
     // 4. Retreat (if enemy is within danger range)
     if (!acted && !(effective_order && effective_order->type == ORDER_ADVANCE)) {
         if (evaluate_enemies(unit, field, 'r', strat)) {
-            if (unit->hp < unit->max_hp * 0.3f || unit->pin_markers >= 2) {
+            if (unit->hp < unit->max_hp * final_retreat_hp_ratio || unit->pin_markers >= 2) {
                 execute_retreat(unit, target, field);
                 acted = true;
                 action_taken = ACTION_RETREAT;
@@ -294,45 +295,6 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
             case 6: action_counts.retreat++; break;
         }
         action_counts.total++;
-    }
-}
-
-// Compare two units based on preference digit (1=HP, 2=Pins, 3=Value, 4=Armor)
-int compare_enemies_by_preference(const Unit* a, const Unit* b, int preference_digit) {
-    switch(preference_digit) {
-        case 1: // Lowest HP and not armored
-            if (a->hp < b->hp && !a->is_armor) {
-                return -1;
-            }
-            if (a->hp > b->hp && !b->is_armor) {
-                return 1;
-            }
-            return 0;
-        case 2: // Highest Pins
-            if (a->pin_markers > b->pin_markers && !a->is_armor) {
-                return -1;
-            }
-            if (a->pin_markers < b->pin_markers && !b->is_armor) {
-                return 1;
-            }
-            return 0;
-        case 3: // Highest Point Value
-            if (a->point_value > b->point_value && !a->is_armor) {
-                return -1;
-            }
-            if (a->point_value < b->point_value && !b->is_armor) {
-                return 1;
-            }
-            return 0;
-        case 4: // Highest Armor Class
-            if (a->armor_class > b->armor_class && !a->is_armor) {
-                return -1;
-            }
-            if (a->armor_class < b->armor_class && !b->is_armor) {
-                return 1;
-            }
-            return 0;
-        default: return 0;
     }
 }
 

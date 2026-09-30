@@ -21,7 +21,7 @@ typedef struct {
     int morale;
     int armor_class;
     int point_value;
-    bool is_armor;
+    bool is_ranged;
     int units_count;
     int attacks_per_unit;
     int attack_order;

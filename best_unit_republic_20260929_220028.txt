@@ -1,0 +1,9 @@
+# Best unit genome for Republic
+
+[UNIT_SWORDSMAN]
+aggression 0.73
+ally_proximity 5.77
+retreat_hp_ratio 0.13
+preferred_range 0.04
+danger_range 0.36
+

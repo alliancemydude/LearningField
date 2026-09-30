@@ -58,7 +58,7 @@ extern int total_actions_across_units;
 extern int units_that_acted;
 extern char battle_action_log[4096];
 extern bool turn_based;
-extern bool print_battle_summery_flag;
+extern bool print_battle_summary_flag;
 
 // Initialization:
 void resolve_overlaps(Battlefield* field);
