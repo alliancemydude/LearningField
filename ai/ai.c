@@ -49,6 +49,7 @@ void unit_turn(Unit* unit, Battlefield* field) {
     bool acted = false;
     int action_taken = -1;
     bool is_ranged = unit->is_ranged;
+    bool moved = false;
 
     FactionStrategy* strat = (unit->faction == FACTION_REPUBLIC)
                              ? &republic_strategy : &separatist_strategy;
@@ -82,9 +83,9 @@ void unit_turn(Unit* unit, Battlefield* field) {
         if (enemy) {
             int dist_sq = get_distance_squared(unit, enemy);
             int max_advance = max_range + unit->half_movement;
-            if (dist_sq > unit->preferred_range_sq
-                && dist_sq <= max_advance * max_advance) {
+            if (dist_sq > unit->preferred_range_sq && dist_sq <= max_advance * max_advance) {
                 move_toward_target(unit, enemy, unit->half_movement, field);
+                moved = true;
                 if (is_ranged) {
                     acted = execute_fire(unit, enemy, true, field);
                     if (acted) { action_taken = ACTION_ADVANCE_FIRE; goto action_done; }
@@ -92,31 +93,34 @@ void unit_turn(Unit* unit, Battlefield* field) {
                     acted = execute_attack(unit, enemy, true, field);
                     if (acted) { action_taken = ACTION_ADVANCE_ATTACK; goto action_done; }
                 }
+                // Attack missed but we already committed to the move — stop here.
+                action_taken = ACTION_ADVANCE_ATTACK;
+                goto action_done;
             }
         }
     }
 
     // 4. Move toward strategic target, or dash toward enemy
-    if (!acted) {
+    if (!acted && !moved) {
         int tx, ty;
         bool has_target = false;
 
         if (unit->role == ROLE_FLANK) {
-            // Flankers steer around the enemy
-            int ecx, ecy;
-            get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
-            int offset = (int)(strat->strategic.flanking_bias * 8.0f);
-            bool go_left = (unit->id % 2 == 0);
-            tx = ecx + (go_left ? -offset : offset);
-            ty = ecy;
-            has_target = true;
-        } else if (unit->effective_aggression > 0.5f) {
-            // Aggressive line units push toward the enemy center
-            int ecx, ecy;
-            get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
-            tx = ecx; ty = ecy;
-            has_target = true;
-        }
+        // Flankers steer around the enemy
+        int ecx, ecy;
+        get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
+        int offset = (int)(strat->strategic.flanking_bias * 8.0f);
+        bool go_left = (unit->id % 2 == 0);
+        tx = ecx + (go_left ? -offset : offset);
+        ty = ecy;
+        has_target = true;
+    } else {
+        // Line units advance toward the enemy center.
+        int ecx, ecy;
+        get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
+        tx = ecx; ty = ecy;
+        has_target = true;
+    }
         // else: passive line units hold position — no target
 
         if (has_target) {

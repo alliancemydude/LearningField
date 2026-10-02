@@ -47,6 +47,9 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->effective_ally_proximity = ug->unit_ally_proximity;
     unit->effective_retreat_hp_ratio = ug->unit_retreat_hp_ratio;
     unit->preferred_range = ug->preferred_range;
+    if (unit->preferred_range > unit->max_range) {
+        unit->preferred_range = unit->max_range;
+    }
     unit->danger_range = ug->danger_range;
     
     // Create preferences based on variables
