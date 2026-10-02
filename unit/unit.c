@@ -15,21 +15,15 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     const UnitBlueprint* bp = &unit_blueprints[type];
 
     // Create the unit object
-    Unit* unit = malloc(sizeof(Unit));
+    Unit* unit = calloc(1, sizeof(Unit));
     if (!unit) {
         return NULL;
     }
-
-    // Reset orders
-    unit->strategic_order.type = ORDER_NONE;
-    unit->strategic_order.target_x = 0;
-    unit->strategic_order.target_y = 0;
     
     // Reset identity
     unit->id = id;
     unit->type = type;
     unit->faction = bp->faction;
-    unit->squad_id = -1;
     
     // Give stats according to blueprints
     unit->hp = bp->hp;
@@ -54,7 +48,6 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->effective_retreat_hp_ratio = ug->unit_retreat_hp_ratio;
     unit->preferred_range = ug->preferred_range;
     unit->danger_range = ug->danger_range;
-    unit->focus_target = NULL;
     
     // Create preferences based on variables
     unit->attack_order = bp->attack_order;

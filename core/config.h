@@ -30,7 +30,7 @@ typedef enum {
 } Faction;
 
 // Constants
-#define MAX_UNITS 100
+#define MAX_UNITS 200
 #define MAX_ROWS 60
 #define MAX_COLS 48
 #define MAX_TURNS 35

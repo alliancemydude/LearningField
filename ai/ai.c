@@ -18,32 +18,25 @@ bool evaluate_enemies(Unit* unit, Battlefield* field, char type, FactionStrategy
     int max_range = unit->max_range;
     switch(type) {
         case 'a': // Attack
-            if (max_range == 0) {
-                return false;
-            }
+            if (max_range == 0) return false;
             target = select_enemy_by_preference(unit, field, max_range, &strat->strategic);
             return (target != NULL);
 
         case 'f': // Fire
-            if (max_range == 0) {
-                return false;
-            }
+            if (max_range == 0) return false;
             target = select_enemy_by_preference(unit, field, max_range, &strat->strategic);
             return (target != NULL);
 
         case 'd': // Dash
-            // Select a target and run
             target = select_enemy_by_preference(unit, field, 100, &strat->strategic);
             return (target != NULL);
 
-        case 'r': // Retreat
+        case 'r': { // Retreat
             target = find_closest_enemy(unit, field);
-            if (!target) {
-                return false;
-            }
+            if (!target) return false;
             int dist = get_distance_squared(unit, target);
-            // Retreat if enemy is within danger_range
             return (dist <= unit->danger_range_sq);
+        }
 
         default:
             return false;
@@ -51,124 +44,46 @@ bool evaluate_enemies(Unit* unit, Battlefield* field, char type, FactionStrategy
 }
 
 // Unit turn
-void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
-    // Units follow an order of operations
+void unit_turn(Unit* unit, Battlefield* field) {
     target = NULL;
     bool acted = false;
     int action_taken = -1;
     bool is_ranged = unit->is_ranged;
 
-    // Use normal strategic orders if none are given
-    StrategicOrder* effective_order = order;
-    if (effective_order == NULL) {
-        effective_order = &unit->strategic_order;
-    }
+    FactionStrategy* strat = (unit->faction == FACTION_REPUBLIC)
+                             ? &republic_strategy : &separatist_strategy;
 
-    FactionStrategy* strat;
-    if (unit->faction == FACTION_REPUBLIC) {
-        strat = &republic_strategy;
-    } else {
-        strat = &separatist_strategy;
-    }
+    int max_range = unit->max_range;
 
-    // Multiply global by unit-specific modifier
-    float final_ally_proximity = strat->strategic.ally_proximity * unit->effective_ally_proximity;
-    float final_retreat_hp_ratio = strat->tactical.retreat_hp_ratio * unit->effective_retreat_hp_ratio;
-
-    // Adjust values to valid ranges
-    if (final_ally_proximity < 2.0f) {
-        final_ally_proximity = 2.0f;
-    }
-    if (final_ally_proximity > 8.0f) {
-        final_ally_proximity = 8.0f;
-    }
-    if (final_retreat_hp_ratio < 0.1f) {
-        final_retreat_hp_ratio = 0.1f;
-    }
-    if (final_retreat_hp_ratio > 0.6f) {
-        final_retreat_hp_ratio = 0.6f;
-    }
-
-    // Do strategic orders, if available
-    // Move away from the nearest enemy
-    if (effective_order && effective_order->type == ORDER_RETREAT) {
-        Unit* enemy = find_closest_enemy(unit, field);
-        if (enemy) {
-            execute_retreat(unit, enemy, field);
-            acted = true;
-            action_taken = ACTION_RETREAT;
-        } else {
-            // If there is no enemy, move toward the retreat target
-            if (effective_order->type == ORDER_MOVE_TO || effective_order->type == ORDER_RETREAT) {
-                execute_move(unit, field, effective_order->target_x, effective_order->target_y);
-                acted = true;
-                action_taken = ACTION_RETREAT;
-            }
-        }
-        // Mark as acted
-        goto action_done;
-    }
-
-    // Move toward the target point
-    if (effective_order && effective_order->type == ORDER_MOVE_TO) {
-        execute_move(unit, field, effective_order->target_x, effective_order->target_y);
-        acted = true;
-        action_taken = ACTION_DASH;
-        goto action_done;
-    }
-
-    // Do normal actions
     // 1. Emergency rally
     if (unit->pin_markers >= 3) {
         acted = execute_rally(unit);
         if (acted) { action_taken = ACTION_RALLY; goto action_done; }
     }
 
-    // 2. Fire or attack, if an enemy is in range
-    int max_range = unit->max_range;
-    if (is_ranged) {
-        // Fire at range
-        Unit* fire_target = NULL;
-
-        // Check focus fire order first
-        if (effective_order && effective_order->type == ORDER_FOCUS_FIRE) {
-            if (unit->focus_target && (get_distance_squared(unit, unit->focus_target) <= max_range * max_range)) {
-                fire_target = unit->focus_target;
-            }
-        }
-        if (!fire_target) {
-            if (evaluate_enemies(unit, field, 'f', strat)) {
-                fire_target = target;
-            }
-        }
+    // 2. Attack, if an enemy is in range
+    if (!acted) {
+        Unit* fire_target = select_enemy_by_preference(unit, field, max_range, &strat->strategic);
         if (fire_target) {
-            acted = execute_fire(unit, fire_target, false, field);
-            if (acted) { action_taken = ACTION_FIRE; goto action_done; }
-        }
-
-    } else {
-        // Melee attack
-        Unit* fire_target = NULL;
-
-        if (!fire_target) {
-            if (evaluate_enemies(unit, field, 'a', strat)) {
-                fire_target = target;
+            target = fire_target;
+            if (is_ranged) {
+                acted = execute_fire(unit, fire_target, false, field);
+                if (acted) { action_taken = ACTION_FIRE; goto action_done; }
+            } else {
+                acted = execute_attack(unit, fire_target, false, field);
+                if (acted) { action_taken = ACTION_ATTACK; goto action_done; }
             }
-        }
-
-        if (fire_target) {
-            acted = execute_attack(unit, fire_target, false, field);
-            if (acted) { action_taken = ACTION_ATTACK; goto action_done; }
         }
     }
 
-    // 3. Advance & Fire (if enemy beyond preferred range but within max range + half movement)
-    if (!acted && !(effective_order && effective_order->type == ORDER_DEFEND)) {
+    // 3. Advance and attack, if enemy is close enough
+    if (!acted) {
         Unit* enemy = find_closest_enemy(unit, field);
         if (enemy) {
             int dist_sq = get_distance_squared(unit, enemy);
-            int max_advance_dist = max_range + unit->half_movement;
-            if (dist_sq > unit->preferred_range_sq && dist_sq <= max_advance_dist * max_advance_dist) {
+            int max_advance = max_range + unit->half_movement;
+            if (dist_sq > unit->preferred_range_sq
+                && dist_sq <= max_advance * max_advance) {
                 move_toward_target(unit, enemy, unit->half_movement, field);
                 if (is_ranged) {
                     acted = execute_fire(unit, enemy, true, field);
@@ -177,81 +92,55 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
                     acted = execute_attack(unit, enemy, true, field);
                     if (acted) { action_taken = ACTION_ADVANCE_ATTACK; goto action_done; }
                 }
-                
             }
         }
     }
 
-    // 4. Retreat (if enemy is within danger range)
-    if (!acted && !(effective_order && effective_order->type == ORDER_ADVANCE)) {
-        if (evaluate_enemies(unit, field, 'r', strat)) {
-            if (unit->hp < unit->max_hp * final_retreat_hp_ratio || unit->pin_markers >= 2) {
-                execute_retreat(unit, target, field);
-                acted = true;
-                action_taken = ACTION_RETREAT;
-                goto action_done;
-            }
+    // 4. Move toward strategic target, or dash toward enemy
+    if (!acted) {
+        int tx, ty;
+        bool has_target = false;
+
+        if (unit->role == ROLE_FLANK) {
+            // Flankers steer around the enemy
+            int ecx, ecy;
+            get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
+            int offset = (int)(strat->strategic.flanking_bias * 8.0f);
+            bool go_left = (unit->id % 2 == 0);
+            tx = ecx + (go_left ? -offset : offset);
+            ty = ecy;
+            has_target = true;
+        } else if (unit->effective_aggression > 0.5f) {
+            // Aggressive line units push toward the enemy center
+            int ecx, ecy;
+            get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
+            tx = ecx; ty = ecy;
+            has_target = true;
+        }
+        // else: passive line units hold position — no target
+
+        if (has_target) {
+            execute_move(unit, field, tx, ty);
+            acted = true;
+            action_taken = ACTION_DASH;
         }
     }
 
-    // 5. Dash (move toward enemy if no target in range)
-    if (!acted && !(effective_order && effective_order->type == ORDER_DEFEND)) {
-        bool moved_formation = false;
-        if (effective_order && (effective_order->type == ORDER_ADVANCE || effective_order->type == ORDER_MOVE_TO
-            || effective_order->type == ORDER_FLANK_LEFT || effective_order->type == ORDER_FLANK_RIGHT
-            || effective_order->type == ORDER_BREAKTHROUGH || effective_order->type == ORDER_FALLBACK)) {
-            if (!unit->squad_moved) {
-                int move_amount = unit->half_movement;
-                if (move_amount < 1) move_amount = 1;
-                execute_squad_move(unit, field, effective_order->target_x, effective_order->target_y, move_amount);
-                int sid = unit->squad_id;
-                for (int i = 0; i < field->unit_count; i++) {
-                    Unit* other = field->units[i];
-                    if (other != NULL && other->hp > 0 && other->squad_id == sid) {
-                        other->squad_moved = true;
-                    }
-                }
-                moved_formation = true;
-                acted = true;
-                action_taken = ACTION_DASH;
-                goto action_done;
-            }
-        }
-        if (!moved_formation && evaluate_enemies(unit, field, 'd', strat)) {
-            if (target && unit->movement > 0 && !unit->is_immobilized) {
-                execute_dash(unit, target, field);
-                clamp_unit_position(unit, field);
-                acted = true;
-                action_taken = ACTION_DASH;
-                goto action_done;
-            }
-        }
-    }
-
-    // 6. If still not acted, rally (if pinned) or do nothing
+    // 5. Fallback: rally if pinned
     if (!acted) {
         if (unit->pin_markers > 0) {
             execute_rally(unit);
             action_taken = ACTION_RALLY;
-        } else {
-            action_taken = -1;
         }
         acted = true;
     }
 
-    action_done:
-
+action_done:
     if (turn_based) {
         const char* action_names[] = {
-            "Fire",             // 0 ACTION_FIRE
-            "Advance+Fire",     // 1 ACTION_ADVANCE_FIRE
-            "Attack",           // 2 ACTION_ATTACK
-            "Advance+Attack",   // 3 ACTION_ADVANCE_ATTACK
-            "Rally",            // 4 ACTION_RALLY
-            "Dash",             // 5 ACTION_DASH
-            "Retreat",          // 6 ACTION_RETREAT
-            "Cover",            // 7 ACTION_COVER
-            "Advance+Cover"     // 8 ACTION_ADVANCE_COVER
+            "Fire", "Advance+Fire",
+            "Attack", "Advance+Attack",
+            "Rally", "Dash", "Retreat", "Cover", "Advance+Cover"
         };
         char msg[128];
         const char* action_name;
@@ -275,7 +164,6 @@ void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order) {
 
     target = NULL;
 
-    // Tracking
     if (track_actions) {
         if (unit->actions_taken == 0 && !unit->has_acted) {
             units_that_acted++;
@@ -306,7 +194,7 @@ Unit* select_enemy_by_preference(Unit* unit, Battlefield* field, int max_range, 
     typedef struct { Unit* u; float rough_score; } Candidate;
     Candidate candidates[MAX_UNITS];
     int count = 0;
-    float max_dist = (float)unit->max_range;
+    float max_dist = (float)max_range;
     if (max_dist < 1.0f) max_dist = 1.0f;
 
     for (int i = 0; i < field->unit_count; i++) {

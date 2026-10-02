@@ -7,15 +7,26 @@
 
 // Handle finding overall parameters
 Faction get_faction_of_unit(UnitType type) {
-    // Republic units: from 0 to UNIT_HORSEMAN inclusive
-    if (type <= UNIT_HORSEMAN) {
-        return FACTION_REPUBLIC;
+    switch (type) {
+        case UNIT_SWORDSMAN:
+        case UNIT_ELITE_SWORDSMAN:
+        case UNIT_LONGBOWMAN:
+        case UNIT_HORSEMAN:
+            return FACTION_REPUBLIC;
+
+        case UNIT_SPEARMAN:
+        case UNIT_ELITE_SPEARMAN:
+        case UNIT_SHORTBOWMAN:
+        case UNIT_CAMELMAN:
+            return FACTION_SEPARATIST;
+
+        default:
+            return FACTION_UNKNOWN;
     }
-    // Separatist units: from UNIT_SPEARMAN to UNIT_CAMELMAN inclusive
-    if (type >= UNIT_SPEARMAN && type <= UNIT_CAMELMAN) {
-        return FACTION_SEPARATIST;
-    }
-    return FACTION_UNKNOWN;
+}
+
+Faction enemy_faction(Faction f) {
+    return (f == FACTION_REPUBLIC) ? FACTION_SEPARATIST : FACTION_REPUBLIC;
 }
 
 int get_turn_count() {
@@ -34,16 +45,9 @@ bool is_faction_defeated(Battlefield* field, Faction faction) {
 int get_weapon_range(Unit* unit) {
     int max_range = 0;
     for (int i = 0; i < unit->weapon_count; i++) {
-        Weapon* w = &unit->weapons[i];
-        int range = 0;
-        switch (w->type) {
-            case WEAPON_SWORD: range = 2; break;
-            case WEAPON_SPEAR: range = 4; break;
-            case WEAPON_LONGBOW: range = 24; break;
-            case WEAPON_SHORTBOW: range = 16; break;
-            default: range = 2; break;
+        if (unit->weapons[i].range > max_range) {
+            max_range = unit->weapons[i].range;
         }
-        if (range > max_range) max_range = range;
     }
     return max_range;
 }
@@ -234,6 +238,29 @@ Unit* select_closest_unit(Battlefield* field, Faction faction) {
         }
     }
     return best;
+}
+
+void get_faction_center(Battlefield* field, Faction faction, int* out_x, int* out_y) {
+    if (!field || !out_x || !out_y) return;
+
+    int sum_x = 0, sum_y = 0, count = 0;
+    for (int i = 0; i < field->unit_count; i++) {
+        Unit* u = field->units[i];
+        if (!u || u->hp <= 0 || u->faction != faction) continue;
+        sum_x += u->x;
+        sum_y += u->y;
+        count++;
+    }
+
+    if (count == 0) {
+        // Fallback: map centre. Victory checks in run_battle should prevent this.
+        *out_x = field->width / 2;
+        *out_y = field->height / 2;
+        return;
+    }
+
+    *out_x = sum_x / count;
+    *out_y = sum_y / count;
 }
 
 // Handle finding allies by type

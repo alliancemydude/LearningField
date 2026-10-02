@@ -2,10 +2,10 @@
 #define UTILS_H
 
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "unit.h"
 #include "battlefield.h"
-
 
 // Colors!
 #define COLOR_RESET   "\033[0m"
@@ -34,7 +34,7 @@ static inline int get_distance_squared(Unit* a, Unit* b) {
 }
 
 // Position utilities:
-const char* get_squad_color(int squad_id, Faction faction);
+const char* get_unit_color(Unit* unit);
 
 bool is_tile_walkable(Battlefield* field, int x, int y, Unit* exclude);
 

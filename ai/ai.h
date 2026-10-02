@@ -18,19 +18,12 @@ typedef enum {
     ACTION_ADVANCE_COVER
 } ActionType;
 
-typedef struct {
-    ActionType type;
-    Unit* target;      // For targeting enemies
-    int target_x;      // For movement
-    int target_y;      // For movement
-} Action;
-
 // Individual logic functions
 Unit* select_enemy_by_preference(Unit* unit, Battlefield* field, int max_range, StrategicGenome* strat);
 
 bool evaluate_enemies(Unit* unit, Battlefield* field, char type, FactionStrategy* strat);
 
 // Strategy
-void unit_turn(Unit* unit, Battlefield* field, StrategicOrder* order);
+void unit_turn(Unit* unit, Battlefield* field);
 
 #endif

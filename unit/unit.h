@@ -14,6 +14,11 @@ typedef struct {
     int explosion_radius;
 } Weapon;
 
+typedef enum {
+    ROLE_LINE,
+    ROLE_FLANK
+} UnitRole;
+
 // Unit struct
 typedef struct Unit {
     // Identity
@@ -48,7 +53,6 @@ typedef struct Unit {
     float effective_explosive_threshold;
     float effective_ally_proximity;
     float effective_retreat_hp_ratio;
-    struct Unit* focus_target;
 
     // Status
     int rally_bonus;
@@ -57,8 +61,8 @@ typedef struct Unit {
     bool is_stunned;
     bool is_immobilized;
 
-    // Formations
-    int formation_index; // unit's position in formation, 0 = leader, 1 = right, 2 = left
+    // Role
+    UnitRole role;
 
     // Position
     int x, y;
@@ -67,11 +71,7 @@ typedef struct Unit {
     // Weapons
     Weapon weapons[WEAPON_COUNT];
     int weapon_count;
-    int squad_id;
     int actions_taken;
-
-    // Strategy
-    StrategicOrder strategic_order;
 } Unit;
 
 // Create units

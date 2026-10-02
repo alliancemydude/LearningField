@@ -9,6 +9,8 @@ int get_turn_count(void);
 Faction get_faction_of_unit(UnitType type);
 bool is_faction_defeated(Battlefield* field, Faction faction);
 int get_weapon_range(Unit* unit);
+Faction enemy_faction(Faction f);
+void get_faction_center(Battlefield* field, Faction faction, int* out_x, int* out_y);
 
 // Enemy queries:
 Unit* find_closest_enemy(Unit* unit, Battlefield* field);

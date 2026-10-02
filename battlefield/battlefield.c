@@ -11,7 +11,7 @@
 
 // Default force compositions
 ForceComposition default_republic_composition[] = {
-    {UNIT_SWORDSMAN,        16},
+    {UNIT_SWORDSMAN,        20},
     {UNIT_ELITE_SWORDSMAN,  0},
     {UNIT_LONGBOWMAN,       0},
     {UNIT_HORSEMAN,         0}
@@ -19,7 +19,7 @@ ForceComposition default_republic_composition[] = {
 int default_republic_composition_count = sizeof(default_republic_composition) / sizeof(default_republic_composition[0]);
 
 ForceComposition default_separatist_composition[] = {
-    {UNIT_SPEARMAN,         12},
+    {UNIT_SPEARMAN,         20},
     {UNIT_ELITE_SPEARMAN,   0},
     {UNIT_SHORTBOWMAN,      0},
     {UNIT_CAMELMAN,         0}
@@ -180,8 +180,7 @@ void spawn_republic_forces(Battlefield* field, ForceComposition forces[], int fo
 
             int x = desired_x, y = desired_y;
             bool placed = false;
-            
-            // try the desired tile first
+
             if (is_tile_walkable(field, x, y, NULL)) {
                 placed = true;
             }
@@ -202,7 +201,6 @@ void spawn_republic_forces(Battlefield* field, ForceComposition forces[], int fo
                 }
             }
 
-            // If still not placed, do a random search
             if (!placed) {
                 for (int attempt = 0; attempt < 100; attempt++) {
                     x = roll(x_min, x_max);
@@ -213,11 +211,9 @@ void spawn_republic_forces(Battlefield* field, ForceComposition forces[], int fo
                 }
             }
 
-            // If there is still no placement, force it.
             if (!placed) {
                 x = (unit_index * 3) % field->width;
                 y = y_min + (unit_index % (y_max - y_min + 1));
-                // If still not walkable, search linearly (rare)
                 for (int yy = y_min; yy <= y_max && !placed; yy++) {
                     for (int xx = 0; xx < field->width && !placed; xx++) {
                         if (is_tile_walkable(field, xx, yy, NULL)) {
@@ -227,18 +223,14 @@ void spawn_republic_forces(Battlefield* field, ForceComposition forces[], int fo
                 }
             }
 
-            Unit* squad = create_unit_squad(forces[f].type, id++, x, y);
-            static int next_squad_id = 1;
-            if (squad) {
-                field->units[field->unit_count++] = squad;
-                squad->squad_id = f;
-                squad->formation_index = i;
-                next_squad_id++;
+            Unit* unit = create_unit(forces[f].type, id++, x, y);
+            if (unit) {
+                field->units[field->unit_count++] = unit;
             }
             unit_index++;
-            resolve_overlaps(field);
         }
     }
+    resolve_overlaps(field);
 }
 
 void spawn_separatist_forces(Battlefield* field, ForceComposition forces[], int force_count) {
@@ -285,12 +277,11 @@ void spawn_separatist_forces(Battlefield* field, ForceComposition forces[], int 
 
             int x = desired_x, y = desired_y;
             bool placed = false;
-            
+
             if (is_tile_walkable(field, x, y, NULL)) {
                 placed = true;
             }
 
-            // If not, spiral search
             if (!placed) {
                 for (int radius = 1; radius <= 3 && !placed; radius++) {
                     for (int dy = -radius; dy <= radius && !placed; dy++) {
@@ -307,7 +298,6 @@ void spawn_separatist_forces(Battlefield* field, ForceComposition forces[], int 
                 }
             }
 
-            // If still not placed, random search
             if (!placed) {
                 for (int attempt = 0; attempt < 100; attempt++) {
                     x = roll(x_min, x_max);
@@ -318,11 +308,9 @@ void spawn_separatist_forces(Battlefield* field, ForceComposition forces[], int 
                 }
             }
 
-            // If still nothing, force deploy
             if (!placed) {
                 x = (unit_index * 3) % field->width;
                 y = y_min + (unit_index % (y_max - y_min + 1));
-                // If still not walkable, search linearly (rare)
                 for (int yy = y_min; yy <= y_max && !placed; yy++) {
                     for (int xx = 0; xx < field->width && !placed; xx++) {
                         if (is_tile_walkable(field, xx, yy, NULL)) {
@@ -332,18 +320,14 @@ void spawn_separatist_forces(Battlefield* field, ForceComposition forces[], int 
                 }
             }
 
-            Unit* squad = create_unit_squad(forces[f].type, id++, x, y);
-            static int next_squad_id = 1;
-            if (squad) {
-                field->units[field->unit_count++] = squad;
-                squad->squad_id = f;
-                squad->formation_index = i;
-                next_squad_id++;
+            Unit* unit = create_unit(forces[f].type, id++, x, y);
+            if (unit) {
+                field->units[field->unit_count++] = unit;
             }
             unit_index++;
-            resolve_overlaps(field);
         }
     }
+    resolve_overlaps(field);
 }
 
 
@@ -378,15 +362,9 @@ int run_battle(Battlefield* field, int max_turns) {
             }
         }
 
-        // Assign orders to both factions
-        assign_faction_orders(field, FACTION_REPUBLIC);
-        assign_faction_orders(field, FACTION_SEPARATIST);
-
         bool republic_turn = (roll(1, 2) == 1);
         int acted_this_turn = 0;
         int total_active = republic_count + separatist_count;
-
-        update_strategic_orders(field);
 
         bool toggled_once = false;  // track if we already tried both sides
 
@@ -406,7 +384,7 @@ int run_battle(Battlefield* field, int max_turns) {
             toggled_once = false;  // reset toggled flag when we find a unit
 
             acting_unit->has_acted = true;
-            unit_turn(acting_unit, field, NULL);
+            unit_turn(acting_unit, field);
             acted_this_turn++;
 
             republic_turn = !republic_turn;

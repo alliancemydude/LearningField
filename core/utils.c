@@ -6,37 +6,9 @@
 
 int turn_count = 0;
 
-static const char* SQUAD_COLORS[] = {
-    COLOR_RED,     // squad 0
-    COLOR_GREEN,   // squad 1
-    COLOR_YELLOW,  // squad 2
-    COLOR_BLUE,    // squad 3
-    COLOR_MAGENTA, // squad 4
-    COLOR_CYAN,    // squad 5
-    COLOR_WHITE,   // squad 6
-    COLOR_RED,     // squad 7 (reuse)
-    COLOR_GREEN,   // squad 8
-    COLOR_YELLOW   // squad 9
-};
-#define SQUAD_COLOR_COUNT (sizeof(SQUAD_COLORS)/sizeof(SQUAD_COLORS[0]))
-
-const char* get_squad_color(int squad_id, Faction faction) {
-    static const char* republic_palette[] = {
-        COLOR_GREEN, COLOR_CYAN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_WHITE
-    };
-    static const char* separatist_palette[] = {
-        COLOR_RED, COLOR_MAGENTA, COLOR_YELLOW, COLOR_BLUE, COLOR_CYAN, COLOR_WHITE
-    };
-    const int palette_size = 6;
-
-    // Wrap negative or large squad IDs safely
-    int idx = ((squad_id % palette_size) + palette_size) % palette_size;
-
-    if (faction == FACTION_REPUBLIC) {
-        return republic_palette[idx];
-    } else {
-        return separatist_palette[idx];
-    }
+const char* get_unit_color(Unit* unit) {
+    if (unit == NULL) return COLOR_WHITE;
+    return (unit->faction == FACTION_REPUBLIC) ? COLOR_BLUE : COLOR_RED;
 }
 
 int roll(int min, int max) {
@@ -92,7 +64,7 @@ void print_screen(Battlefield* field) {
     printf("Turn %d | Republic: %d units (HP: %.1f) | Separatist: %d units (HP: %.1f)\n",
            turn_count, rep_count, rep_hp, sep_count, sep_hp);
     printf("Legend: S=Swordsman, E=Elite, H=Horseman, B=Bowman P = Spearman,\n");
-    printf("Green = Republic, Red = Separatist, . open\n\n");
+    printf("Blue = Republic, Red = Separatist, . open\n\n");
 
     // Print column headers
     printf("   ");
@@ -122,11 +94,10 @@ void print_screen(Battlefield* field) {
 
             if (unit_on_tile != NULL) {
                 const char* symbol = get_unit_symbol(unit_on_tile);
-                int sid = unit_on_tile->squad_id;
                 int soldier_count = unit_on_tile->units_count;
                 if (soldier_count < 0) soldier_count = 0;
                 if (soldier_count > 9) soldier_count = 9;
-                const char* color = get_squad_color(sid, unit_on_tile->faction);
+                const char* color = get_unit_color(unit_on_tile);
                 char buf[3];
                 snprintf(buf, sizeof(buf), "%s%d", symbol, soldier_count);
                 printf("%s%2s%s ", color, buf, COLOR_RESET);
@@ -180,7 +151,7 @@ void print_screen_to_file(Battlefield* field, const char* filename) {
 
             if (unit_on_tile != NULL) {
                 const char* symbol = get_unit_symbol(unit_on_tile);
-                const char* color = (unit_on_tile->faction == FACTION_REPUBLIC) ? COLOR_GREEN : COLOR_RED;
+                const char* color = get_unit_color(unit_on_tile);
                 fprintf(f, "%s %s %s", color, symbol, COLOR_RESET);
             } else if (is_dead) {
                 // Unit is dead

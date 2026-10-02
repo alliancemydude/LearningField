@@ -22,29 +22,17 @@ EvolutionMode current_mode = EVOLVE_ALL;
 // Gene definitions
 
 const GeneInfo STRATEGY_GENES[] = {
-    // Tactical (CAT_TACTICAL)
-    {"advance_distance", 8.0f, 25.0f, 12.00f, CAT_TACTICAL},    // If the enemy center > than advance_dist * aggr_bias, advance. Smaller = aggressive
-    {"flanking_bias", 0.5f, 2.0f, 1.3f, CAT_TACTICAL},          // Lateral movement when advancing 0.5 = straight, 2.0 da long way
-    {"retreat_hp_ratio", 0.1f, 0.6f, 0.3f, CAT_TACTICAL},      // If HP is below max_hp * retreat_hp_ratio, retreat. lower = in fight longer
-    {"cohesion_threshold", 2.0f, 8.0f, 5.0f, CAT_TACTICAL},    // Maximum distance from the squad center. 2 = tight formation, 8 = loose formation
-    
-    // Strategic (CAT_STRATEGIC)
-    {"aggression_bias", 0.5f, 2.0f, 0.8f, CAT_STRATEGIC},       // Global aggression. Higher = more aggressive (more advance, less retreat)
-    {"aggression_curve", 0.5f, 6.0f, 3.14f, CAT_STRATEGIC},     // How aggression changes with HP loss. >1 = more aggr. when wounded, <1 = more cautious
-    {"target_priority", 0.0f, 1.0f, 0.5f, CAT_STRATEGIC},       // Which enemy to target. 0 = lowest HP, 1 = highest point-value
-    {"ally_proximity", 2.0f, 8.0f, 6.14f, CAT_STRATEGIC},       // Preferred distance to nearest ally. (* 1.5) higher = stay with the squad
-    {"threat_weight", 0.0f, 1.0f, 0.9f, CAT_STRATEGIC},         // 0 = prefer low-hp enemies, 1 = prefer high-value enemies
-    {"focus_fire_tendency", 0.0f, 2.0f, 1.00f, CAT_STRATEGIC},  // Whether a squad prefers to focus or spread fire. Higher = more focus
-    {"flank_left_weight", 0.0f, 10.0f, 5.0f, CAT_STRATEGIC},    // Preference for flanking to the left
-    {"flank_right_weight", 0.0f, 10.0f, 5.0f, CAT_STRATEGIC},   // Preference for flanking to the right
-    {"breakthrough_weight", 0.0f, 10.0f, 5.0f, CAT_STRATEGIC},  // Preference for having a unit break through the center
-    {"fallback_weight", 0.0f, 10.0f, 5.0f, CAT_STRATEGIC},      // Preference for having units fall back while preserving formation
-    {"edge_avoidance_weight", 0.0f, 1.0f, 0.6f, CAT_STRATEGIC}, // Preference for avoiding the map edge
-    
-    // Deployment (CAT_DEPLOYMENT)
-    {"deploy_horizontal_spread", 0.0f, 10.0f, 6.00f, CAT_DEPLOYMENT},   // How wide the deployment is. 0 = clumped, 10 = spread across the width of the map
-    {"deploy_vertical_offset", 0.0f, 10.0f, 4.00f, CAT_DEPLOYMENT}, // How far back units are placed in their spawn zone. 0 = front line, 10 = far back
-    {"deploy_flank_bias", -5.0f, 5.0f, 0.0f, CAT_DEPLOYMENT}   // Which side the deployment is. -5 = far left, 5 = far right
+    // Strategic (5)
+    {"aggression_bias",       0.5f, 2.0f, 1.2f, CAT_STRATEGIC},
+    {"threat_weight",         0.0f, 1.0f, 0.5f, CAT_STRATEGIC},
+    {"edge_avoidance_weight", 0.0f, 1.0f, 0.6f, CAT_STRATEGIC},
+    {"flank_percentage",      0.0f, 1.0f, 0.2f, CAT_STRATEGIC},
+    {"flanking_bias",         0.5f, 2.0f, 1.0f, CAT_STRATEGIC},
+
+    // Deployment (3)
+    {"deploy_horizontal_spread", 0.0f, 10.0f, 6.0f, CAT_DEPLOYMENT},
+    {"deploy_vertical_offset",   0.0f, 10.0f, 4.0f, CAT_DEPLOYMENT},
+    {"deploy_flank_bias",       -5.0f,  5.0f, 0.0f, CAT_DEPLOYMENT}
 };
 const size_t STRATEGY_GENE_COUNT = sizeof(STRATEGY_GENES) / sizeof(GeneInfo);
 
