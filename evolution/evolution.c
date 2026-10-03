@@ -304,13 +304,13 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
 
         int elite_count = 3;
 
-        // ---- Republic: write into next_rep ----
-        // Elitism: copy best individuals
+        // Republic write into next_rep
+        // copy best individuals
         for (int i = 0; i < elite_count; i++) {
             memcpy(next_rep[i].weights, rep_pop[i].weights, gene_count * sizeof(float));
             next_rep[i].fitness = rep_pop[i].fitness;
         }
-        // Fill the rest via crossover + mutation
+        // Fill the rest with crossover + mutation
         for (int i = elite_count; i < pop_size; i++) {
             int p1 = tournament_select(rep_pop, pop_size, 3);
             int p2 = tournament_select(rep_pop, pop_size, 3);
@@ -319,7 +319,7 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
             next_rep[i].fitness = 0.0f;
         }
 
-        // ---- Separatists: write into next_sep ----
+        // Separatists write into next_sep
         for (int i = 0; i < elite_count; i++) {
             memcpy(next_sep[i].weights, sep_pop[i].weights, gene_count * sizeof(float));
             next_sep[i].fitness = sep_pop[i].fitness;
@@ -332,7 +332,7 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
             next_sep[i].fitness = 0.0f;
         }
 
-        // Swap pointers (no freeing here)
+        // Swap pointers
         Individual* tmp = rep_pop;
         rep_pop = next_rep;
         next_rep = tmp;
@@ -364,7 +364,7 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
         printf("\nWARNING: Stopped early (%.1f%%). Skipping save.\n", completion * 100);
     }
 
-    // Cleanup: free all weight arrays
+    // free all weight arrays
     for (int i = 0; i < pop_size; i++) {
         free(rep_pop[i].weights);
         free(sep_pop[i].weights);

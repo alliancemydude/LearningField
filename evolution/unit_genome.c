@@ -3,11 +3,11 @@
 
 UnitGenome unit_genomes[UNIT_TYPE_COUNT] = {
     [UNIT_SWORDSMAN] = {
-        .unit_aggression = 0.73f,
-        .unit_ally_proximity = 5.74f,
-        .unit_retreat_hp_ratio = 0.13f,
-        .preferred_range = 0.04f,
-        .danger_range = 0.36f
+        .unit_aggression = 0.70f,
+        .unit_ally_proximity = 3.00f,
+        .unit_retreat_hp_ratio = 0.10f,
+        .preferred_range = 0.10f,
+        .danger_range = 0.00f
     },
     [UNIT_ELITE_SWORDSMAN] = {
         .unit_aggression = 0.0f,
@@ -32,11 +32,11 @@ UnitGenome unit_genomes[UNIT_TYPE_COUNT] = {
     },
 
     [UNIT_SPEARMAN] = {
-        .unit_aggression = 0.0f,
-        .unit_ally_proximity = 2.0f,
-        .unit_retreat_hp_ratio = 0.1f,
-        .preferred_range = 0.0f,
-        .danger_range = 0.0f
+        .unit_aggression = 0.70f,
+        .unit_ally_proximity = 3.00f,
+        .unit_retreat_hp_ratio = 0.10f,
+        .preferred_range = 0.10f,
+        .danger_range = 0.00f
     },
     [UNIT_ELITE_SPEARMAN] = {
         .unit_aggression = 0.00f,
