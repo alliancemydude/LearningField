@@ -166,14 +166,8 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
             unit_genomes[i].unit_ally_proximity = rep_weights[base + 1];
             CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);
 
-            unit_genomes[i].unit_retreat_hp_ratio = rep_weights[base + 2];
-            CLAMP(unit_genomes[i].unit_retreat_hp_ratio, 0.1f, 0.6f);
-
             unit_genomes[i].preferred_range = rep_weights[base + 3];
             CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
-
-            unit_genomes[i].danger_range = rep_weights[base + 4];
-            CLAMP(unit_genomes[i].danger_range, 0.0f, 20.0f);
 
         } else if (f == FACTION_SEPARATIST) {
             unit_genomes[i].unit_aggression = sep_weights[base + 0];
@@ -182,14 +176,9 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
             unit_genomes[i].unit_ally_proximity = sep_weights[base + 1];
             CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);
 
-            unit_genomes[i].unit_retreat_hp_ratio = sep_weights[base + 2];
-            CLAMP(unit_genomes[i].unit_retreat_hp_ratio, 0.1f, 0.6f);
-
             unit_genomes[i].preferred_range = sep_weights[base + 3];
             CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
 
-            unit_genomes[i].danger_range = sep_weights[base + 4];
-            CLAMP(unit_genomes[i].danger_range, 0.0f, 20.0f);
         }
     }
 
@@ -216,7 +205,7 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
 
     float win_rate = (float)rep_wins / num_battles;
     float timeout_rate = (float)timeouts / num_battles;
-    float penalty_factor = 1.0f; // make sure to adjust this to control aggressiveness
+    float penalty_factor = 2.0f; // make sure to adjust this to control aggressiveness
     float fitness = win_rate - (timeout_rate * penalty_factor);
 
     return fitness;

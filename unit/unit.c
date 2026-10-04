@@ -42,20 +42,21 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     // Create a unit genome array
     UnitGenome* ug = &unit_genomes[type];
 
+    // Compute max range for this unit
+    unit->max_range = get_weapon_range(unit);
+    unit->max_range_sq = unit->max_range * unit->max_range;
+
     // Unpack the array into usable variables
     unit->effective_aggression = ug->unit_aggression;
     unit->effective_ally_proximity = ug->unit_ally_proximity;
-    unit->effective_retreat_hp_ratio = ug->unit_retreat_hp_ratio;
     unit->preferred_range = ug->preferred_range;
     if (unit->preferred_range > unit->max_range) {
         unit->preferred_range = unit->max_range;
     }
-    unit->danger_range = ug->danger_range;
     
     // Create preferences based on variables
     unit->attack_order = bp->attack_order;
     unit->preferred_range_sq = unit->preferred_range * unit->preferred_range;
-    unit->danger_range_sq = unit->danger_range * unit->danger_range;
     
     // Reset unit status
     unit->pin_markers = 0;
@@ -74,10 +75,6 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     for (int i = 0; i < bp->weapon_count; i++) {
         add_weapon(unit, bp->weapons[i].type);
     }
-    
-    // Compute max range for this unit
-    unit->max_range = get_weapon_range(unit);
-    unit->max_range_sq = unit->max_range * unit->max_range;
     
     return unit;
 }

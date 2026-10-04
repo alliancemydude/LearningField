@@ -13,36 +13,6 @@
 // Global variable for the target
 static Unit* target = NULL;
 
-// Evaluations
-bool evaluate_enemies(Unit* unit, Battlefield* field, char type, FactionStrategy* strat) {
-    int max_range = unit->max_range;
-    switch(type) {
-        case 'a': // Attack
-            if (max_range == 0) return false;
-            target = select_enemy_by_preference(unit, field, max_range, &strat->strategic);
-            return (target != NULL);
-
-        case 'f': // Fire
-            if (max_range == 0) return false;
-            target = select_enemy_by_preference(unit, field, max_range, &strat->strategic);
-            return (target != NULL);
-
-        case 'd': // Dash
-            target = select_enemy_by_preference(unit, field, 100, &strat->strategic);
-            return (target != NULL);
-
-        case 'r': { // Retreat
-            target = find_closest_enemy(unit, field);
-            if (!target) return false;
-            int dist = get_distance_squared(unit, target);
-            return (dist <= unit->danger_range_sq);
-        }
-
-        default:
-            return false;
-    }
-}
-
 // Unit turn
 void unit_turn(Unit* unit, Battlefield* field) {
     target = NULL;
@@ -93,8 +63,7 @@ void unit_turn(Unit* unit, Battlefield* field) {
                     acted = execute_attack(unit, enemy, true, field);
                     if (acted) { action_taken = ACTION_ADVANCE_ATTACK; goto action_done; }
                 }
-                // Attack missed but we already committed to the move — stop here.
-                action_taken = ACTION_ADVANCE_ATTACK;
+                action_taken = is_ranged ? ACTION_ADVANCE_FIRE : ACTION_ADVANCE_ATTACK;
                 goto action_done;
             }
         }
@@ -114,17 +83,16 @@ void unit_turn(Unit* unit, Battlefield* field) {
         tx = ecx + (go_left ? -offset : offset);
         ty = ecy;
         has_target = true;
-    } else {
-        // Line units advance toward the enemy center.
-        int ecx, ecy;
-        get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
-        tx = ecx; ty = ecy;
-        has_target = true;
-    }
-        // else: passive line units hold position — no target
-
+        } else {
+            // Line units advance toward the enemy center.
+            int ecx, ecy;
+            get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
+            tx = ecx; ty = ecy;
+            has_target = true;
+        }
         if (has_target) {
-            execute_move(unit, field, tx, ty);
+            int move_cap = unit->half_movement + (int)((unit->movement - unit->half_movement) * unit->effective_aggression);
+            execute_move(unit, field, tx, ty, move_cap);
             acted = true;
             action_taken = ACTION_DASH;
         }
@@ -184,7 +152,6 @@ action_done:
             case 3: action_counts.advance_attack++; break;
             case 4: action_counts.rally++; break;
             case 5: action_counts.dash++; break;
-            case 6: action_counts.retreat++; break;
         }
         action_counts.total++;
     }

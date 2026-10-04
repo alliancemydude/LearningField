@@ -45,14 +45,11 @@ typedef struct Unit {
     int attack_order;
     int preferred_range;
     int preferred_range_sq;
-    int danger_range;
-    int danger_range_sq;
 
     // Genomes
     float effective_aggression;
     float effective_explosive_threshold;
     float effective_ally_proximity;
-    float effective_retreat_hp_ratio;
 
     // Status
     int rally_bonus;

@@ -5,17 +5,16 @@
 #include <math.h>
 #include <stdlib.h>
 
-void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y) {
+void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y, int max_steps) {
     if (!unit || !field) return;
     if (unit->movement == 0 || unit->is_immobilized) return;
 
-    int dx = (target_x > unit->x) ? 1 : (target_x < unit->x) ? -1 : 0;
-    int dy = (target_y > unit->y) ? 1 : (target_y < unit->y) ? -1 : 0;
-    int steps = unit->movement;
     int cur_x = unit->x, cur_y = unit->y;
+    int steps = max_steps;
 
-    // Move in X direction first
-    while (steps > 0 && dx != 0) {
+    // Move in X direction first, but stop at target_x
+    while (steps > 0 && cur_x != target_x) {
+        int dx = (target_x > cur_x) ? 1 : -1;
         int next_x = cur_x + dx;
         if (is_tile_walkable(field, next_x, cur_y, unit)) {
             cur_x = next_x;
@@ -24,8 +23,10 @@ void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y) {
             break;
         }
     }
-    // Then Y direction
-    while (steps > 0 && dy != 0) {
+
+    // Then Y direction, stop at target_y
+    while (steps > 0 && cur_y != target_y) {
+        int dy = (target_y > cur_y) ? 1 : -1;
         int next_y = cur_y + dy;
         if (is_tile_walkable(field, cur_x, next_y, unit)) {
             cur_y = next_y;
@@ -34,6 +35,7 @@ void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y) {
             break;
         }
     }
+
     unit->x = cur_x;
     unit->y = cur_y;
     clamp_unit_position(unit, field);

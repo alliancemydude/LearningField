@@ -4,7 +4,7 @@
 #include "unit.h"
 #include "battlefield.h"
 
-void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y);
+void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y, int max_steps);
 void execute_retreat(Unit* unit, Unit* target, Battlefield* field);
 void execute_dash(Unit* unit, Unit* target, Battlefield* field);
 void move_toward_target(Unit* unit, Unit* target, int move_amount, Battlefield* field);

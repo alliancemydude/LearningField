@@ -12,16 +12,11 @@ typedef enum {
     ACTION_ATTACK,
     ACTION_ADVANCE_ATTACK,
     ACTION_RALLY,
-    ACTION_DASH,
-    ACTION_RETREAT,
-    ACTION_COVER,
-    ACTION_ADVANCE_COVER
+    ACTION_DASH
 } ActionType;
 
 // Individual logic functions
 Unit* select_enemy_by_preference(Unit* unit, Battlefield* field, int max_range, StrategicGenome* strat);
-
-bool evaluate_enemies(Unit* unit, Battlefield* field, char type, FactionStrategy* strat);
 
 // Strategy
 void unit_turn(Unit* unit, Battlefield* field);

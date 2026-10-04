@@ -11,31 +11,31 @@
 // Set the current weights
 FactionStrategy republic_strategy = {
     .strategic = {
-        .aggression_bias       = 1.50f,
-        .threat_weight         = 0.50f,
-        .edge_avoidance_weight = 0.60f,
-        .flank_percentage      = 0.20f,
-        .flanking_bias         = 1.00f
+        .aggression_bias       = 1.51f,
+        .threat_weight         = 0.8f,
+        .edge_avoidance_weight = 0.80f,
+        .flank_percentage      = 0.59f,
+        .flanking_bias         = 0.59f
     },
     .deployment = {
-        .deploy_horizontal_spread = 10.00f,
-        .deploy_vertical_offset   = 10.00f,
-        .deploy_flanking_bias     = 2.00f
+        .deploy_horizontal_spread = 7.00f,
+        .deploy_vertical_offset   = 0.68f,
+        .deploy_flanking_bias     = 3.41f
     }
 };
 
 FactionStrategy separatist_strategy = {
     .strategic = {
-        .aggression_bias       = 1.50f,
-        .threat_weight         = 0.50f,
-        .edge_avoidance_weight = 0.60f,
-        .flank_percentage      = 0.20f,
-        .flanking_bias         = 1.00f
+        .aggression_bias       = 1.20f,
+        .threat_weight         = 0.08f,
+        .edge_avoidance_weight = 0.91f,
+        .flank_percentage      = 1.00f,
+        .flanking_bias         = 1.11f
     },
     .deployment = {
-        .deploy_horizontal_spread = 10.00f,
-        .deploy_vertical_offset   = 10.00f,
-        .deploy_flanking_bias     = 2.00f
+        .deploy_horizontal_spread = 1.56f,
+        .deploy_vertical_offset   = 0.28f,
+        .deploy_flanking_bias     = 0.15f
     }
 };
 
