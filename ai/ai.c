@@ -110,8 +110,15 @@ void unit_turn(Unit* unit, Battlefield* field) {
             }
         }
 
+        float effective = unit->effective_aggression * strat->strategic.aggression_bias;
+        if (effective > 1.0f) effective = 1.0f;
+        if (effective < 0.0f) effective = 0.0f;
+
         int move_cap = unit->half_movement +
-                    (int)((unit->movement - unit->half_movement) * unit->effective_aggression);
+                    (int)((unit->movement - unit->half_movement) * effective);
+        if (move_cap < unit->half_movement) move_cap = unit->half_movement;
+        if (move_cap > unit->movement)      move_cap = unit->movement;
+
         execute_move(unit, field, tx, ty, move_cap);
         acted = true;
         action_taken = ACTION_DASH;

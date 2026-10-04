@@ -27,13 +27,18 @@ typedef struct {
     GeneCategory category;
 } GeneInfo;
 
+typedef struct {
+    float rep_fitness;
+    float sep_fitness;
+} PairFitness;
+
 void run_evolution(EvolutionMode mode);
 void print_genome(const float* w, const GeneInfo* genes, size_t gene_count, const char* name);
 void save_genomes(const float* rep_weights, const float* sep_weights, const GeneInfo* genes, size_t gene_count, const char* prefix);
 void print_unit_genome(const float* w, Faction faction, const char* name);
 void save_unit_genome(const float* weights, Faction faction, const char* prefix);
 
-float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int num_battles);
+PairFitness evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int num_battles);
 
 // Gene arrays
 extern const GeneInfo STRATEGY_GENES[];

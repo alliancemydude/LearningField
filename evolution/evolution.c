@@ -25,7 +25,6 @@ const GeneInfo STRATEGY_GENES[] = {
     // Strategic (5)
     {"aggression_bias",       0.5f, 2.0f, 1.2f, CAT_STRATEGIC},
     {"threat_weight",         0.0f, 1.0f, 0.5f, CAT_STRATEGIC},
-    {"edge_avoidance_weight", 0.0f, 1.0f, 0.6f, CAT_STRATEGIC},
     {"flank_percentage",      0.0f, 1.0f, 0.2f, CAT_STRATEGIC},
     {"flanking_bias",         0.5f, 2.0f, 1.0f, CAT_STRATEGIC},
 
@@ -51,14 +50,14 @@ int battles_max = 60;
 int current_battles = 20;
 
 int pop_size = 30;
-int num_generations = 30;
+int num_generations = 10;
 
 float mutation_rate_start = 0.5f;
 float mutation_rate_end = 0.2f;
 float mutation_delta_start = 0.4f;
 float mutation_delta_end = 0.1f;
 
-int max_plateau_generations = 20;
+int max_plateau_generations = 8;
 float improvement_threshold = 0.005f;
 float crossover_rate = 0.8f;
 
@@ -143,7 +142,7 @@ int compare_individual(const void *a, const void *b) {
 }
 
 // Evaluation function
-float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int num_battles) {
+PairFitness evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int num_battles) {
     UnitGenome old_genomes[UNIT_TYPE_COUNT];
     memcpy(old_genomes, unit_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
@@ -162,18 +161,21 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
             unit_genomes[i].unit_aggression = rep_weights[base + 0];
             CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
 
+            unit_genomes[i].preferred_range = rep_weights[base + 1];
+            CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
+
             unit_genomes[i].spacing_x = rep_weights[base + 2];
             CLAMP(unit_genomes[i].spacing_x, 1.0f, 8.0f);
 
             unit_genomes[i].spacing_y = rep_weights[base + 3];
             CLAMP(unit_genomes[i].spacing_y, 1.0f, 8.0f);
 
-            unit_genomes[i].preferred_range = rep_weights[base + 3];
-            CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
-
         } else if (f == FACTION_SEPARATIST) {
             unit_genomes[i].unit_aggression = sep_weights[base + 0];
             CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
+
+            unit_genomes[i].preferred_range = sep_weights[base + 1];
+            CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
 
             unit_genomes[i].spacing_x = sep_weights[base + 2];
             CLAMP(unit_genomes[i].spacing_x, 1.0f, 8.0f);
@@ -181,46 +183,40 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
             unit_genomes[i].spacing_y = sep_weights[base + 3];
             CLAMP(unit_genomes[i].spacing_y, 1.0f, 8.0f);
 
-            unit_genomes[i].preferred_range = sep_weights[base + 3];
-            CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
-
         }
     }
 
-    int rep_wins = 0;
-    int timeouts = 0;
+    int rep_wins = 0, sep_wins = 0, timeouts = 0;
 
     for (int i = 0; i < num_battles; i++) {
         Battlefield field;
         initialize_battlefield(&field);
-
         spawn_republic_forces(&field, default_republic_composition, default_republic_composition_count);
         spawn_separatist_forces(&field, default_separatist_composition, default_separatist_composition_count);
 
         int winner = run_battle(&field, MAX_TURNS);
         if (winner == 0) rep_wins++;
-        else if (winner == 2) {
-            timeouts++;
-        }
+        else if (winner == 1) sep_wins++;
+        else if (winner == 2) timeouts++;
+
         cleanup_battlefield(&field);
     }
 
     memcpy(unit_genomes, old_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
-
-    float win_rate = (float)rep_wins / num_battles;
-    float timeout_rate = (float)timeouts / num_battles;
-    float penalty_factor = 2.0f; // make sure to adjust this to control aggressiveness
-    float fitness = win_rate - (timeout_rate * penalty_factor);
-
-    return fitness;
+    float penalty = 1.0f;
+    PairFitness out;
+    out.rep_fitness = (float)rep_wins / num_battles - penalty * (float)timeouts / num_battles;
+    out.sep_fitness = (float)sep_wins / num_battles - penalty * (float)timeouts / num_battles;
+    return out;
 
     #undef CLAMP
 }
 
 // Co-evolution
 void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int num_generations,
-    float (*evaluate_pair)(const float* rep_genome, const float* sep_genome, int num_battles), const char* name_prefix, EvolutionMode mode) {
+    PairFitness (*evaluate_pair)(const float* rep_genome, const float* sep_genome, int num_battles), 
+    const char* name_prefix, EvolutionMode mode) {
     // Allocate populations (weights will be allocated inside)
     Individual* rep_pop = malloc(pop_size * sizeof(Individual));
     Individual* sep_pop = malloc(pop_size * sizeof(Individual));
@@ -256,9 +252,10 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
 
         // Evaluate Republic vs Separatist population
         for (int i = 0; i < pop_size; i++) {
-            float total = 0.0f;
+        float total = 0.0f;
             for (int j = 0; j < pop_size; j++) {
-                total += evaluate_pair(rep_pop[i].weights, sep_pop[j].weights, num_battles);
+                PairFitness pf = evaluate_pair(rep_pop[i].weights, sep_pop[j].weights, num_battles);
+                total += pf.rep_fitness;
             }
             rep_pop[i].fitness = total / pop_size;
         }
@@ -266,7 +263,8 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
         for (int j = 0; j < pop_size; j++) {
             float total = 0.0f;
             for (int i = 0; i < pop_size; i++) {
-                total += 1.0f - evaluate_pair(rep_pop[i].weights, sep_pop[j].weights, num_battles);
+                PairFitness pf = evaluate_pair(rep_pop[i].weights, sep_pop[j].weights, num_battles);
+                total += pf.sep_fitness;
             }
             sep_pop[j].fitness = total / pop_size;
         }

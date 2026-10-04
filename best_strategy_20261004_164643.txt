@@ -1,0 +1,19 @@
+# Best co-evolved genomes for strategy
+
+[REPUBLIC]
+aggression_bias 0.50
+threat_weight 0.39
+flank_percentage 0.17
+flanking_bias 0.50
+deploy_horizontal_spread 0.36
+deploy_vertical_offset 7.65
+deploy_flank_bias -4.20
+
+[SEPARATIST]
+aggression_bias 1.46
+threat_weight 0.36
+flank_percentage 1.00
+flanking_bias 1.97
+deploy_horizontal_spread 0.94
+deploy_vertical_offset 9.21
+deploy_flank_bias 3.54

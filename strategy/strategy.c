@@ -13,7 +13,6 @@ FactionStrategy republic_strategy = {
     .strategic = {
         .aggression_bias       = 1.51f,
         .threat_weight         = 0.8f,
-        .edge_avoidance_weight = 0.80f,
         .flank_percentage      = 0.59f,
         .flanking_bias         = 0.59f
     },
@@ -28,7 +27,6 @@ FactionStrategy separatist_strategy = {
     .strategic = {
         .aggression_bias       = 1.20f,
         .threat_weight         = 0.08f,
-        .edge_avoidance_weight = 0.91f,
         .flank_percentage      = 1.00f,
         .flanking_bias         = 1.11f
     },
@@ -73,28 +71,26 @@ void assign_unit_roles(Battlefield* field, Faction faction) {
 
 // Set genes
 
-void set_republic_strategy(const float weights[8]) {
+void set_republic_strategy(const float weights[7]) {
     republic_strategy.strategic.aggression_bias       = weights[0];
     republic_strategy.strategic.threat_weight         = weights[1];
-    republic_strategy.strategic.edge_avoidance_weight = weights[2];
-    republic_strategy.strategic.flank_percentage      = weights[3];
-    republic_strategy.strategic.flanking_bias         = weights[4];
+    republic_strategy.strategic.flank_percentage      = weights[2];
+    republic_strategy.strategic.flanking_bias         = weights[3];
 
-    republic_strategy.deployment.deploy_horizontal_spread = weights[5];
-    republic_strategy.deployment.deploy_vertical_offset   = weights[6];
-    republic_strategy.deployment.deploy_flanking_bias     = weights[7];
+    republic_strategy.deployment.deploy_horizontal_spread = weights[4];
+    republic_strategy.deployment.deploy_vertical_offset   = weights[5];
+    republic_strategy.deployment.deploy_flanking_bias     = weights[6];
 }
 
-void set_separatist_strategy(const float weights[8]) {
+void set_separatist_strategy(const float weights[7]) {
     separatist_strategy.strategic.aggression_bias       = weights[0];
     separatist_strategy.strategic.threat_weight         = weights[1];
-    separatist_strategy.strategic.edge_avoidance_weight = weights[2];
-    separatist_strategy.strategic.flank_percentage      = weights[3];
-    separatist_strategy.strategic.flanking_bias         = weights[4];
+    separatist_strategy.strategic.flank_percentage      = weights[2];
+    separatist_strategy.strategic.flanking_bias         = weights[3];
 
-    separatist_strategy.deployment.deploy_horizontal_spread = weights[5];
-    separatist_strategy.deployment.deploy_vertical_offset   = weights[6];
-    separatist_strategy.deployment.deploy_flanking_bias     = weights[7];
+    separatist_strategy.deployment.deploy_horizontal_spread = weights[4];
+    separatist_strategy.deployment.deploy_vertical_offset   = weights[5];
+    separatist_strategy.deployment.deploy_flanking_bias     = weights[6];
 }
 
 // Load strategies
@@ -106,8 +102,8 @@ void load_strategy_from_file(const char* filename) {
         return;
     }
 
-    float rep_weights[8] = {0};
-    float sep_weights[8] = {0};
+    float rep_weights[7] = {0};
+    float sep_weights[7] = {0};
     int rep_count = 0, sep_count = 0;
     int current_faction = -1;
     char line[256];
@@ -142,16 +138,15 @@ void load_strategy_from_file(const char* filename) {
 }
 
 // Fitness evaluation
-
-float evaluate_matchup(const float* rep_weights, const float* sep_weights, int num_battles) {
+PairFitness evaluate_matchup(const float* rep_weights, const float* sep_weights, int num_battles) {
     FactionStrategy old_rep = republic_strategy;
     FactionStrategy old_sep = separatist_strategy;
 
     set_republic_strategy(rep_weights);
     set_separatist_strategy(sep_weights);
 
-    int rep_wins = 0;
-    int timeouts = 0;
+    int rep_wins = 0, sep_wins = 0, timeouts = 0;
+
     for (int i = 0; i < num_battles; i++) {
         Battlefield field;
         initialize_battlefield(&field);
@@ -161,6 +156,7 @@ float evaluate_matchup(const float* rep_weights, const float* sep_weights, int n
 
         int winner = run_battle(&field, MAX_TURNS);
         if (winner == 0) rep_wins++;
+        else if (winner == 1) sep_wins++;
         else if (winner == 2) timeouts++;
 
         cleanup_battlefield(&field);
@@ -169,10 +165,9 @@ float evaluate_matchup(const float* rep_weights, const float* sep_weights, int n
     republic_strategy = old_rep;
     separatist_strategy = old_sep;
 
-    float win_rate     = (float)rep_wins / num_battles;
-    float timeout_rate = (float)timeouts / num_battles;
-    float penalty_factor = 2.0f;
-    float fitness = win_rate - (timeout_rate * penalty_factor);
-
-    return fitness;
+    float penalty = 2.0f;
+    PairFitness out;
+    out.rep_fitness = (float)rep_wins / num_battles - penalty * (float)timeouts / num_battles;
+    out.sep_fitness = (float)sep_wins / num_battles - penalty * (float)timeouts / num_battles;
+    return out;
 }

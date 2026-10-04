@@ -3,10 +3,10 @@
 
 UnitGenome unit_genomes[UNIT_TYPE_COUNT] = {
     [UNIT_SWORDSMAN] = {
-        .unit_aggression = 0.70f,
-        .preferred_range = 1.0f,
-        .spacing_x = 3.0f,
-        .spacing_y = 2.0f
+        .unit_aggression = 0.83f,
+        .preferred_range = 1.64f,
+        .spacing_x = 1.079f,
+        .spacing_y = 1.77f
     },
     [UNIT_ELITE_SWORDSMAN] = {
         .unit_aggression = 0.70f,
