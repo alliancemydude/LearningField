@@ -3,44 +3,52 @@
 
 UnitGenome unit_genomes[UNIT_TYPE_COUNT] = {
     [UNIT_SWORDSMAN] = {
-        .unit_aggression = 0.68f,
-        .unit_ally_proximity = 4.16f,
-        .preferred_range = 2.13f
+        .unit_aggression = 0.70f,
+        .preferred_range = 1.0f,
+        .spacing_x = 3.0f,
+        .spacing_y = 2.0f
     },
     [UNIT_ELITE_SWORDSMAN] = {
-        .unit_aggression = 0.0f,
-        .unit_ally_proximity = 2.00f,
-        .preferred_range = 1.0f
+        .unit_aggression = 0.70f,
+        .preferred_range = 1.0f,
+        .spacing_x = 3.0f,
+        .spacing_y = 2.0f
     },
     [UNIT_LONGBOWMAN] = {
         .unit_aggression = 0.52f,
-        .unit_ally_proximity = 2.00f,
-        .preferred_range = 8.85f
+        .preferred_range = 18.0f,
+        .spacing_x = 3.0f,
+        .spacing_y = 3.0f
     },
     [UNIT_HORSEMAN] = {
-        .unit_aggression = 0.02f,
-        .unit_ally_proximity = 2.00f,
-        .preferred_range = 2.0f
+        .unit_aggression = 0.80f,
+        .preferred_range = 4.0f,
+        .spacing_x = 4.0f,
+        .spacing_y = 4.0f
     },
 
     [UNIT_SPEARMAN] = {
         .unit_aggression = 0.70f,
-        .unit_ally_proximity = 3.00f,
-        .preferred_range = 2.10f
+        .preferred_range = 3.0f,
+        .spacing_x = 3.0f,
+        .spacing_y = 2.0f
     },
     [UNIT_ELITE_SPEARMAN] = {
-        .unit_aggression = 0.00f,
-        .unit_ally_proximity = 2.00f,
-        .preferred_range = 2.00f
+        .unit_aggression = 0.70f,
+        .preferred_range = 3.0f,
+        .spacing_x = 3.0f,
+        .spacing_y = 2.0f
     },
     [UNIT_SHORTBOWMAN] = {
-        .unit_aggression = 0.9f,
-        .unit_ally_proximity = 4.00f,
-        .preferred_range = 10.00f
+        .unit_aggression = 0.90f,
+        .preferred_range = 12.0f,
+        .spacing_x = 3.0f,
+        .spacing_y = 3.0f
     },
     [UNIT_CAMELMAN] = {
-        .unit_aggression = 1.0f,
-        .unit_ally_proximity = 2.0f,
-        .preferred_range = 2.2f
+        .unit_aggression = 1.00f,
+        .preferred_range = 2.0f,
+        .spacing_x = 4.0f,
+        .spacing_y = 4.0f
     }
 };

@@ -37,29 +37,28 @@ const GeneInfo STRATEGY_GENES[] = {
 const size_t STRATEGY_GENE_COUNT = sizeof(STRATEGY_GENES) / sizeof(GeneInfo);
 
 const GeneInfo UNIT_GENES[] = {
-    {"aggression", 0.0f, 1.0f, 0.5f, CAT_ALL},
-    {"ally_proximity", 2.0f, 8.0f, 5.0f, CAT_ALL},
-    {"retreat_hp_ratio", 0.1f, 0.6f, 0.3f, CAT_ALL},
+    {"aggression",      0.0f,  1.0f, 0.5f, CAT_ALL},
     {"preferred_range", 0.0f, 36.0f, 12.0f, CAT_ALL},
-    {"danger_range", 0.0f, 20.0f, 4.0f, CAT_ALL}
+    {"spacing_x",       1.0f,  8.0f, 3.0f, CAT_ALL},
+    {"spacing_y",       1.0f,  8.0f, 3.0f, CAT_ALL}
 };
 const size_t UNIT_TYPE_GENE_COUNT = sizeof(UNIT_GENES) / sizeof(GeneInfo);
 const size_t UNIT_GENE_COUNT = UNIT_TYPE_COUNT * UNIT_TYPE_GENE_COUNT;
 
 // Evolution parameters
-int battles_min = 20;
-int battles_max = 40;
+int battles_min = 30;
+int battles_max = 60;
 int current_battles = 20;
 
-int pop_size = 20;
-int num_generations = 15;
+int pop_size = 30;
+int num_generations = 30;
 
 float mutation_rate_start = 0.5f;
 float mutation_rate_end = 0.2f;
 float mutation_delta_start = 0.4f;
 float mutation_delta_end = 0.1f;
 
-int max_plateau_generations = 12;
+int max_plateau_generations = 20;
 float improvement_threshold = 0.005f;
 float crossover_rate = 0.8f;
 
@@ -163,8 +162,11 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
             unit_genomes[i].unit_aggression = rep_weights[base + 0];
             CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
 
-            unit_genomes[i].unit_ally_proximity = rep_weights[base + 1];
-            CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);
+            unit_genomes[i].spacing_x = rep_weights[base + 2];
+            CLAMP(unit_genomes[i].spacing_x, 1.0f, 8.0f);
+
+            unit_genomes[i].spacing_y = rep_weights[base + 3];
+            CLAMP(unit_genomes[i].spacing_y, 1.0f, 8.0f);
 
             unit_genomes[i].preferred_range = rep_weights[base + 3];
             CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
@@ -173,8 +175,11 @@ float evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int
             unit_genomes[i].unit_aggression = sep_weights[base + 0];
             CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
 
-            unit_genomes[i].unit_ally_proximity = sep_weights[base + 1];
-            CLAMP(unit_genomes[i].unit_ally_proximity, 2.0f, 8.0f);
+            unit_genomes[i].spacing_x = sep_weights[base + 2];
+            CLAMP(unit_genomes[i].spacing_x, 1.0f, 8.0f);
+
+            unit_genomes[i].spacing_y = sep_weights[base + 3];
+            CLAMP(unit_genomes[i].spacing_y, 1.0f, 8.0f);
 
             unit_genomes[i].preferred_range = sep_weights[base + 3];
             CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);

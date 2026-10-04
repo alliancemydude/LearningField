@@ -69,33 +69,52 @@ void unit_turn(Unit* unit, Battlefield* field) {
         }
     }
 
-    // 4. Move toward strategic target, or dash toward enemy
+    // 4. Move toward strategic target, with spacing adjustment
     if (!acted && !moved) {
         int tx, ty;
-        bool has_target = false;
 
         if (unit->role == ROLE_FLANK) {
-        // Flankers steer around the enemy
-        int ecx, ecy;
-        get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
-        int offset = (int)(strat->strategic.flanking_bias * 8.0f);
-        bool go_left = (unit->id % 2 == 0);
-        tx = ecx + (go_left ? -offset : offset);
-        ty = ecy;
-        has_target = true;
-        } else {
-            // Line units advance toward the enemy center.
+            // Flankers steer around the enemy
             int ecx, ecy;
             get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
-            tx = ecx; ty = ecy;
-            has_target = true;
+            int offset = (int)(strat->strategic.flanking_bias * 8.0f);
+            bool go_left = (unit->id % 2 == 0);
+            tx = ecx + (go_left ? -offset : offset);
+            ty = ecy;
+        } else {
+            // Line units advance toward the enemy center
+            int ecx, ecy;
+            get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
+            tx = ecx;
+            ty = ecy;
         }
-        if (has_target) {
-            int move_cap = unit->half_movement + (int)((unit->movement - unit->half_movement) * unit->effective_aggression);
-            execute_move(unit, field, tx, ty, move_cap);
-            acted = true;
-            action_taken = ACTION_DASH;
+
+        // push the target away from the nearest ally if we're closer
+        // than our preferred spacing on either axis.
+        Unit* ally = find_closest_ally(unit, field);
+        if (ally) {
+            int dax = unit->x - ally->x;
+            int day = unit->y - ally->y;
+
+            if (fabsf((float)dax) < unit->spacing_x) {
+                int push = (int)(unit->spacing_x - fabsf((float)dax));
+                int dir = (dax != 0) ? (dax > 0 ? 1 : -1)
+                                    : ((unit->id % 2 == 0) ? 1 : -1);
+                tx += dir * push;
+            }
+            if (fabsf((float)day) < unit->spacing_y) {
+                int push = (int)(unit->spacing_y - fabsf((float)day));
+                int dir = (day != 0) ? (day > 0 ? 1 : -1)
+                                    : ((unit->id % 2 == 0) ? 1 : -1);
+                ty += dir * push;
+            }
         }
+
+        int move_cap = unit->half_movement +
+                    (int)((unit->movement - unit->half_movement) * unit->effective_aggression);
+        execute_move(unit, field, tx, ty, move_cap);
+        acted = true;
+        action_taken = ACTION_DASH;
     }
 
     // 5. Fallback: rally if pinned

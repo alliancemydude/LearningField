@@ -48,8 +48,8 @@ typedef struct Unit {
 
     // Genomes
     float effective_aggression;
-    float effective_explosive_threshold;
-    float effective_ally_proximity;
+    float spacing_x;
+    float spacing_y;
 
     // Status
     int rally_bonus;

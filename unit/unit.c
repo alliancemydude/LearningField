@@ -48,7 +48,8 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
 
     // Unpack the array into usable variables
     unit->effective_aggression = ug->unit_aggression;
-    unit->effective_ally_proximity = ug->unit_ally_proximity;
+    unit->spacing_x = ug->spacing_x;
+    unit->spacing_y = ug->spacing_y;
     unit->preferred_range = ug->preferred_range;
     if (unit->preferred_range > unit->max_range) {
         unit->preferred_range = unit->max_range;
