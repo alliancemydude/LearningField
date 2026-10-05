@@ -152,8 +152,6 @@ void spawn_republic_forces(Battlefield* field, ForceComposition forces[], int fo
     if (total_units == 0) return;
 
     float center_x = (float)field->width / 2.0f;
-    float flank_shift = (strat->deployment.deploy_flanking_bias / 10.0f) * (float)field->width * 0.25f;
-    center_x += flank_shift;
     if (center_x < 0.0f) center_x = 0.0f;
     if (center_x >= field->width) center_x = field->width - 1.0f;
 
@@ -249,8 +247,6 @@ void spawn_separatist_forces(Battlefield* field, ForceComposition forces[], int 
     if (total_units == 0) return;
 
     float center_x = (float)field->width / 2.0f;
-    float flank_shift = (strat->deployment.deploy_flanking_bias / 10.0f) * (float)field->width * 0.25f;
-    center_x += flank_shift;
     if (center_x < 0.0f) center_x = 0.0f;
     if (center_x >= field->width) center_x = field->width - 1.0f;
 
@@ -438,7 +434,7 @@ int run_battle(Battlefield* field, int max_turns) {
                 return 0;
             }
 
-            // Update total_active to reflect remaining living units
+            // Update total_active
             total_active = republic_count + separatist_count;
         }
 
@@ -478,7 +474,6 @@ void reset_stats() {
     action_counts.advance_attack = 0;
     action_counts.rally = 0;
     action_counts.dash = 0;
-    action_counts.retreat = 0;
     action_counts.total = 0;
 }
 
@@ -495,7 +490,7 @@ void print_action_stats() {
     // Categories
     int aggressive = action_counts.fire + action_counts.advance_fire + action_counts.attack + action_counts.advance_attack;
     int movement = action_counts.dash;
-    int defensive = action_counts.rally + action_counts.retreat;
+    int defensive = action_counts.rally;
     
     printf("Category breakdown:\n");
     printf("  Aggressive: %.1f%% (%d)\n", 
@@ -519,8 +514,6 @@ void print_action_stats() {
            (action_counts.dash * 100.0f) / action_counts.total);
     printf("  Rally:                %.1f%%\n", 
            (action_counts.rally * 100.0f) / action_counts.total);
-    printf("  Retreat:              %.1f%%\n", 
-           (action_counts.retreat * 100.0f) / action_counts.total);
     printf("\n");
 }
 

@@ -109,34 +109,28 @@ void add_weapon(Unit* unit, WeaponType type) {
     Weapon* w = &unit->weapons[unit->weapon_count];
     w->type = type;
     w->equipped = true;
-    w->explosion_radius = 0;
     
     // Set stats based on weapon types
     switch (type) {
         case WEAPON_SWORD:
             w->damage_bonus = 1;
             w->range = 2;
-            w->explosion_radius = 0;
             break;
         case WEAPON_SPEAR:
             w->damage_bonus = 0;
             w->range = 4;
-            w->explosion_radius = 0;
             break;
         case WEAPON_LONGBOW:
             w->damage_bonus = 0;
             w->range = 24;
-            w->explosion_radius = 0;
             break;
         case WEAPON_SHORTBOW:
             w->damage_bonus = 1;
             w->range = 16;
-            w->explosion_radius = 0;
             break;
         default:
             w->damage_bonus = 0;
             w->range = 2;
-            w->explosion_radius = 0;
             break;
     }
     unit->weapon_count++;

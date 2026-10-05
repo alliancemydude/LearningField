@@ -10,14 +10,13 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .hp = 1,
         .hp_per_soldier = 1,
         .movement = 8,
-        .morale = 9,
+        .morale = 7,
         .armor_class = 4,
         .point_value = 5,
         .is_ranged = false,
         .units_count = 1,
         .attacks_per_unit = 1,
         .preferred_range = 1,
-        .rally_bonus = 0,
         .weapons = {
             {WEAPON_SWORD}
         },
@@ -36,7 +35,6 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 1,
         .attacks_per_unit = 2,
         .preferred_range = 1,
-        .rally_bonus = 0,
         .weapons = {
             {WEAPON_SWORD}
         },
@@ -55,7 +53,6 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 1,
         .attacks_per_unit = 1,
         .preferred_range = 18,
-        .rally_bonus = 0,
         .weapons = {
             {WEAPON_LONGBOW}
         },
@@ -74,7 +71,6 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 1,
         .attacks_per_unit = 1,
         .preferred_range = 4,
-        .rally_bonus = 0,
         .weapons = {
             {WEAPON_SWORD}
         },
@@ -95,8 +91,7 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .is_ranged = false,
         .units_count = 1,
         .attacks_per_unit = 1,
-        .preferred_range = 3,
-        .rally_bonus = 0,
+        .preferred_range = 2,
         .weapons = {
             {WEAPON_SPEAR}
         },
@@ -115,7 +110,6 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 1,
         .attacks_per_unit = 2,
         .preferred_range = 3,
-        .rally_bonus = 0,
         .weapons = {
             {WEAPON_SPEAR}
         },
@@ -133,8 +127,7 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .is_ranged = true,
         .units_count = 1,
         .attacks_per_unit = 1,
-        .danger_range = 8,
-        .rally_bonus = 0,
+        .preferred_range = 10,
         .weapons = {
             {WEAPON_SHORTBOW}
         },
@@ -153,7 +146,6 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .units_count = 1,
         .attacks_per_unit = 2,
         .preferred_range = 2,
-        .rally_bonus = 0,
         .weapons = {
             {WEAPON_SWORD}
         },

@@ -11,7 +11,6 @@ typedef struct {
     int damage_bonus;
     int range;
     bool equipped;
-    int explosion_radius;
 } Weapon;
 
 typedef enum {

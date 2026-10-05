@@ -15,41 +15,44 @@
 #include "queries.h"
 #include "unit.h"
 
-#define MAX_TURNS 35
-
-EvolutionMode current_mode = EVOLVE_ALL;
-
 // Gene definitions
-
-const GeneInfo STRATEGY_GENES[] = {
-    // Strategic (5)
-    {"aggression_bias",       0.5f, 2.0f, 1.2f, CAT_STRATEGIC},
-    {"threat_weight",         0.0f, 1.0f, 0.5f, CAT_STRATEGIC},
-    {"flank_percentage",      0.0f, 1.0f, 0.2f, CAT_STRATEGIC},
-    {"flanking_bias",         0.5f, 2.0f, 1.0f, CAT_STRATEGIC},
-
-    // Deployment (3)
-    {"deploy_horizontal_spread", 0.0f, 10.0f, 6.0f, CAT_DEPLOYMENT},
-    {"deploy_vertical_offset",   0.0f, 10.0f, 4.0f, CAT_DEPLOYMENT},
-    {"deploy_flank_bias",       -5.0f,  5.0f, 0.0f, CAT_DEPLOYMENT}
+const GeneInfo REP_GENES[] = {
+    // Strategy (0-5)
+    {"strategy.aggression_bias",          0.5f,  2.0f, 1.2f},
+    {"strategy.threat_weight",            0.0f,  1.0f, 0.5f},
+    {"strategy.flank_percentage",         0.0f,  1.0f, 0.2f},
+    {"strategy.flanking_bias",            0.5f,  2.0f, 1.0f},
+    {"strategy.deploy_horizontal_spread", 0.0f, 10.0f, 6.0f},
+    {"strategy.deploy_vertical_offset",   0.0f, 10.0f, 4.0f},
+    // Swordsman (6-9)
+    {"swordsman.aggression",      0.0f,  1.0f, 0.5f},
+    {"swordsman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"swordsman.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"swordsman.spacing_y",       1.0f,  8.0f, 3.0f}
 };
-const size_t STRATEGY_GENE_COUNT = sizeof(STRATEGY_GENES) / sizeof(GeneInfo);
+const size_t REP_GENE_COUNT = sizeof(REP_GENES) / sizeof(GeneInfo);
 
-const GeneInfo UNIT_GENES[] = {
-    {"aggression",      0.0f,  1.0f, 0.5f, CAT_ALL},
-    {"preferred_range", 0.0f, 36.0f, 12.0f, CAT_ALL},
-    {"spacing_x",       1.0f,  8.0f, 3.0f, CAT_ALL},
-    {"spacing_y",       1.0f,  8.0f, 3.0f, CAT_ALL}
+const GeneInfo SEP_GENES[] = {
+    // Strategy (0-5)
+    {"strategy.aggression_bias",          0.5f,  2.0f, 1.2f},
+    {"strategy.threat_weight",            0.0f,  1.0f, 0.5f},
+    {"strategy.flank_percentage",         0.0f,  1.0f, 0.2f},
+    {"strategy.flanking_bias",            0.5f,  2.0f, 1.0f},
+    {"strategy.deploy_horizontal_spread", 0.0f, 10.0f, 6.0f},
+    {"strategy.deploy_vertical_offset",   0.0f, 10.0f, 4.0f},
+    // Spearman (6-9)
+    {"spearman.aggression",      0.0f,  1.0f, 0.5f},
+    {"spearman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"spearman.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"spearman.spacing_y",       1.0f,  8.0f, 3.0f}
 };
-const size_t UNIT_TYPE_GENE_COUNT = sizeof(UNIT_GENES) / sizeof(GeneInfo);
-const size_t UNIT_GENE_COUNT = UNIT_TYPE_COUNT * UNIT_TYPE_GENE_COUNT;
+const size_t SEP_GENE_COUNT = sizeof(SEP_GENES) / sizeof(GeneInfo);
 
 // Evolution parameters
-int battles_min = 30;
-int battles_max = 60;
-int current_battles = 20;
+int battles_min = 20;
+int battles_max = 40;
 
-int pop_size = 30;
+int pop_size = 20;
 int num_generations = 10;
 
 float mutation_rate_start = 0.5f;
@@ -61,17 +64,6 @@ int max_plateau_generations = 8;
 float improvement_threshold = 0.005f;
 float crossover_rate = 0.8f;
 
-/*
-10 min unit evolution: 20-40 battles, 25 population, 30 generations, 0.45-0.15 mutation rate, 0.35-0.08 mutation delta, 15 plateau
-10 min strat evolution: 40-80 battles, 20 population, 25 generations, 0.35-0.08 mutation rate, 0.25-0.05 mutation delta, 15 plateau
-
-30 min unit evolution: 30-60 battles, 30 population, 50 generations, 0.5-0.2 mutation rate, 0.4-0.1 mutation delta, 25 plateau
-30 min strat evolution: 60-120 battles, 30 population, 40 generations, 0.35-0.08 mutation rate, 0.25-0.05 mutation delta, 20 plateau
-
-60 min unit evolution: 40-80 battles, 40 population, 80 generations, 0.55-0.25 mutation rate, 0.45-0.12 mutation delta, 35 plateau
-60 min strat evolution: 80-150 battles, 40 population, 60 generations, 0.35-0.08 mutation rate, 0.25-0.05 mutation delta, 25 plateau
-*/
-
 typedef struct {
     float* weights;
     float fitness;
@@ -81,20 +73,16 @@ float rand_float(float low, float high) {
     return low + ((float)rand() / RAND_MAX) * (high - low);
 }
 
-float gaussian_rand() {
+float gaussian_rand(void) {
     float u = (float)rand() / RAND_MAX;
     float v = (float)rand() / RAND_MAX;
     return sqrt(-2.0f * log(u)) * cos(2.0f * M_PI * v);
 }
 
-void random_individual(Individual* ind, const GeneInfo* genes, size_t gene_count, EvolutionMode mode) {
+void random_individual(Individual* ind, const GeneInfo* genes, size_t gene_count) {
     ind->weights = malloc(gene_count * sizeof(float));
     for (size_t i = 0; i < gene_count; i++) {
-        if (mode == EVOLVE_ALL || mode == EVOLVE_UNIT || (genes[i].category & mode)) {
-            ind->weights[i] = rand_float(genes[i].min, genes[i].max);
-        } else {
-            ind->weights[i] = genes[i].default_val;
-        }
+        ind->weights[i] = rand_float(genes[i].min, genes[i].max);
     }
     ind->fitness = 0.0f;
 }
@@ -119,14 +107,12 @@ void crossover(const float* p1, const float* p2, float* child, size_t gene_count
     }
 }
 
-void mutate(float* weights, const GeneInfo* genes, size_t gene_count, EvolutionMode mode, float rate, float delta) {
+void mutate(float* weights, const GeneInfo* genes, size_t gene_count, float rate, float delta) {
     for (size_t i = 0; i < gene_count; i++) {
-        if (mode != EVOLVE_ALL && mode != EVOLVE_UNIT && !(genes[i].category & mode)) continue;
         if (rand_float(0.0f, 1.0f) < rate) {
             float range = genes[i].max - genes[i].min;
             float scaled_delta = delta * range / 10.0f;
-            float d = gaussian_rand() * scaled_delta;
-            weights[i] += d;
+            weights[i] += gaussian_rand() * scaled_delta;
             if (weights[i] < genes[i].min) weights[i] = genes[i].min;
             if (weights[i] > genes[i].max) weights[i] = genes[i].max;
         }
@@ -141,53 +127,44 @@ int compare_individual(const void *a, const void *b) {
     return 0;
 }
 
-// Evaluation function
-PairFitness evaluate_unit_pair(const float* rep_weights, const float* sep_weights, int num_battles) {
+// Combined evaluator
+PairFitness evaluate_all(const float* rep_weights, const float* sep_weights, int num_battles) {
+    // Stash current state so we can restore after the batch.
+    FactionStrategy old_rep = republic_strategy;
+    FactionStrategy old_sep = separatist_strategy;
     UnitGenome old_genomes[UNIT_TYPE_COUNT];
     memcpy(old_genomes, unit_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
-    // Helper macro to clamp a value to a range
-    #define CLAMP(value, min_val, max_val) \
-        do { if ((value) < (min_val)) (value) = (min_val); \
-             if ((value) > (max_val)) (value) = (max_val); } while(0)
+    // Apply strategy genes (indices 0..STRATEGY_GENE_COUNT-1)
+    set_republic_strategy(rep_weights);
+    set_separatist_strategy(sep_weights);
 
+    // Apply unit genes. Iteration order must match ALL_GENES layout.
+    int rep_idx = STRATEGY_GENE_COUNT;
+    int sep_idx = STRATEGY_GENE_COUNT;
     for (unsigned int i = 0; i < UNIT_TYPE_COUNT; i++) {
         UnitType type = (UnitType)i;
         Faction f = get_faction_of_unit(type);
         if (f == FACTION_UNKNOWN) continue;
-        int base = i * UNIT_TYPE_GENE_COUNT;
-
+        if (!is_unit_used_in_composition(type)) continue;
+        
         if (f == FACTION_REPUBLIC) {
-            unit_genomes[i].unit_aggression = rep_weights[base + 0];
-            CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
-
-            unit_genomes[i].preferred_range = rep_weights[base + 1];
-            CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
-
-            unit_genomes[i].spacing_x = rep_weights[base + 2];
-            CLAMP(unit_genomes[i].spacing_x, 1.0f, 8.0f);
-
-            unit_genomes[i].spacing_y = rep_weights[base + 3];
-            CLAMP(unit_genomes[i].spacing_y, 1.0f, 8.0f);
-
-        } else if (f == FACTION_SEPARATIST) {
-            unit_genomes[i].unit_aggression = sep_weights[base + 0];
-            CLAMP(unit_genomes[i].unit_aggression, 0.0f, 1.0f);
-
-            unit_genomes[i].preferred_range = sep_weights[base + 1];
-            CLAMP(unit_genomes[i].preferred_range, 0.0f, 36.0f);
-
-            unit_genomes[i].spacing_x = sep_weights[base + 2];
-            CLAMP(unit_genomes[i].spacing_x, 1.0f, 8.0f);
-
-            unit_genomes[i].spacing_y = sep_weights[base + 3];
-            CLAMP(unit_genomes[i].spacing_y, 1.0f, 8.0f);
-
+            unit_genomes[i].unit_aggression = rep_weights[rep_idx + 0];
+            unit_genomes[i].preferred_range = rep_weights[rep_idx + 1];
+            unit_genomes[i].spacing_x       = rep_weights[rep_idx + 2];
+            unit_genomes[i].spacing_y       = rep_weights[rep_idx + 3];
+            rep_idx += UNIT_TYPE_GENE_COUNT;
+        } else {
+            unit_genomes[i].unit_aggression = sep_weights[sep_idx + 0];
+            unit_genomes[i].preferred_range = sep_weights[sep_idx + 1];
+            unit_genomes[i].spacing_x       = sep_weights[sep_idx + 2];
+            unit_genomes[i].spacing_y       = sep_weights[sep_idx + 3];
+            sep_idx += UNIT_TYPE_GENE_COUNT;
         }
     }
 
+    // Run battles.
     int rep_wins = 0, sep_wins = 0, timeouts = 0;
-
     for (int i = 0; i < num_battles; i++) {
         Battlefield field;
         initialize_battlefield(&field);
@@ -202,6 +179,9 @@ PairFitness evaluate_unit_pair(const float* rep_weights, const float* sep_weight
         cleanup_battlefield(&field);
     }
 
+    // Restore.
+    republic_strategy = old_rep;
+    separatist_strategy = old_sep;
     memcpy(unit_genomes, old_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
     float penalty = 1.0f;
@@ -209,15 +189,14 @@ PairFitness evaluate_unit_pair(const float* rep_weights, const float* sep_weight
     out.rep_fitness = (float)rep_wins / num_battles - penalty * (float)timeouts / num_battles;
     out.sep_fitness = (float)sep_wins / num_battles - penalty * (float)timeouts / num_battles;
     return out;
-
-    #undef CLAMP
 }
 
 // Co-evolution
-void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int num_generations,
-    PairFitness (*evaluate_pair)(const float* rep_genome, const float* sep_genome, int num_battles), 
-    const char* name_prefix, EvolutionMode mode) {
-    // Allocate populations (weights will be allocated inside)
+void run_coevolution(const GeneInfo* rep_genes, size_t rep_gene_count,
+                     const GeneInfo* sep_genes, size_t sep_gene_count,
+                     int pop_size, int num_generations,
+                     PairFitness (*evaluate_pair)(const float*, const float*, int),
+                     const char* name_prefix) {
     Individual* rep_pop = malloc(pop_size * sizeof(Individual));
     Individual* sep_pop = malloc(pop_size * sizeof(Individual));
     Individual* next_rep = malloc(pop_size * sizeof(Individual));
@@ -227,13 +206,11 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
         return;
     }
 
-    // Initialise all four populations with allocated weight arrays
     for (int i = 0; i < pop_size; i++) {
-        random_individual(&rep_pop[i], genes, gene_count, mode);
-        random_individual(&sep_pop[i], genes, gene_count, mode);
-        // Allocate weight arrays for the "next" populations
-        next_rep[i].weights = malloc(gene_count * sizeof(float));
-        next_sep[i].weights = malloc(gene_count * sizeof(float));
+        random_individual(&rep_pop[i], rep_genes, rep_gene_count);
+        random_individual(&sep_pop[i], sep_genes, sep_gene_count);
+        next_rep[i].weights = malloc(rep_gene_count * sizeof(float));
+        next_sep[i].weights = malloc(sep_gene_count * sizeof(float));
         next_rep[i].fitness = 0.0f;
         next_sep[i].fitness = 0.0f;
     }
@@ -250,9 +227,8 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
         float current_mutation_rate = mutation_rate_start + (mutation_rate_end - mutation_rate_start) * gen_ratio;
         float current_mutation_delta = mutation_delta_start + (mutation_delta_end - mutation_delta_start) * gen_ratio;
 
-        // Evaluate Republic vs Separatist population
         for (int i = 0; i < pop_size; i++) {
-        float total = 0.0f;
+            float total = 0.0f;
             for (int j = 0; j < pop_size; j++) {
                 PairFitness pf = evaluate_pair(rep_pop[i].weights, sep_pop[j].weights, num_battles);
                 total += pf.rep_fitness;
@@ -296,35 +272,30 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
 
         int elite_count = 3;
 
-        // Republic write into next_rep
-        // copy best individuals
         for (int i = 0; i < elite_count; i++) {
-            memcpy(next_rep[i].weights, rep_pop[i].weights, gene_count * sizeof(float));
+            memcpy(next_rep[i].weights, rep_pop[i].weights, rep_gene_count * sizeof(float));
             next_rep[i].fitness = rep_pop[i].fitness;
         }
-        // Fill the rest with crossover + mutation
         for (int i = elite_count; i < pop_size; i++) {
             int p1 = tournament_select(rep_pop, pop_size, 3);
             int p2 = tournament_select(rep_pop, pop_size, 3);
-            crossover(rep_pop[p1].weights, rep_pop[p2].weights, next_rep[i].weights, gene_count, crossover_rate);
-            mutate(next_rep[i].weights, genes, gene_count, mode, current_mutation_rate, current_mutation_delta);
+            crossover(rep_pop[p1].weights, rep_pop[p2].weights, next_rep[i].weights, rep_gene_count, crossover_rate);
+            mutate(next_rep[i].weights, rep_genes, rep_gene_count, current_mutation_rate, current_mutation_delta);
             next_rep[i].fitness = 0.0f;
         }
 
-        // Separatists write into next_sep
         for (int i = 0; i < elite_count; i++) {
-            memcpy(next_sep[i].weights, sep_pop[i].weights, gene_count * sizeof(float));
+            memcpy(next_sep[i].weights, sep_pop[i].weights, sep_gene_count * sizeof(float));
             next_sep[i].fitness = sep_pop[i].fitness;
         }
         for (int i = elite_count; i < pop_size; i++) {
             int p1 = tournament_select(sep_pop, pop_size, 3);
             int p2 = tournament_select(sep_pop, pop_size, 3);
-            crossover(sep_pop[p1].weights, sep_pop[p2].weights, next_sep[i].weights, gene_count, crossover_rate);
-            mutate(next_sep[i].weights, genes, gene_count, mode, current_mutation_rate, current_mutation_delta);
+            crossover(sep_pop[p1].weights, sep_pop[p2].weights, next_sep[i].weights, sep_gene_count, crossover_rate);
+            mutate(next_sep[i].weights, sep_genes, sep_gene_count, current_mutation_rate, current_mutation_delta);
             next_sep[i].fitness = 0.0f;
         }
 
-        // Swap pointers
         Individual* tmp = rep_pop;
         rep_pop = next_rep;
         next_rep = tmp;
@@ -340,23 +311,13 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
         printf("Best Republic fitness: %.4f\n", rep_pop[0].fitness);
         printf("Best Separatist fitness: %.4f\n", sep_pop[0].fitness);
 
-        if (genes == UNIT_GENES) {
-            // Unit genome mode
-            print_unit_genome(rep_pop[0].weights, FACTION_REPUBLIC, "Republic");
-            print_unit_genome(sep_pop[0].weights, FACTION_SEPARATIST, "Separatist");
-            save_unit_genome(rep_pop[0].weights, FACTION_REPUBLIC, name_prefix);
-            save_unit_genome(sep_pop[0].weights, FACTION_SEPARATIST, name_prefix);
-        } else {
-            // Strategy genome mode
-            print_genome(rep_pop[0].weights, genes, gene_count, "Republic");
-            print_genome(sep_pop[0].weights, genes, gene_count, "Separatist");
-            save_genomes(rep_pop[0].weights, sep_pop[0].weights, genes, gene_count, name_prefix);
-        }
+        print_genome(rep_pop[0].weights, rep_genes, rep_gene_count, "Republic");
+        print_genome(sep_pop[0].weights, sep_genes, sep_gene_count, "Separatist");
+        save_genomes(rep_pop[0].weights, rep_gene_count, sep_pop[0].weights, sep_gene_count, rep_genes, sep_genes, name_prefix);
     } else {
         printf("\nWARNING: Stopped early (%.1f%%). Skipping save.\n", completion * 100);
     }
 
-    // free all weight arrays
     for (int i = 0; i < pop_size; i++) {
         free(rep_pop[i].weights);
         free(sep_pop[i].weights);
@@ -369,7 +330,7 @@ void run_coevolution(const GeneInfo* genes, size_t gene_count, int pop_size, int
     free(next_sep);
 }
 
-// Print and save functions
+// Print and save
 void print_genome(const float* w, const GeneInfo* genes, size_t gene_count, const char* name) {
     printf("%s genome:\n", name);
     for (size_t i = 0; i < gene_count; i++) {
@@ -377,7 +338,10 @@ void print_genome(const float* w, const GeneInfo* genes, size_t gene_count, cons
     }
 }
 
-void save_genomes(const float* rep_weights, const float* sep_weights, const GeneInfo* genes, size_t gene_count, const char* prefix) {
+void save_genomes(const float* rep_weights, size_t rep_count,
+                  const float* sep_weights, size_t sep_count,
+                  const GeneInfo* rep_genes, const GeneInfo* sep_genes,
+                  const char* prefix) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
     char filename[128];
@@ -391,91 +355,29 @@ void save_genomes(const float* rep_weights, const float* sep_weights, const Gene
     }
     fprintf(f, "# Best co-evolved genomes for %s\n\n", prefix);
     fprintf(f, "[REPUBLIC]\n");
-    for (size_t i = 0; i < gene_count; i++) {
-        fprintf(f, "%s %.2f\n", genes[i].name, rep_weights[i]);
+    for (size_t i = 0; i < rep_count; i++) {
+        fprintf(f, "%s %.2f\n", rep_genes[i].name, rep_weights[i]);
     }
     fprintf(f, "\n[SEPARATIST]\n");
-    for (size_t i = 0; i < gene_count; i++) {
-        fprintf(f, "%s %.2f\n", genes[i].name, sep_weights[i]);
+    for (size_t i = 0; i < sep_count; i++) {
+        fprintf(f, "%s %.2f\n", sep_genes[i].name, sep_weights[i]);
     }
     fclose(f);
     printf("Genomes saved to %s\n", filename);
 }
 
-void print_unit_genome(const float* w, Faction faction, const char* name) {
-    printf("%s unit genome:\n", name);
-    for (unsigned int i = 0; i < UNIT_TYPE_COUNT; i++) {
-        UnitType type = (UnitType)i;
-        if (get_faction_of_unit(type) != faction) continue;
-        if (!is_unit_used_in_composition(type)) continue;
-
-        int base = i * UNIT_TYPE_GENE_COUNT;
-        const char* type_name = get_unit_type_name(type);
-        printf("  [%s]\n", type_name);
-
-        for (size_t g = 0; g < UNIT_TYPE_GENE_COUNT; g++) {
-            // Clamp to the gene's declared bounds so display is always valid
-            float val = w[base + g];
-            if (val < UNIT_GENES[g].min) val = UNIT_GENES[g].min;
-            if (val > UNIT_GENES[g].max) val = UNIT_GENES[g].max;
-            printf("    %s: %.2f\n", UNIT_GENES[g].name, val);
-        }
-    }
-}
-
-void save_unit_genome(const float* weights, Faction faction, const char* prefix) {
-    (void)prefix;
-    time_t t = time(NULL);
-    struct tm *tm = localtime(&t);
-    char filename[128];
-    char time_str[32];
-    strftime(time_str, sizeof(time_str), "%Y%m%d_%H%M%S", tm);
-    const char* faction_name = (faction == FACTION_REPUBLIC) ? "republic" : "separatist";
-    snprintf(filename, sizeof(filename), "best_unit_%s_%s.txt", faction_name, time_str);
-
-    FILE* f = fopen(filename, "w");
-    if (!f) {
-        printf("Error: Could not save unit genome.\n");
-        return;
-    }
-    fprintf(f, "# Best unit genome for %s\n\n",
-            (faction == FACTION_REPUBLIC) ? "Republic" : "Separatist");
-
-    for (unsigned int i = 0; i < UNIT_TYPE_COUNT; i++) {
-        UnitType type = (UnitType)i;
-        if (get_faction_of_unit(type) != faction) continue;
-        if (!is_unit_used_in_composition(type)) continue;
-
-        int base = i * UNIT_TYPE_GENE_COUNT;
-        const char* type_name = get_unit_type_name(type);
-        fprintf(f, "[%s]\n", type_name);
-
-        for (size_t g = 0; g < UNIT_TYPE_GENE_COUNT; g++) {
-            float val = weights[base + g];
-            if (val < UNIT_GENES[g].min) val = UNIT_GENES[g].min;
-            if (val > UNIT_GENES[g].max) val = UNIT_GENES[g].max;
-            fprintf(f, "%s %.2f\n", UNIT_GENES[g].name, val);
-        }
-        fprintf(f, "\n");
-    }
-    fclose(f);
-    printf("Unit genomes saved to %s\n", filename);
-}
-
-// Main evolution function
-void run_evolution(EvolutionMode mode) {
-    current_mode = mode;
-    
+// Entry point
+void run_evolution(void) {
     printf("\n=== STARTING EVOLUTION ===\n");
-    printf("Population: %d, Generations: %d\n", pop_size, num_generations);
-    printf("Mutation rate: %.2f -> %.2f, Delta: %.2f -> %.2f\n", mutation_rate_start, mutation_rate_end, mutation_delta_start, mutation_delta_end);
+    printf("Population: %d, Generations: %d, Genes: %zu\n",
+           pop_size, num_generations, REP_GENE_COUNT);
+    printf("Mutation rate: %.2f -> %.2f, Delta: %.2f -> %.2f\n",
+           mutation_rate_start, mutation_rate_end,
+           mutation_delta_start, mutation_delta_end);
     printf("Crossover rate: %.2f\n", crossover_rate);
 
-    if (mode == EVOLVE_UNIT) {
-        run_coevolution(UNIT_GENES, UNIT_GENE_COUNT, pop_size, num_generations, evaluate_unit_pair, "unit", mode);
-        return;
-    }
-
-    // Strategy evolution (TACTICAL, STRATEGIC, DEPLOYMENT, ALL)
-    run_coevolution(STRATEGY_GENES, STRATEGY_GENE_COUNT, pop_size, num_generations, evaluate_matchup, "strategy", mode);
+    run_coevolution(REP_GENES, REP_GENE_COUNT,
+                SEP_GENES, SEP_GENE_COUNT,
+                pop_size, num_generations,
+                evaluate_all, "combined");
 }

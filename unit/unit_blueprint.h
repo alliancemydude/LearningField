@@ -4,10 +4,9 @@
 #include "unit.h"
 #include "config.h"
 
-// Weapon unit struct, ammo is only used for explosives
+// Weapon unit struct
 typedef struct {
     WeaponType type;
-    int ammo;
 } WeaponBlueprint;
 
 // All unit stats struct. Does not interact with the battlefield,
@@ -26,7 +25,6 @@ typedef struct {
     int attacks_per_unit;
     int attack_order;
     int preferred_range;
-    int danger_range;
     int rally_bonus;
     WeaponBlueprint weapons[WEAPON_COUNT];
     int weapon_count;

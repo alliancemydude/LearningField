@@ -202,32 +202,6 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
             add_pin_marker(target);
         }
 
-        // Deal area-of-effect damage
-        if (w->explosion_radius > 0) {
-        // For each hit, apply splash to nearby enemies (excluding primary)
-            for (int h = 0; h < hits; h++) {
-                Unit* nearby[MAX_UNITS];
-                int count = get_enemies_in_range(target, field, w->explosion_radius, nearby);
-                for (int j = 0; j < count; j++) {
-                    Unit* enemy = nearby[j];
-                    if (enemy == target) continue;   // primary already takes direct damage
-
-                    int kills = 0;
-                    int damage = roll(1, 6);
-                    if (damage == 1) add_pin_marker(enemy);
-                    else if (damage == 2) { enemy->is_immobilized = true; add_pin_marker(enemy); }
-                    else if (damage == 3) { add_pin_marker(enemy); if (morale_check(enemy) == 0) kills = 1; }
-                    else kills = 1;
-
-                    if (kills > 0) take_damage(enemy, kills);
-
-                    // Pin markers from blast
-                    add_pin_marker(enemy);
-                    add_pin_marker(enemy);   // extra shock
-                }
-            }
-        }
-
         // Deal damage
         int kills = 0;
         for (int h = 0; h < hits; h++) {

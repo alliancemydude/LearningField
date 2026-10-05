@@ -11,37 +11,34 @@
 // Set the current weights
 FactionStrategy republic_strategy = {
     .strategic = {
-        .aggression_bias       = 1.51f,
-        .threat_weight         = 0.8f,
-        .flank_percentage      = 0.59f,
-        .flanking_bias         = 0.59f
+        .aggression_bias       = 1.2f,
+        .threat_weight         = 0.5f,
+        .flank_percentage      = 0.3f,
+        .flanking_bias         = 1.0f
     },
     .deployment = {
-        .deploy_horizontal_spread = 7.00f,
-        .deploy_vertical_offset   = 0.68f,
-        .deploy_flanking_bias     = 3.41f
+        .deploy_horizontal_spread = 4.00f,
+        .deploy_vertical_offset   = 1.00f
     }
 };
 
 FactionStrategy separatist_strategy = {
     .strategic = {
-        .aggression_bias       = 1.20f,
-        .threat_weight         = 0.08f,
-        .flank_percentage      = 1.00f,
-        .flanking_bias         = 1.11f
+        .aggression_bias       = 1.2f,
+        .threat_weight         = 0.5f,
+        .flank_percentage      = 0.3f,
+        .flanking_bias         = 1.0f
     },
     .deployment = {
-        .deploy_horizontal_spread = 1.56f,
-        .deploy_vertical_offset   = 0.28f,
-        .deploy_flanking_bias     = 0.15f
+        .deploy_horizontal_spread = 4.00f,
+        .deploy_vertical_offset   = 1.00f
     }
 };
 
 //Role assignment
 
 void assign_unit_roles(Battlefield* field, Faction faction) {
-    FactionStrategy* strat = (faction == FACTION_REPUBLIC)
-                             ? &republic_strategy : &separatist_strategy;
+    FactionStrategy* strat = (faction == FACTION_REPUBLIC) ? &republic_strategy : &separatist_strategy;
     float pct = strat->strategic.flank_percentage;
 
     Unit* list[MAX_UNITS];
@@ -70,8 +67,7 @@ void assign_unit_roles(Battlefield* field, Faction faction) {
 }
 
 // Set genes
-
-void set_republic_strategy(const float weights[7]) {
+void set_republic_strategy(const float weights[6]) {
     republic_strategy.strategic.aggression_bias       = weights[0];
     republic_strategy.strategic.threat_weight         = weights[1];
     republic_strategy.strategic.flank_percentage      = weights[2];
@@ -79,10 +75,9 @@ void set_republic_strategy(const float weights[7]) {
 
     republic_strategy.deployment.deploy_horizontal_spread = weights[4];
     republic_strategy.deployment.deploy_vertical_offset   = weights[5];
-    republic_strategy.deployment.deploy_flanking_bias     = weights[6];
 }
 
-void set_separatist_strategy(const float weights[7]) {
+void set_separatist_strategy(const float weights[6]) {
     separatist_strategy.strategic.aggression_bias       = weights[0];
     separatist_strategy.strategic.threat_weight         = weights[1];
     separatist_strategy.strategic.flank_percentage      = weights[2];
@@ -90,11 +85,9 @@ void set_separatist_strategy(const float weights[7]) {
 
     separatist_strategy.deployment.deploy_horizontal_spread = weights[4];
     separatist_strategy.deployment.deploy_vertical_offset   = weights[5];
-    separatist_strategy.deployment.deploy_flanking_bias     = weights[6];
 }
 
 // Load strategies
-
 void load_strategy_from_file(const char* filename) {
     FILE* f = fopen(filename, "r");
     if (!f) {
@@ -102,8 +95,8 @@ void load_strategy_from_file(const char* filename) {
         return;
     }
 
-    float rep_weights[7] = {0};
-    float sep_weights[7] = {0};
+    float rep_weights[6] = {0};
+    float sep_weights[6] = {0};
     int rep_count = 0, sep_count = 0;
     int current_faction = -1;
     char line[256];

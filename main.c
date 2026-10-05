@@ -108,30 +108,7 @@ int main() {
             print_results();
         } else if (battle_type == 'e') {
             clock_t start = clock();
-
-            printf("Select evolution mode:\n");
-            printf("1. Tactical\n");
-            printf("2. Strategic\n");
-            printf("3. Deployment\n");
-            printf("4. All\n");
-            printf("5. Unit (co‑evolves both factions)\n");
-            printf("Enter choice (1-5): ");
-
-            int c;
-            while ((c = getchar()) != '\n' && c != EOF) { }
-
-            int choice = getchar() - '0';
-
-            EvolutionMode mode;
-            switch (choice) {
-                case 1: mode = EVOLVE_TACTICAL; break;
-                case 2: mode = EVOLVE_STRATEGIC; break;
-                case 3: mode = EVOLVE_DEPLOYMENT; break;
-                case 5: mode = EVOLVE_UNIT; break;
-                default: mode = EVOLVE_ALL; break;
-            }
-
-            run_evolution(mode);
+            run_evolution();
 
             clock_t end = clock();
             float time_taken = ((float)(end - start)) / CLOCKS_PER_SEC;
