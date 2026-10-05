@@ -10,6 +10,8 @@
 #include <math.h>
 #include <string.h>
 
+#define LOCAL_FORCE_RADIUS 5
+
 // Global variable for the target
 static Unit* target = NULL;
 
@@ -72,56 +74,41 @@ void unit_turn(Unit* unit, Battlefield* field) {
     // 4. Move toward strategic target, with spacing adjustment
     if (!acted && !moved) {
         int tx, ty;
+        bool has_target = false;
 
         if (unit->role == ROLE_FLANK) {
-            // Flankers steer around the enemy
             int ecx, ecy;
             get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
             int offset = (int)(strat->strategic.flanking_bias * 8.0f);
+            int push_dir = (unit->faction == FACTION_REPUBLIC) ? -1 : 1;
             bool go_left = (unit->id % 2 == 0);
             tx = ecx + (go_left ? -offset : offset);
-            ty = ecy;
+            ty = ecy + push_dir * (int)strat->strategic.flank_depth;
+            has_target = true;
         } else {
-            // Line units advance toward the enemy center
             int ecx, ecy;
             get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
-            tx = ecx;
-            ty = ecy;
+            tx = ecx; ty = ecy;
+            has_target = true;
         }
 
-        // push the target away from the nearest ally if we're closer
-        // than our preferred spacing on either axis.
-        Unit* ally = find_closest_ally(unit, field);
-        if (ally) {
-            int dax = unit->x - ally->x;
-            int day = unit->y - ally->y;
+        if (has_target) {
+            int local_allies  = count_faction_in_radius(unit, field, unit->faction, LOCAL_FORCE_RADIUS);
+            int local_enemies = count_faction_in_radius(unit, field,
+                                enemy_faction(unit->faction), LOCAL_FORCE_RADIUS);
 
-            if (fabsf((float)dax) < unit->spacing_x) {
-                int push = (int)(unit->spacing_x - fabsf((float)dax));
-                int dir = (dax != 0) ? (dax > 0 ? 1 : -1)
-                                    : ((unit->id % 2 == 0) ? 1 : -1);
-                tx += dir * push;
+            bool should_advance = (local_enemies == 0) ||
+                ((float)local_allies >= unit->effective_local_force_ratio * (float)local_enemies);
+
+            if (should_advance) {
+                int move_cap = unit->half_movement +
+                    (int)((unit->movement - unit->half_movement) * unit->effective_aggression);
+                execute_move(unit, field, tx, ty, move_cap);
+                acted = true;
+                action_taken = ACTION_DASH;
             }
-            if (fabsf((float)day) < unit->spacing_y) {
-                int push = (int)(unit->spacing_y - fabsf((float)day));
-                int dir = (day != 0) ? (day > 0 ? 1 : -1)
-                                    : ((unit->id % 2 == 0) ? 1 : -1);
-                ty += dir * push;
-            }
+            // else: hold position. The unit will not move this turn.
         }
-
-        float effective = unit->effective_aggression * strat->strategic.aggression_bias;
-        if (effective > 1.0f) effective = 1.0f;
-        if (effective < 0.0f) effective = 0.0f;
-
-        int move_cap = unit->half_movement +
-                    (int)((unit->movement - unit->half_movement) * effective);
-        if (move_cap < unit->half_movement) move_cap = unit->half_movement;
-        if (move_cap > unit->movement)      move_cap = unit->movement;
-
-        execute_move(unit, field, tx, ty, move_cap);
-        acted = true;
-        action_taken = ACTION_DASH;
     }
 
     // 5. Fallback: rally if pinned

@@ -51,9 +51,9 @@ int take_damage(Unit* unit, int kills) {
     }
 
     if (unit->faction == FACTION_REPUBLIC) {
-        battle_stats.damage_dealt_rep += damage_dealt;
+        battle_stats.damage_taken_rep += damage_dealt;
     } else {
-        battle_stats.damage_dealt_sep += damage_dealt;
+        battle_stats.damage_taken_sep += damage_dealt;
     }
 
     if (unit->hp <= 0) {

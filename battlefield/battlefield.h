@@ -41,8 +41,8 @@ typedef struct {
     int shots_fired;
     int shots_hit;
     int kills;
-    int damage_dealt_rep;
-    int damage_dealt_sep;
+    int damage_taken_rep;
+    int damage_taken_sep;
     int casualties_rep;
     int casualties_sep;
     int kills_by_type[UNIT_TYPE_COUNT];

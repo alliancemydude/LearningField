@@ -49,6 +49,7 @@ typedef struct Unit {
     float effective_aggression;
     float spacing_x;
     float spacing_y;
+    float effective_local_force_ratio;
 
     // Status
     int rally_bonus;

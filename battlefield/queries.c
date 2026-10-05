@@ -368,3 +368,15 @@ int get_distance_to_specific_ally(Unit* unit, Unit* target) {
     int distance = get_distance(unit, target);
     return distance;
 }
+
+int count_faction_in_radius(Unit* unit, Battlefield* field, Faction faction, int radius) {
+    int count = 0;
+    int radius_sq = radius * radius;
+    for (int i = 0; i < field->unit_count; i++) {
+        Unit* other = field->units[i];
+        if (!other || other == unit || other->hp <= 0) continue;
+        if (other->faction != faction) continue;
+        if (get_distance_squared(unit, other) <= radius_sq) count++;
+    }
+    return count;
+}

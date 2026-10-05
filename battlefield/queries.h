@@ -27,5 +27,6 @@ int get_distance_to_ally_type(Unit* unit, Battlefield* field, UnitType ally_type
 Unit* find_closest_pinned_ally(Unit* unit, Battlefield* field);
 int get_distance_to_specific_ally(Unit* unit, Unit* target);
 Unit* find_closest_ally(Unit* unit, Battlefield* field);
+int count_faction_in_radius(Unit* unit, Battlefield* field, Faction faction, int radius);
 
 #endif

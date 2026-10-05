@@ -54,6 +54,7 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     if (unit->preferred_range > unit->max_range) {
         unit->preferred_range = unit->max_range;
     }
+    unit->effective_local_force_ratio = ug->local_force_ratio;
     
     // Create preferences based on variables
     unit->attack_order = bp->attack_order;
@@ -113,7 +114,7 @@ void add_weapon(Unit* unit, WeaponType type) {
     // Set stats based on weapon types
     switch (type) {
         case WEAPON_SWORD:
-            w->damage_bonus = 1;
+            w->damage_bonus = 0;
             w->range = 2;
             break;
         case WEAPON_SPEAR:

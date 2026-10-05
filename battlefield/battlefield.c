@@ -157,7 +157,7 @@ void spawn_republic_forces(Battlefield* field, ForceComposition forces[], int fo
 
     float horizontal_spread = strat->deployment.deploy_horizontal_spread / 10.0f;
     float vertical_offset = strat->deployment.deploy_vertical_offset / 10.0f;
-    int y_center = y_min + (int)((y_max - y_min) * vertical_offset);
+    int y_center = y_max - (int)((y_max - y_min) * vertical_offset);
     if (y_center < y_min) y_center = y_min;
     if (y_center > y_max) y_center = y_max;
 
@@ -524,7 +524,9 @@ void print_battle_summary() {
     printf("Shots fired: %d\n", battle_stats.shots_fired);
     printf("Shots hit: %d\n", battle_stats.shots_hit);
     printf("Kills: %d\n", battle_stats.kills);
-    printf("Damage dealt: Republic %d, Separatist %d\n", battle_stats.damage_dealt_rep, battle_stats.damage_dealt_sep);
+    int rep_dealt = battle_stats.damage_taken_sep;
+    int sep_dealt = battle_stats.damage_taken_rep;
+    printf("Damage dealt: Republic %d, Separatist %d\n", rep_dealt, sep_dealt);
     printf("Casualties: Republic %d, Separatist %d\n", battle_stats.casualties_rep, battle_stats.casualties_sep);
     // Print kills by type
     for (int i = 0; i < UNIT_TYPE_COUNT; i++) {

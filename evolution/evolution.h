@@ -4,8 +4,8 @@
 #include <stddef.h>
 #include "config.h"
 
-#define STRATEGY_GENE_COUNT 6
-#define UNIT_TYPE_GENE_COUNT 4
+#define STRATEGY_GENE_COUNT 7
+#define UNIT_TYPE_GENE_COUNT 5
 
 typedef struct {
     const char* name;
