@@ -56,13 +56,13 @@ const size_t SEP_GENE_COUNT = sizeof(SEP_GENES) / sizeof(GeneInfo);
 int battles_min = 30;
 int battles_max = 60;
 
-int pop_size = 30;
-int num_generations = 30;
+int pop_size = 40;
+int num_generations = 60;
 
 float mutation_rate_start = 0.5f;
-float mutation_rate_end = 0.2f;
+float mutation_rate_end = 0.15f;
 float mutation_delta_start = 0.4f;
-float mutation_delta_end = 0.1f;
+float mutation_delta_end = 0.08f;
 float crossover_rate = 0.8f;
 
 typedef struct {
@@ -323,23 +323,50 @@ void run_coevolution(const GeneInfo* rep_genes, size_t rep_gene_count,
         float current_mutation_rate = mutation_rate_start + (mutation_rate_end - mutation_rate_start) * gen_ratio;
         float current_mutation_delta = mutation_delta_start + (mutation_delta_end - mutation_delta_start) * gen_ratio;
 
+        // Compute every pairing once and cache both scores.
+        // cache[i * pop_size + j] holds the scores for Republic individual i
+        // vs Separatist individual j.
+        PairFitness* cache = malloc(pop_size * pop_size * sizeof(PairFitness));
+        if (!cache) {
+            printf("Memory allocation failed (cache).\n");
+            for (int i = 0; i < pop_size; i++) {
+                free(rep_pop[i].weights);
+                free(sep_pop[i].weights);
+                free(next_rep[i].weights);
+                free(next_sep[i].weights);
+            }
+            free(rep_pop);
+            free(sep_pop);
+            free(next_rep);
+            free(next_sep);
+            return;
+        }
+
+        for (int i = 0; i < pop_size; i++) {
+            for (int j = 0; j < pop_size; j++) {
+                cache[i * pop_size + j] = evaluate_pair(rep_pop[i].weights, sep_pop[j].weights, num_battles);
+            }
+        }
+
+        // Republic scores: average across each row
         for (int i = 0; i < pop_size; i++) {
             float total = 0.0f;
             for (int j = 0; j < pop_size; j++) {
-                PairFitness pf = evaluate_pair(rep_pop[i].weights, sep_pop[j].weights, num_battles);
-                total += pf.rep_fitness;
+                total += cache[i * pop_size + j].rep_fitness;
             }
             rep_pop[i].fitness = total / pop_size;
         }
 
+        // Separatist scores: average down each column
         for (int j = 0; j < pop_size; j++) {
             float total = 0.0f;
             for (int i = 0; i < pop_size; i++) {
-                PairFitness pf = evaluate_pair(rep_pop[i].weights, sep_pop[j].weights, num_battles);
-                total += pf.sep_fitness;
+                total += cache[i * pop_size + j].sep_fitness;
             }
             sep_pop[j].fitness = total / pop_size;
         }
+
+        free(cache);
 
         qsort(rep_pop, pop_size, sizeof(Individual), compare_individual);
         qsort(sep_pop, pop_size, sizeof(Individual), compare_individual);
@@ -393,6 +420,17 @@ void run_coevolution(const GeneInfo* rep_genes, size_t rep_gene_count,
             mutate(next_sep[i].weights, sep_genes, sep_gene_count, current_mutation_rate, current_mutation_delta);
             next_sep[i].fitness = 0.0f;
             next_sep[i].selection_score = 0.0f;
+        }
+
+        // Checkpoint save every 15 generations
+        if ((gen + 1) % 15 == 0) {
+            char ckpt[64];
+            snprintf(ckpt, sizeof(ckpt), "checkpoint_gen%d", gen + 1);
+            printf("\n--- Checkpoint at generation %d ---\n", gen + 1);
+            save_genomes(rep_pop[0].weights, rep_gene_count,
+                         sep_pop[0].weights, sep_gene_count,
+                         rep_genes, sep_genes, ckpt);
+            printf("\n");
         }
 
         Individual* tmp = rep_pop;

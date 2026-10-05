@@ -1,0 +1,29 @@
+# Best co-evolved genomes for combined
+
+[REPUBLIC]
+strategy.aggression_bias 1.02
+strategy.threat_weight 0.58
+strategy.flank_percentage 0.45
+strategy.flanking_bias 1.66
+strategy.deploy_horizontal_spread 8.47
+strategy.deploy_vertical_offset 2.11
+strategy.flank_depth 10.53
+swordsman.aggression 0.06
+swordsman.preferred_range 8.68
+swordsman.spacing_x 6.28
+swordsman.spacing_y 7.82
+swordsman.local_force_ratio 0.68
+
+[SEPARATIST]
+strategy.aggression_bias 1.87
+strategy.threat_weight 0.05
+strategy.flank_percentage 0.53
+strategy.flanking_bias 0.59
+strategy.deploy_horizontal_spread 6.11
+strategy.deploy_vertical_offset 0.62
+strategy.flank_depth 13.85
+spearman.aggression 0.03
+spearman.preferred_range 4.65
+spearman.spacing_x 4.16
+spearman.spacing_y 1.86
+spearman.local_force_ratio 0.59

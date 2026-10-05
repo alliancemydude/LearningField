@@ -40,10 +40,10 @@ void unit_turn(Unit* unit, Battlefield* field) {
         if (fire_target) {
             target = fire_target;
             if (is_ranged) {
-                acted = execute_fire(unit, fire_target, false, field);
+                acted = execute_fire(unit, fire_target, false);
                 if (acted) { action_taken = ACTION_FIRE; goto action_done; }
             } else {
-                acted = execute_attack(unit, fire_target, false, field);
+                acted = execute_attack(unit, fire_target, false);
                 if (acted) { action_taken = ACTION_ATTACK; goto action_done; }
             }
         }
@@ -59,10 +59,10 @@ void unit_turn(Unit* unit, Battlefield* field) {
                 move_toward_target(unit, enemy, unit->half_movement, field);
                 moved = true;
                 if (is_ranged) {
-                    acted = execute_fire(unit, enemy, true, field);
+                    acted = execute_fire(unit, enemy, true);
                     if (acted) { action_taken = ACTION_ADVANCE_FIRE; goto action_done; }
                 } else {
-                    acted = execute_attack(unit, enemy, true, field);
+                    acted = execute_attack(unit, enemy, true);
                     if (acted) { action_taken = ACTION_ADVANCE_ATTACK; goto action_done; }
                 }
                 action_taken = is_ranged ? ACTION_ADVANCE_FIRE : ACTION_ADVANCE_ATTACK;

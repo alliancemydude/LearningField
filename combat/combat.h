@@ -10,8 +10,8 @@ int take_damage(Unit* unit, int kills);
 void add_pin_marker(Unit* unit);
 
 // Actions
-bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field);
-bool execute_attack(Unit* unit, Unit* target, bool advanced, Battlefield* field);
+bool execute_fire(Unit* unit, Unit* target, bool advanced);
+bool execute_attack(Unit* unit, Unit* target, bool advanced);
 bool execute_rally(Unit* unit);
 
 #endif

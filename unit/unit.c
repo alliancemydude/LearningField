@@ -70,7 +70,6 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     // Give the unit its position
     unit->x = x;
     unit->y = y;
-    unit->squad_moved = false;
     
     // Give the unit weapons according to its specifications
     clear_weapons(unit);
@@ -126,7 +125,7 @@ void add_weapon(Unit* unit, WeaponType type) {
             w->range = 24;
             break;
         case WEAPON_SHORTBOW:
-            w->damage_bonus = 1;
+            w->damage_bonus = 0;
             w->range = 16;
             break;
         default:

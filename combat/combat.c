@@ -25,26 +25,16 @@ int morale_check(Unit* unit) {
 
 int take_damage(Unit* unit, int kills) {
     int old_hp = unit->hp;
-    
-    // Remove HP according to kills
+
     unit->hp -= kills;
+    if (unit->hp < 0) unit->hp = 0;
 
-    // Remove unit soldiers according to kills
     if (unit->hp_per_soldier > 0) {
-        unit->units_count -= kills / unit->hp_per_soldier;
-    }
-    if (unit->units_count < 0) unit->units_count = 0;
-    
-
-    if (unit->hp < 0) {
-        unit->hp = 0;
+        unit->units_count = (unit->hp + unit->hp_per_soldier - 1) / unit->hp_per_soldier;
+    } else {
+        unit->units_count = (unit->hp > 0) ? 1 : 0;
     }
 
-    if (unit->units_count < 0) {
-        unit->units_count = 0;
-    }
-
-    // Compute damage dealt
     int damage_dealt = old_hp - unit->hp;
     if (damage_dealt < 0) {
         damage_dealt = 0;
@@ -74,22 +64,17 @@ void add_pin_marker(Unit* unit) {
 
 
 // Action executions
-bool execute_attack(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
-    if (target == NULL) {
-        return false;
-    }
-
+bool execute_attack(Unit* unit, Unit* target, bool advanced) {
+    if (!unit || !target) return false;
     if (unit->hp <= 0) return false;
 
     bool attacked = false;
 
-    if (unit == NULL || target == NULL || field == NULL) return false;
-
     // Find a usable weapon
+    int distance_sq = get_distance_squared(unit, target);
     for (int i = 0; i < unit->weapon_count; i++) {
         Weapon* w = &unit->weapons[i];
-        int distance_sq = get_distance_squared(unit, target);
-
+        
         // Check that the range is valid
         if (distance_sq > w->range * w->range) {
             continue;
@@ -150,22 +135,16 @@ bool execute_attack(Unit* unit, Unit* target, bool advanced, Battlefield* field)
     return attacked;
 }
 
-bool execute_fire(Unit* unit, Unit* target, bool advanced, Battlefield* field) {
-    if (target == NULL) {
-        return false;
-    }
-
+bool execute_fire(Unit* unit, Unit* target, bool advanced) {
+    if (!unit || !target) return false;
     if (unit->hp <= 0) return false;
-
     bool fired = false;
 
-    if (unit == NULL || target == NULL || field == NULL) return false;
-
     // Find a usable weapon
+    int distance_sq = get_distance_squared(unit, target);
     for (int i = 0; i < unit->weapon_count; i++) {
         Weapon* w = &unit->weapons[i];
-        int distance_sq = get_distance_squared(unit, target);
-
+        
         // Check that the range is valid
         if (distance_sq > w->range * w->range) {
             continue;

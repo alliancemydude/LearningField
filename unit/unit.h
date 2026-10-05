@@ -63,7 +63,6 @@ typedef struct Unit {
 
     // Position
     int x, y;
-    bool squad_moved;
 
     // Weapons
     Weapon weapons[WEAPON_COUNT];

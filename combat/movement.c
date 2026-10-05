@@ -74,37 +74,3 @@ void move_toward_target(Unit* unit, Unit* target, int move_amount, Battlefield* 
     unit->y = cur_y;
     clamp_unit_position(unit, field);
 }
-
-void execute_dash(Unit* unit, Unit* target, Battlefield* field) {
-    if (!target || unit->movement == 0 || unit->is_immobilized) return;
-
-    int dx = target->x - unit->x;
-    int dy = target->y - unit->y;
-    int step_x = (dx > 0) ? 1 : (dx < 0) ? -1 : 0;
-    int step_y = (dy > 0) ? 1 : (dy < 0) ? -1 : 0;
-    int steps = unit->movement;
-    int cur_x = unit->x, cur_y = unit->y;
-
-    while (steps > 0 && step_x != 0) {
-        int next_x = cur_x + step_x;
-        if (is_tile_walkable(field, next_x, cur_y, unit)) {
-            cur_x = next_x;
-            steps--;
-        } else {
-            break;
-        }
-    }
-    while (steps > 0 && step_y != 0) {
-        int next_y = cur_y + step_y;
-        if (is_tile_walkable(field, cur_x, next_y, unit)) {
-            cur_y = next_y;
-            steps--;
-        } else {
-            break;
-        }
-    }
-
-    unit->x = cur_x;
-    unit->y = cur_y;
-    clamp_unit_position(unit, field);
-}

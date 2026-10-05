@@ -11,7 +11,7 @@
 
 // Default force compositions
 ForceComposition default_republic_composition[] = {
-    {UNIT_SWORDSMAN,        20},
+    {UNIT_SWORDSMAN,        30},
     {UNIT_ELITE_SWORDSMAN,  0},
     {UNIT_LONGBOWMAN,       0},
     {UNIT_HORSEMAN,         0}
@@ -19,7 +19,7 @@ ForceComposition default_republic_composition[] = {
 int default_republic_composition_count = sizeof(default_republic_composition) / sizeof(default_republic_composition[0]);
 
 ForceComposition default_separatist_composition[] = {
-    {UNIT_SPEARMAN,         20},
+    {UNIT_SPEARMAN,         30},
     {UNIT_ELITE_SPEARMAN,   0},
     {UNIT_SHORTBOWMAN,      0},
     {UNIT_CAMELMAN,         0}
@@ -344,17 +344,22 @@ int run_battle(Battlefield* field, int max_turns) {
     while (turn_count < max_turns) {
         int republic_count = 0, separatist_count = 0;
         for (int i = 0; i < field->unit_count; i++) {
-            if (field->units[i]->hp <= 0) continue;
+            if (field->units[i] == NULL || field->units[i]->hp <= 0) continue;
             if (field->units[i]->faction == FACTION_REPUBLIC) republic_count++;
             else separatist_count++;
         }
-        if (republic_count == 0) return 1;
-        if (separatist_count == 0) return 0;
+        if (republic_count == 0) {
+            battle_stats.winner = 1;
+            return 1;
+        }
+        if (separatist_count == 0) {
+            battle_stats.winner = 0;
+            return 0;
+        }
 
         for (int i = 0; i < field->unit_count; i++) {
             if (field->units[i]->hp > 0) {
                 field->units[i]->has_acted = false;
-                field->units[i]->squad_moved = false;
             }
         }
 
@@ -400,7 +405,7 @@ int run_battle(Battlefield* field, int max_turns) {
             republic_count = 0;
             separatist_count = 0;
             for (int i = 0; i < field->unit_count; i++) {
-                if (field->units[i]->hp <= 0) continue;
+                if (field->units[i] == NULL || field->units[i]->hp <= 0) continue;
                 if (field->units[i]->faction == FACTION_REPUBLIC) republic_count++;
                 else separatist_count++;
             }
@@ -419,19 +424,9 @@ int run_battle(Battlefield* field, int max_turns) {
             republic_count = 0;
             separatist_count = 0;
             for (int i = 0; i < field->unit_count; i++) {
-                if (field->units[i]->hp <= 0) continue;
+                if (field->units[i] == NULL || field->units[i]->hp <= 0) continue;
                 if (field->units[i]->faction == FACTION_REPUBLIC) republic_count++;
                 else separatist_count++;
-            }
-            if (republic_count == 0) {
-                battle_stats.winner = 1;
-                if (turn_based) print_battle_summary_and_wait();
-                return 1;
-            }
-            if (separatist_count == 0) {
-                battle_stats.winner = 0;
-                if (turn_based) print_battle_summary_and_wait();
-                return 0;
             }
 
             // Update total_active

@@ -33,15 +33,6 @@ int get_turn_count() {
     return turn_count;
 }
 
-bool is_faction_defeated(Battlefield* field, Faction faction) {
-    for (int i = 0; i < field->unit_count; i++) {
-        if (field->units[i]->faction == faction && field->units[i]->hp > 0) {
-            return false;
-        }
-    }
-    return true;
-}
-
 int get_weapon_range(Unit* unit) {
     int max_range = 0;
     for (int i = 0; i < unit->weapon_count; i++) {
@@ -81,26 +72,6 @@ Unit* find_closest_enemy(Unit* unit, Battlefield* field) {
         }
     }
     return closest;
-}
-
-Unit* find_highest_hp_enemy(Unit* unit, Battlefield* field) {
-    Unit* highest = NULL;
-    for (int i = 0; i < field->unit_count; i++) {
-        Unit* other = field->units[i];
-        if (!other || other == unit || other->hp <= 0) {
-            continue;
-        }
-        if (other->faction == unit->faction) {
-            continue;
-        }
-        if (get_distance(unit, other) > (unit->movement + 6)) {
-            continue;
-        }
-        if (!highest || other->hp > highest->hp) {
-            highest = other;
-        }
-    }
-    return highest;
 }
 
 int get_enemies_in_range(Unit* unit, Battlefield* field, int range, Unit* enemies[]) {
@@ -222,18 +193,22 @@ Unit* select_closest_unit(Battlefield* field, Faction faction) {
 
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
-        if (u == NULL) continue;
-        if (u->hp <= 0) continue;
+        if (!u || u->hp <= 0) continue;
         if (u->faction != faction) continue;
         if (u->has_acted) continue;
 
-        // Find the closest enemy to this unit
-        Unit* enemy = find_closest_enemy(u, field);
-        if (enemy == NULL) continue; // no enemies left? should not happen
+        // Inline scan for closest enemy
+        int min_dist_sq = 9999 * 9999;
+        for (int j = 0; j < field->unit_count; j++) {
+            Unit* e = field->units[j];
+            if (!e || e == u || e->hp <= 0) continue;
+            if (e->faction == u->faction) continue;
+            int d = get_distance_squared(u, e);
+            if (d < min_dist_sq) min_dist_sq = d;
+        }
 
-        int dist_sq = get_distance_squared(u, enemy);
-        if (dist_sq < best_dist_sq) {
-            best_dist_sq = dist_sq;
+        if (min_dist_sq < best_dist_sq) {
+            best_dist_sq = min_dist_sq;
             best = u;
         }
     }
@@ -292,81 +267,6 @@ Unit* find_closest_ally(Unit* unit, Battlefield* field) {
         }
     }
     return closest;
-}
-
-int get_distance_to_closest_ally(Unit* unit, Battlefield* field) {
-    int closest_distance = 9999;
-    
-    for (int i = 0; i < field->unit_count; i++) {
-        Unit* other = field->units[i];
-        if (other == NULL) continue;
-
-        if (other == unit || other->hp <= 0) continue;
-        if (other->faction != unit->faction) continue;
-        
-        int distance = get_distance(unit, other);
-        if (distance < closest_distance) {
-            closest_distance = distance;
-        }
-    }
-    
-    return closest_distance;
-}
-
-int get_distance_to_ally_type(Unit* unit, Battlefield* field, UnitType ally_type) {
-    int closest_distance = 9999;
-    
-    for (int i = 0; i < field->unit_count; i++) {
-        Unit* other = field->units[i];
-        if (other == NULL) continue;
-        
-        // Skip self
-        if (other == unit) continue;
-        
-        // Skip dead units
-        if (other->hp <= 0) continue;
-        
-        // Skip enemies (different faction)
-        if (other->faction != unit->faction) continue;
-        
-        // Skip if not the type we're looking for
-        if (other->type != ally_type) continue;
-        
-        // Calculate distance
-        int distance = get_distance(unit, other);
-        if (distance < closest_distance) {
-            closest_distance = distance;
-        }
-    }
-    
-    // Return 9999 if no ally of that type found
-    return closest_distance;
-}
-
-Unit* find_closest_pinned_ally(Unit* unit, Battlefield* field) {
-    Unit* closest = NULL;
-    int closest_distance = 9999;
-    
-    for (int i = 0; i < field->unit_count; i++) {
-        Unit* other = field->units[i];
-        if (other == NULL) continue;
-
-        if (other == unit || other->hp <= 0) continue;
-        if (other->faction != unit->faction) continue;
-        
-        int distance = get_distance(unit, other);
-        if (distance < closest_distance && other->pin_markers > 0) {
-            closest_distance = distance;
-            closest = other;
-        }
-    }
-    
-    return closest;  // Returns NULL if no ally of that type found
-}
-
-int get_distance_to_specific_ally(Unit* unit, Unit* target) {
-    int distance = get_distance(unit, target);
-    return distance;
 }
 
 int count_faction_in_radius(Unit* unit, Battlefield* field, Faction faction, int radius) {
