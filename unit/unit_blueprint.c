@@ -27,9 +27,9 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .faction = FACTION_REPUBLIC,
         .hp = 2,
         .hp_per_soldier = 2,
-        .movement = 12,
-        .morale = 9,
-        .armor_class = 5,
+        .movement = 8,
+        .morale = 8,
+        .armor_class = 4,
         .point_value = 20,
         .is_ranged = false,
         .units_count = 1,
@@ -40,21 +40,21 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         },
         .weapon_count = 1
     },
-    [UNIT_LONGBOWMAN] = {
-        .type = UNIT_LONGBOWMAN,
+    [UNIT_SPEAR_THROWER] = {
+        .type = UNIT_SPEAR_THROWER,
         .faction = FACTION_REPUBLIC,
         .hp = 1,
         .hp_per_soldier = 1,
-        .movement = 12,
-        .morale = 9,
+        .movement = 6,
+        .morale = 7,
         .armor_class = 4,
-        .point_value = 20,
+        .point_value = 10,
         .is_ranged = true,
         .units_count = 1,
         .attacks_per_unit = 1,
-        .preferred_range = 18,
+        .preferred_range = 10,
         .weapons = {
-            {WEAPON_LONGBOW}
+            {WEAPON_JAVELIN}
         },
         .weapon_count = 1
     },
@@ -62,15 +62,15 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .type = UNIT_HORSEMAN,
         .faction = FACTION_REPUBLIC,
         .hp = 2,
-        .hp_per_soldier = 1,
-        .movement = 24,
-        .morale = 9,
-        .armor_class = 6,
-        .point_value = 35,
+        .hp_per_soldier = 2,
+        .movement = 18,
+        .morale = 7,
+        .armor_class = 4,
+        .point_value = 20,
         .is_ranged = false,
         .units_count = 1,
         .attacks_per_unit = 1,
-        .preferred_range = 4,
+        .preferred_range = 1,
         .weapons = {
             {WEAPON_SWORD}
         },
@@ -102,52 +102,52 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .faction = FACTION_SEPARATIST,
         .hp = 2,
         .hp_per_soldier = 2,
-        .movement = 12,
-        .morale = 9,
-        .armor_class = 4,
-        .point_value = 30,
+        .movement = 6,
+        .morale = 8,
+        .armor_class = 5,
+        .point_value = 20,
         .is_ranged = false,
         .units_count = 1,
-        .attacks_per_unit = 2,
+        .attacks_per_unit = 1,
         .preferred_range = 3,
         .weapons = {
             {WEAPON_SPEAR}
         },
         .weapon_count = 1
     },
-    [UNIT_SHORTBOWMAN] = {
-        .type = UNIT_SHORTBOWMAN,
+    [UNIT_BOWMAN] = {
+        .type = UNIT_BOWMAN,
         .faction = FACTION_SEPARATIST,
         .hp = 1,
         .hp_per_soldier = 1,
-        .movement = 12,
+        .movement = 6,
         .morale = 9,
         .armor_class = 4,
-        .point_value = 15,
+        .point_value = 10,
         .is_ranged = true,
         .units_count = 1,
         .attacks_per_unit = 1,
-        .preferred_range = 10,
+        .preferred_range = 20,
         .weapons = {
-            {WEAPON_SHORTBOW}
+            {WEAPON_BOW}
         },
         .weapon_count = 1
     },
-    [UNIT_CAMELMAN] = {
-        .type = UNIT_CAMELMAN,
+    [UNIT_CAVALRY] = {
+        .type = UNIT_CAVALRY,
         .faction = FACTION_SEPARATIST,
         .hp = 2,
-        .hp_per_soldier = 1,
-        .movement = 24,
-        .morale = 9,
-        .armor_class = 6,
-        .point_value = 30,
+        .hp_per_soldier = 2,
+        .movement = 18,
+        .morale = 7,
+        .armor_class = 4,
+        .point_value = 20,
         .is_ranged = false,
         .units_count = 1,
-        .attacks_per_unit = 2,
+        .attacks_per_unit = 1,
         .preferred_range = 2,
         .weapons = {
-            {WEAPON_SWORD}
+            {WEAPON_SPEAR}
         },
         .weapon_count = 1
     }

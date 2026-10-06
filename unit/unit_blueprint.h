@@ -23,9 +23,7 @@ typedef struct {
     bool is_ranged;
     int units_count;
     int attacks_per_unit;
-    int attack_order;
     int preferred_range;
-    int rally_bonus;
     WeaponBlueprint weapons[WEAPON_COUNT];
     int weapon_count;
 } UnitBlueprint;

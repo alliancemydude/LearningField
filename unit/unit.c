@@ -32,7 +32,6 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->movement = bp->movement;
     unit->half_movement = bp->movement / 2;
     unit->morale = bp->morale;
-    unit->rally_bonus = bp->rally_bonus;
     unit->armor_class = bp->armor_class;
     unit->point_value = bp->point_value;
     unit->is_ranged = bp->is_ranged;
@@ -57,7 +56,6 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->effective_local_force_ratio = ug->local_force_ratio;
     
     // Create preferences based on variables
-    unit->attack_order = bp->attack_order;
     unit->preferred_range_sq = unit->preferred_range * unit->preferred_range;
     
     // Reset unit status
@@ -81,21 +79,18 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
 }
 
 // General Use Functions
-Unit* create_unit_squad(UnitType type, int id, int x, int y) {
-    return create_unit(type, id, x, y);
-}
 
 const char* get_unit_type_name(UnitType type) {
     switch(type) {
         case UNIT_SWORDSMAN: return "UNIT_SWORDSMAN";
         case UNIT_ELITE_SWORDSMAN: return "UNIT_ELITE_SWORDSMAN";
-        case UNIT_LONGBOWMAN: return "UNIT_LONGBOWMAN";
+        case UNIT_SPEAR_THROWER: return "UNIT_SPEAR_THROWER";
         case UNIT_HORSEMAN: return "UNIT_HORSEMAN";
 
         case UNIT_SPEARMAN: return "UNIT_SPEARMAN";
         case UNIT_ELITE_SPEARMAN: return "UNIT_ELITE_SPEARMAN";
-        case UNIT_SHORTBOWMAN: return "UNIT_SHORTBOWMAN";
-        case UNIT_CAMELMAN: return "UNIT_CAMELMAN";
+        case UNIT_BOWMAN: return "UNIT_BOWMAN";
+        case UNIT_CAVALRY: return "UNIT_CAVALRY";
         default: return "UNKNOWN";
     }
 }
@@ -115,18 +110,22 @@ void add_weapon(Unit* unit, WeaponType type) {
         case WEAPON_SWORD:
             w->damage_bonus = 0;
             w->range = 2;
+            w->penetration_bonus = 0;
             break;
         case WEAPON_SPEAR:
             w->damage_bonus = 0;
             w->range = 4;
+            w->penetration_bonus = 0;
             break;
-        case WEAPON_LONGBOW:
+        case WEAPON_JAVELIN:
+            w->damage_bonus = 1;
+            w->range = 12;
+            w->penetration_bonus = 1;
+            break;
+        case WEAPON_BOW:
             w->damage_bonus = 0;
             w->range = 24;
-            break;
-        case WEAPON_SHORTBOW:
-            w->damage_bonus = 0;
-            w->range = 16;
+            w->penetration_bonus = 0;
             break;
         default:
             w->damage_bonus = 0;

@@ -11,18 +11,18 @@
 
 // Default force compositions
 ForceComposition default_republic_composition[] = {
-    {UNIT_SWORDSMAN,        30},
-    {UNIT_ELITE_SWORDSMAN,  0},
-    {UNIT_LONGBOWMAN,       0},
-    {UNIT_HORSEMAN,         0}
+    {UNIT_SWORDSMAN,        10},
+    {UNIT_ELITE_SWORDSMAN,  5},
+    {UNIT_BOWMAN,           5},
+    {UNIT_HORSEMAN,         5}
 };
 int default_republic_composition_count = sizeof(default_republic_composition) / sizeof(default_republic_composition[0]);
 
 ForceComposition default_separatist_composition[] = {
-    {UNIT_SPEARMAN,         30},
-    {UNIT_ELITE_SPEARMAN,   0},
-    {UNIT_SHORTBOWMAN,      0},
-    {UNIT_CAMELMAN,         0}
+    {UNIT_SPEARMAN,         10},
+    {UNIT_ELITE_SPEARMAN,   5},
+    {UNIT_BOWMAN,           5},
+    {UNIT_CAVALRY,          5}
 };
 int default_separatist_composition_count = sizeof(default_separatist_composition) / sizeof(default_separatist_composition[0]);
 
@@ -118,20 +118,18 @@ void resolve_overlaps(Battlefield* field) {
 }
 
 void initialize_battlefield(Battlefield* field) {
-    // Set dimensions
     field->width = MAX_COLS;
     field->height = MAX_ROWS;
     field->unit_count = 0;
 
-    // Clear all units
     for (int i = 0; i < MAX_UNITS; i++) {
         field->units[i] = NULL;
     }
 
-    // Populate the battlefield with open terrain
-    for (int i = 0; i < MAX_ROWS; i++) {
-        for (int j = 0; j < MAX_COLS; j++) {
-            field->battlefield[i][j] = 0;
+    // Also clear the occupancy grid
+    for (int y = 0; y < MAX_ROWS; y++) {
+        for (int x = 0; x < MAX_COLS; x++) {
+            field->occupancy[y][x] = NULL;
         }
     }
 }
@@ -438,7 +436,6 @@ int run_battle(Battlefield* field, int max_turns) {
             break;
         }
 
-        resolve_overlaps(field);
         turn_count++;
     }
 

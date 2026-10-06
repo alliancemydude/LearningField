@@ -84,11 +84,12 @@ bool execute_attack(Unit* unit, Unit* target, bool advanced) {
         int current_soldiers = unit->units_count;
         int attacks = current_soldiers * unit->attacks_per_unit;
         int damage_bonus = w->damage_bonus;
+        int penetration_bonus = w->penetration_bonus;
         int hits = 0;
 
         // Roll attack for each shot
         for (int attack_number = 0; attack_number < attacks; attack_number++) {
-            int attack_roll = roll(1, 6);
+            int attack_roll = roll(1, 6) + penetration_bonus;
             if (advanced) {
                 attack_roll -= 1;  // Penalty for advancing
             }
@@ -154,11 +155,12 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced) {
         int current_soldiers = unit->units_count;
         int shots = current_soldiers * unit->attacks_per_unit;
         int damage_bonus = w->damage_bonus;
+        int penetration_bonus = w->penetration_bonus;
         int hits = 0;
 
         // Roll attack for each shot
         for (int shot = 0; shot < shots; shot++) {
-            int attack_roll = roll(1, 6) + damage_bonus;
+            int attack_roll = roll(1, 6) + penetration_bonus;
             if (advanced) {
                 attack_roll -= 1;  // Penalty for advancing
             }
@@ -184,7 +186,7 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced) {
         // Deal damage
         int kills = 0;
         for (int h = 0; h < hits; h++) {
-            int damage = roll(1, 6);
+            int damage = roll(1, 6) + damage_bonus;
             if (damage >= 4) {
                 kills++;
             }

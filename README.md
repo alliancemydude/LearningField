@@ -8,4 +8,4 @@ Learning Field is a program meant to simulate different learning styles in the c
 Army compositions are changed in battlefield.c, then the program is run with entering "make" or "make clean", followed by "./battle". Then follow the text prompts to begin. 
 
 Known Issues:
-Elites do not function properly
+Double-printing of greeting message between runs of the program

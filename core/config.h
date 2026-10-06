@@ -6,20 +6,20 @@
 typedef enum { 
     WEAPON_SWORD, 
     WEAPON_SPEAR, 
-    WEAPON_LONGBOW, 
-    WEAPON_SHORTBOW,
+    WEAPON_JAVELIN, 
+    WEAPON_BOW,
     WEAPON_COUNT } WeaponType;
 
 // Unit Types
 typedef enum { 
     UNIT_SWORDSMAN, 
     UNIT_ELITE_SWORDSMAN, 
-    UNIT_LONGBOWMAN,
+    UNIT_SPEAR_THROWER,
     UNIT_HORSEMAN, 
     UNIT_SPEARMAN,
     UNIT_ELITE_SPEARMAN,
-    UNIT_SHORTBOWMAN, 
-    UNIT_CAMELMAN,
+    UNIT_BOWMAN, 
+    UNIT_CAVALRY,
     UNIT_TYPE_COUNT } UnitType;
 
 // Factions

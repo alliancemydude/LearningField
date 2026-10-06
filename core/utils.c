@@ -23,17 +23,9 @@ int get_distance(Unit* a, Unit* b) {
 }
 
 bool is_tile_walkable(Battlefield* field, int x, int y, Unit* exclude) {
-    // Check bounds
-    if (x < 0 || x >= field->width || y < 0 || y >= field->height)
-        return false;
-    // Check occupancy by other units
-    for (int i = 0; i < field->unit_count; i++) {
-        Unit* u = field->units[i];
-        if (u == NULL || u == exclude || u->hp <= 0) continue;
-        if (u->x == x && u->y == y)
-            return false;
-    }
-    return true;
+    if (x < 0 || x >= field->width || y < 0 || y >= field->height) return false;
+    Unit* occupant = field->occupancy[y][x];
+    return (occupant == NULL || occupant == exclude || occupant->hp <= 0);
 }
 
 void clamp_unit_position(Unit* unit, Battlefield* field) {
@@ -98,7 +90,7 @@ void print_screen(Battlefield* field) {
                 if (soldier_count < 0) soldier_count = 0;
                 if (soldier_count > 9) soldier_count = 9;
                 const char* color = get_unit_color(unit_on_tile);
-                char buf[3];
+                char buf[16];
                 snprintf(buf, sizeof(buf), "%s%d", symbol, soldier_count);
                 printf("%s%2s%s ", color, buf, COLOR_RESET);
             } else if (is_dead) {
@@ -191,12 +183,12 @@ const char* get_unit_symbol(Unit* unit) {
     switch (unit->type) {
         case UNIT_SWORDSMAN:        return "S";
         case UNIT_ELITE_SWORDSMAN:  return "E";
+        case UNIT_SPEAR_THROWER:    return "R";
         case UNIT_HORSEMAN:         return "H";
-        case UNIT_LONGBOWMAN:       return "B";
-        case UNIT_SPEARMAN:         return "P";
+        case UNIT_SPEARMAN:         return "S";
         case UNIT_ELITE_SPEARMAN:   return "E";
-        case UNIT_SHORTBOWMAN:      return "B";
-        case UNIT_CAMELMAN:         return "H";
+        case UNIT_BOWMAN:           return "R";
+        case UNIT_CAVALRY:          return "H";
         
         default: return "???";
     }

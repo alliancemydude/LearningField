@@ -30,7 +30,25 @@ const GeneInfo REP_GENES[] = {
     {"swordsman.preferred_range", 0.0f, 36.0f, 12.0f},
     {"swordsman.spacing_x",       1.0f,  8.0f, 3.0f},
     {"swordsman.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"swordsman.local_force_ratio", 0.5f,  2.0f, 1.0f}
+    {"swordsman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"elite_swordsman.aggression",      0.0f,  1.0f, 0.5f},
+    {"elite_swordsman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"elite_swordsman.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"elite_swordsman.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"elite_swordsman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"spear_thrower.aggression",      0.0f,  1.0f, 0.5f},
+    {"spear_thrower.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"spear_thrower.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"spear_thrower.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"spear_thrower.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"horseman.aggression",      0.0f,  1.0f, 0.5f},
+    {"horseman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"horseman.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"horseman.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"horseman.local_force_ratio", 0.5f,  2.0f, 1.0f}
 };
 const size_t REP_GENE_COUNT = sizeof(REP_GENES) / sizeof(GeneInfo);
 
@@ -48,7 +66,25 @@ const GeneInfo SEP_GENES[] = {
     {"spearman.preferred_range", 0.0f, 36.0f, 12.0f},
     {"spearman.spacing_x",       1.0f,  8.0f, 3.0f},
     {"spearman.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"spearman.local_force_ratio", 0.5f,  2.0f, 1.0f}
+    {"spearman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"elite_spearman.aggression",      0.0f,  1.0f, 0.5f},
+    {"elite_spearman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"elite_spearman.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"elite_spearman.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"elite_spearman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"bowman.aggression",      0.0f,  1.0f, 0.5f},
+    {"bowman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"bowman.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"bowman.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"bowman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"cavalry.aggression",      0.0f,  1.0f, 0.5f},
+    {"cavalry.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"cavalry.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"cavalry.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"cavalry.local_force_ratio", 0.5f,  2.0f, 1.0f}
 };
 const size_t SEP_GENE_COUNT = sizeof(SEP_GENES) / sizeof(GeneInfo);
 

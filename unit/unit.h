@@ -11,6 +11,7 @@ typedef struct {
     int damage_bonus;
     int range;
     bool equipped;
+    int penetration_bonus;
 } Weapon;
 
 typedef enum {
@@ -72,7 +73,6 @@ typedef struct Unit {
 
 // Create units
 Unit* create_unit(UnitType type, int id, int x, int y);
-Unit* create_unit_squad(UnitType type, int id, int x, int y);
 
 // Useful functions
 const char* get_unit_type_name(UnitType type);

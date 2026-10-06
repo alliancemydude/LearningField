@@ -10,14 +10,14 @@ Faction get_faction_of_unit(UnitType type) {
     switch (type) {
         case UNIT_SWORDSMAN:
         case UNIT_ELITE_SWORDSMAN:
-        case UNIT_LONGBOWMAN:
+        case UNIT_SPEAR_THROWER:
         case UNIT_HORSEMAN:
             return FACTION_REPUBLIC;
 
         case UNIT_SPEARMAN:
         case UNIT_ELITE_SPEARMAN:
-        case UNIT_SHORTBOWMAN:
-        case UNIT_CAMELMAN:
+        case UNIT_BOWMAN:
+        case UNIT_CAVALRY:
             return FACTION_SEPARATIST;
 
         default:
@@ -193,22 +193,19 @@ Unit* select_closest_unit(Battlefield* field, Faction faction) {
 
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
-        if (!u || u->hp <= 0) continue;
-        if (u->faction != faction) continue;
-        if (u->has_acted) continue;
+        if (!u || u->hp <= 0 || u->faction != faction || u->has_acted) continue;
 
-        // Inline scan for closest enemy
-        int min_dist_sq = 9999 * 9999;
+        int min_enemy_dist_sq = 9999 * 9999;
         for (int j = 0; j < field->unit_count; j++) {
             Unit* e = field->units[j];
             if (!e || e == u || e->hp <= 0) continue;
             if (e->faction == u->faction) continue;
             int d = get_distance_squared(u, e);
-            if (d < min_dist_sq) min_dist_sq = d;
+            if (d < min_enemy_dist_sq) min_enemy_dist_sq = d;
         }
 
-        if (min_dist_sq < best_dist_sq) {
-            best_dist_sq = min_dist_sq;
+        if (min_enemy_dist_sq < best_dist_sq) {
+            best_dist_sq = min_enemy_dist_sq;
             best = u;
         }
     }

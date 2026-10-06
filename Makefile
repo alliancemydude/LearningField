@@ -1,6 +1,6 @@
 # Compiler and flags
 CC = gcc
-CFLAGS = -O2 -march=native -Wall -Wextra \
+CFLAGS = -O3 -march=native -Wall -Wextra \
          -I. \
          -Iai \
          -Ibattlefield \
