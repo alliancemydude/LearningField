@@ -108,14 +108,14 @@ void add_weapon(Unit* unit, WeaponType type) {
     // Set stats based on weapon types
     switch (type) {
         case WEAPON_SWORD:
-            w->damage_bonus = 0;
+            w->damage_bonus = 1;
             w->range = 2;
             w->penetration_bonus = 0;
             break;
         case WEAPON_SPEAR:
             w->damage_bonus = 0;
             w->range = 4;
-            w->penetration_bonus = 0;
+            w->penetration_bonus = 1;
             break;
         case WEAPON_JAVELIN:
             w->damage_bonus = 1;

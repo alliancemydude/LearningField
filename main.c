@@ -4,6 +4,7 @@
 #include "strategy.h"
 #include "evolution.h"
 #include "utils.h"
+#include "tests.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -73,11 +74,15 @@ int main() {
 
         printf("Choose which way to run the program.\n");
         printf("1. Normal combat (n)\n");
-        printf("2. Turn-by-turn battle (t)\n");
+        printf("2. Full screen battle (f)\n");
         printf("3. Verbose analysis (v)\n");
         printf("4. Strategic evolution (e)\n");
+        printf("5. Run test (r)\n");
 
         char battle_type = getchar();
+
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
 
         if (battle_type == 'n') {
             clock_t start = clock();
@@ -91,7 +96,7 @@ int main() {
             float time_taken = ((float)(end - start)) / CLOCKS_PER_SEC;
             printf("\nAll battles took %.1f seconds.\n", time_taken);
 
-        } else if (battle_type == 't') {
+        } else if (battle_type == 'f') {
             turn_based = true;
 
             load_strategy_from_file(STRATEGY_FILE);
@@ -113,7 +118,9 @@ int main() {
             clock_t end = clock();
             float time_taken = ((float)(end - start)) / CLOCKS_PER_SEC;
             printf("\nEvolution took %.1f seconds.\n", time_taken);
-        } else {
+        } else if (battle_type == 'r') {
+            run_tests();
+        } else { 
             printf("Listen man just hit the right button\n");
         }
 

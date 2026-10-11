@@ -16,7 +16,8 @@ typedef struct {
 
 typedef enum {
     ROLE_LINE,
-    ROLE_FLANK
+    ROLE_FLANK,
+    ROLE_RANGED
 } UnitRole;
 
 // Unit struct

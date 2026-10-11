@@ -40,7 +40,8 @@ FactionStrategy separatist_strategy = {
 //Role assignment
 
 void assign_unit_roles(Battlefield* field, Faction faction) {
-    FactionStrategy* strat = (faction == FACTION_REPUBLIC) ? &republic_strategy : &separatist_strategy;
+    FactionStrategy* strat = (faction == FACTION_REPUBLIC)
+                             ? &republic_strategy : &separatist_strategy;
     float pct = strat->strategic.flank_percentage;
 
     Unit* list[MAX_UNITS];
@@ -52,19 +53,31 @@ void assign_unit_roles(Battlefield* field, Faction faction) {
     }
     if (n == 0) return;
 
-    // Fastest units become flankers, ties broken by id
-    for (int i = 0; i < n - 1; i++) {
-        for (int j = i + 1; j < n; j++) {
-            if (list[j]->movement > list[i]->movement ||
-               (list[j]->movement == list[i]->movement && list[j]->id < list[i]->id)) {
-                Unit* tmp = list[i]; list[i] = list[j]; list[j] = tmp;
+    // Ranged units get ROLE_RANGED first
+    Unit* melee[MAX_UNITS];
+    int m = 0;
+    for (int i = 0; i < n; i++) {
+        if (list[i]->is_ranged) {
+            list[i]->role = ROLE_RANGED;
+        } else {
+            melee[m++] = list[i];
+        }
+    }
+    if (m == 0) return;
+
+    // Fastest melee units become flankers
+    for (int i = 0; i < m - 1; i++) {
+        for (int j = i + 1; j < m; j++) {
+            if (melee[j]->movement > melee[i]->movement ||
+               (melee[j]->movement == melee[i]->movement && melee[j]->id < melee[i]->id)) {
+                Unit* tmp = melee[i]; melee[i] = melee[j]; melee[j] = tmp;
             }
         }
     }
 
-    int flank_count = (int)(n * pct);
-    for (int i = 0; i < n; i++) {
-        list[i]->role = (i < flank_count) ? ROLE_FLANK : ROLE_LINE;
+    int flank_count = (int)(m * pct);
+    for (int i = 0; i < m; i++) {
+        melee[i]->role = (i < flank_count) ? ROLE_FLANK : ROLE_LINE;
     }
 }
 

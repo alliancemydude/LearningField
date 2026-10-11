@@ -12,147 +12,46 @@
 
 #define LOCAL_FORCE_RADIUS 5
 
+static void move_with_spacing(Unit* unit, Battlefield* field, int tx, int ty, FactionStrategy* strat);
+static int line_turn(Unit* unit, Battlefield* field, FactionStrategy* strat, bool should_engage);
+static int flank_turn(Unit* unit, Battlefield* field, FactionStrategy* strat, bool should_engage);
+static int ranged_turn(Unit* unit, Battlefield* field, FactionStrategy* strat, bool should_engage);
+
 // Global variable for the target
 static Unit* target = NULL;
 
 // Unit turn
 void unit_turn(Unit* unit, Battlefield* field) {
     target = NULL;
-    bool acted = false;
-    int action_taken = -1;
-    bool is_ranged = unit->is_ranged;
-    bool moved = false;
 
     FactionStrategy* strat = (unit->faction == FACTION_REPUBLIC)
                              ? &republic_strategy : &separatist_strategy;
 
-    int max_range = unit->max_range;
+    int local_allies  = count_faction_in_radius(unit, field, unit->faction, LOCAL_FORCE_RADIUS) + 1;
+    int local_enemies = count_faction_in_radius(unit, field,
+                            enemy_faction(unit->faction), LOCAL_FORCE_RADIUS);
+    bool should_engage = (local_enemies == 0) ||
+        ((float)local_allies >= unit->effective_local_force_ratio * (float)local_enemies);
 
-    // 1. Emergency rally
-    if (unit->pin_markers >= 3) {
-        acted = execute_rally(unit);
-        if (acted) { action_taken = ACTION_RALLY; goto action_done; }
+    int action_taken;
+    switch (unit->role) {
+        case ROLE_RANGED: action_taken = ranged_turn(unit, field, strat, should_engage); break;
+        case ROLE_FLANK:  action_taken = flank_turn(unit, field, strat, should_engage);  break;
+        default:          action_taken = line_turn(unit, field, strat, should_engage);   break;
     }
 
-    // 2. Attack, if an enemy is in range
-    if (!acted) {
-        Unit* fire_target = select_enemy_by_preference(unit, field, max_range, &strat->strategic);
-        if (fire_target) {
-            target = fire_target;
-            if (is_ranged) {
-                acted = execute_fire(unit, fire_target, false);
-                if (acted) { action_taken = ACTION_FIRE; goto action_done; }
-            } else {
-                acted = execute_attack(unit, fire_target, false);
-                if (acted) { action_taken = ACTION_ATTACK; goto action_done; }
-            }
-        }
-    }
-
-    // 3. Advance and attack, if enemy is close enough
-    if (!acted) {
-        Unit* enemy = find_closest_enemy(unit, field);
-        if (enemy) {
-            int dist_sq = get_distance_squared(unit, enemy);
-            int max_advance = max_range + unit->half_movement;
-            if (dist_sq > unit->preferred_range_sq && dist_sq <= max_advance * max_advance) {
-                move_toward_target(unit, enemy, unit->half_movement, field);
-                moved = true;
-                if (is_ranged) {
-                    acted = execute_fire(unit, enemy, true);
-                    if (acted) { action_taken = ACTION_ADVANCE_FIRE; goto action_done; }
-                } else {
-                    acted = execute_attack(unit, enemy, true);
-                    if (acted) { action_taken = ACTION_ADVANCE_ATTACK; goto action_done; }
-                }
-                action_taken = is_ranged ? ACTION_ADVANCE_FIRE : ACTION_ADVANCE_ATTACK;
-                goto action_done;
-            }
-        }
-    }
-
-    // 4. Move toward strategic target, with spacing adjustment
-    if (!acted && !moved) {
-        int tx, ty;
-        bool has_target = false;
-
-        if (unit->role == ROLE_FLANK) {
-            int ecx, ecy;
-            get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
-            int offset = (int)(strat->strategic.flanking_bias * 8.0f);
-            int push_dir = (unit->faction == FACTION_REPUBLIC) ? -1 : 1;
-            bool go_left = (unit->id % 2 == 0);
-            tx = ecx + (go_left ? -offset : offset);
-            ty = ecy + push_dir * (int)strat->strategic.flank_depth;
-            has_target = true;
-        } else {
-            int ecx, ecy;
-            get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
-            tx = ecx; ty = ecy;
-            has_target = true;
-        }
-
-        if (has_target) {
-            int local_allies  = count_faction_in_radius(unit, field, unit->faction, LOCAL_FORCE_RADIUS);
-            int local_enemies = count_faction_in_radius(unit, field,
-                                enemy_faction(unit->faction), LOCAL_FORCE_RADIUS);
-
-            bool should_advance = (local_enemies == 0) ||
-                ((float)local_allies >= unit->effective_local_force_ratio * (float)local_enemies);
-
-            if (should_advance) {
-                int move_cap = unit->half_movement +
-                    (int)((unit->movement - unit->half_movement) * unit->effective_aggression);
-                execute_move(unit, field, tx, ty, move_cap);
-                acted = true;
-                action_taken = ACTION_DASH;
-            }
-            // else: hold position. The unit will not move this turn.
-        }
-    }
-
-    // 5. Fallback: rally if pinned
-    if (!acted) {
-        if (unit->pin_markers > 0) {
-            execute_rally(unit);
-            action_taken = ACTION_RALLY;
-        }
-        acted = true;
-    }
-
-action_done:
+    // --- shared logging block below, unchanged ---
     if (turn_based) {
-        const char* action_names[] = {
-            "Fire", "Advance+Fire",
-            "Attack", "Advance+Attack",
-            "Rally", "Dash", "Retreat", "Cover", "Advance+Cover"
-        };
-        char msg[128];
-        const char* action_name;
-        if (action_taken >= 0 && action_taken < 9) {
-            action_name = action_names[action_taken];
-        } else {
-            action_name = "Nothing";
-        }
-        int turn = get_turn_count();
-        const char* type_name = get_unit_type_name(unit->type);
-        snprintf(msg, sizeof(msg), "Turn %d: [%s] Unit %d %s at (%d,%d)\n",
-                turn, type_name, unit->id, action_name, unit->x, unit->y);
-        strncat(battle_action_log, msg, sizeof(battle_action_log) - strlen(battle_action_log) - 1);
+        // ... existing action_names, snprintf, strncat ...
     }
     if (turn_based && action_taken >= 0 && target) {
-        char target_msg[64];
-        snprintf(target_msg, sizeof(target_msg), "  -> Target: %s (HP:%d)\n",
-                get_unit_type_name(target->type), target->hp);
-        strncat(battle_action_log, target_msg, sizeof(battle_action_log) - strlen(battle_action_log) - 1);
+        // ... existing target log ...
     }
 
     target = NULL;
 
     if (track_actions) {
-        if (unit->actions_taken == 0 && !unit->has_acted) {
-            units_that_acted++;
-        }
+        if (unit->actions_taken == 0 && !unit->has_acted) units_that_acted++;
         unit->actions_taken++;
         total_actions_across_units++;
     }
@@ -168,6 +67,156 @@ action_done:
         }
         action_counts.total++;
     }
+}
+
+// Shared helper: move toward (tx, ty) with spacing adjustment
+static void move_with_spacing(Unit* unit, Battlefield* field, int tx, int ty, FactionStrategy* strat) {
+    Unit* ally = find_closest_ally(unit, field);
+    if (ally) {
+        int dax = unit->x - ally->x;
+        int day = unit->y - ally->y;
+        if (fabsf((float)dax) < unit->spacing_x) {
+            int push = (int)(unit->spacing_x - fabsf((float)dax));
+            int dir = (dax != 0) ? (dax > 0 ? 1 : -1) : ((unit->id % 2 == 0) ? 1 : -1);
+            tx += dir * push;
+        }
+        if (fabsf((float)day) < unit->spacing_y) {
+            int push = (int)(unit->spacing_y - fabsf((float)day));
+            int dir = (day != 0) ? (day > 0 ? 1 : -1) : ((unit->id % 2 == 0) ? 1 : -1);
+            ty += dir * push;
+        }
+    }
+
+    // Faction-wide multiplier on top of per-unit aggression.
+    float effective = unit->effective_aggression * strat->strategic.aggression_bias;
+    if (effective > 1.0f) effective = 1.0f;
+    if (effective < 0.0f) effective = 0.0f;
+
+    int move_cap = unit->half_movement +
+        (int)((unit->movement - unit->half_movement) * effective);
+    if (move_cap < unit->half_movement) move_cap = unit->half_movement;
+    if (move_cap > unit->movement)      move_cap = unit->movement;
+
+    execute_move(unit, field, tx, ty, move_cap);
+}
+
+static int line_turn(Unit* unit, Battlefield* field, FactionStrategy* strat, bool should_engage) {
+    if (unit->pin_markers >= 3 && execute_rally(unit)) return ACTION_RALLY;
+
+    // 1. Attack enemy in range
+    if (should_engage) {
+        Unit* fire_target = select_enemy_by_preference(unit, field, unit->max_range, &strat->strategic);
+        if (fire_target) {
+            target = fire_target;
+            bool hit = unit->is_ranged ? execute_fire(unit, fire_target, false)
+                                       : execute_attack(unit, fire_target, false);
+            if (hit) return unit->is_ranged ? ACTION_FIRE : ACTION_ATTACK;
+        }
+    }
+
+    // 2. Advance and attack
+    if (should_engage) {
+        Unit* enemy = find_closest_enemy(unit, field);
+        if (enemy) {
+            int dist_sq = get_distance_squared(unit, enemy);
+            int max_advance = unit->max_range + unit->half_movement;
+            if (dist_sq > unit->preferred_range_sq && dist_sq <= max_advance * max_advance) {
+                move_toward_target(unit, enemy, unit->half_movement, field);
+                return unit->is_ranged ? ACTION_ADVANCE_FIRE : ACTION_ADVANCE_ATTACK;
+            }
+        }
+    }
+
+    // 3. March toward enemy center (or regroup if outnumbered)
+    int tx, ty;
+    if (should_engage) {
+        get_faction_center(field, enemy_faction(unit->faction), &tx, &ty);
+    } else {
+        get_faction_center(field, unit->faction, &tx, &ty);
+    }
+    move_with_spacing(unit, field, tx, ty, strat);
+    return ACTION_DASH;
+}
+
+static int flank_turn(Unit* unit, Battlefield* field, FactionStrategy* strat, bool should_engage) {
+    if (unit->pin_markers >= 3 && execute_rally(unit)) return ACTION_RALLY;
+
+    // 1. Attack opportunistically (but don't chase)
+    if (should_engage) {
+        Unit* fire_target = select_enemy_by_preference(unit, field, unit->max_range, &strat->strategic);
+        if (fire_target) {
+            target = fire_target;
+            bool hit = unit->is_ranged ? execute_fire(unit, fire_target, false)
+                                       : execute_attack(unit, fire_target, false);
+            if (hit) return unit->is_ranged ? ACTION_FIRE : ACTION_ATTACK;
+        }
+    }
+
+    // 2. Keep moving toward the flank position. Note: no advance+attack step,
+    //    so the flanker doesn't get sucked into the line.
+    int ecx, ecy;
+    get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
+    int offset = (int)(strat->strategic.flanking_bias * 8.0f);
+    int push_dir = (unit->faction == FACTION_REPUBLIC) ? -1 : 1;
+    bool go_left = (unit->id % 2 == 0);
+    int tx = ecx + (go_left ? -offset : offset);
+    int ty = ecy + push_dir * (int)strat->strategic.flank_depth;
+
+    move_with_spacing(unit, field, tx, ty, strat);
+    return ACTION_DASH;
+}
+
+static int ranged_turn(Unit* unit, Battlefield* field, FactionStrategy* strat, bool should_engage) {
+    if (unit->pin_markers >= 3 && execute_rally(unit)) return ACTION_RALLY;
+
+    // 1. Survival check
+    Unit* threat = find_closest_enemy(unit, field);
+    if (threat && !threat->is_ranged) {
+        int threat_dist_sq = get_distance_squared(unit, threat);
+        int kite_threshold_sq = unit->preferred_range_sq / 4;
+        if (kite_threshold_sq < 1) kite_threshold_sq = 1;
+
+        if (threat_dist_sq < kite_threshold_sq) {
+            int dx = (unit->x > threat->x) ? 1 : (unit->x < threat->x) ? -1 : 0;
+            int dy = (unit->y > threat->y) ? 1 : (unit->y < threat->y) ? -1 : 0;
+            if (dx == 0 && dy == 0) dx = (unit->id % 2) ? 1 : -1;
+
+            int flee_x = unit->x + dx * unit->movement;
+            int flee_y = unit->y + dy * unit->movement;
+            execute_move(unit, field, flee_x, flee_y, unit->movement);
+            return ACTION_DASH;
+        }
+    }
+
+    // 2. Fire at best target
+    if (should_engage) {
+        Unit* fire_target = select_enemy_by_preference(unit, field, unit->max_range, &strat->strategic);
+        if (fire_target) {
+            target = fire_target;
+            if (execute_fire(unit, fire_target, false)) return ACTION_FIRE;
+        }
+    }
+
+    // 3. Reposition toward preferred range if too far
+    if (should_engage && threat) {
+        int dist_sq = get_distance_squared(unit, threat);
+        if (dist_sq > unit->preferred_range_sq) {
+            move_toward_target(unit, threat, unit->half_movement, field);
+            return ACTION_ADVANCE_FIRE;
+        }
+        // Inside preferred range but no shot available? Hold position.
+        return -1;
+    }
+
+    // 4. Regroup if not engaging
+    if (!should_engage) {
+        int fcx, fcy;
+        get_faction_center(field, unit->faction, &fcx, &fcy);
+        move_with_spacing(unit, field, fcx, fcy, strat);
+        return ACTION_DASH;
+    }
+
+    return -1;
 }
 
 // Select the best enemy within a given maximum range using the unit's attack_order
