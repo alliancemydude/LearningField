@@ -13,7 +13,7 @@
 ForceComposition default_republic_composition[] = {
     {UNIT_SWORDSMAN,        10},
     {UNIT_ELITE_SWORDSMAN,  5},
-    {UNIT_BOWMAN,           5},
+    {UNIT_SPEAR_THROWER,    5},
     {UNIT_HORSEMAN,         5}
 };
 int default_republic_composition_count = sizeof(default_republic_composition) / sizeof(default_republic_composition[0]);
@@ -360,6 +360,8 @@ int run_battle(Battlefield* field, int max_turns) {
                 field->units[i]->has_acted = false;
             }
         }
+
+        compute_closest_enemy_distances(field);
 
         bool republic_turn = (roll(1, 2) == 1);
         int acted_this_turn = 0;

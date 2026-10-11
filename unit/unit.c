@@ -6,26 +6,16 @@
 #include <stdlib.h>
 
 Unit* create_unit(UnitType type, int id, int x, int y) {
-    // Create an empty unit type. Populate all basic stats
-    if (type < 0 || type >= UNIT_TYPE_COUNT) {
-        return NULL;
-    }
-    
-    // Create a blueprint array for this unit
-    const UnitBlueprint* bp = &unit_blueprints[type];
+    if (type < 0 || type >= UNIT_TYPE_COUNT) return NULL;
 
-    // Create the unit object
+    const UnitBlueprint* bp = &unit_blueprints[type];
     Unit* unit = calloc(1, sizeof(Unit));
-    if (!unit) {
-        return NULL;
-    }
-    
-    // Reset identity
+    if (!unit) return NULL;
+
+    // Identity + stats (unchanged)
     unit->id = id;
     unit->type = type;
     unit->faction = bp->faction;
-    
-    // Give stats according to blueprints
     unit->hp = bp->hp;
     unit->max_hp = bp->hp;
     unit->hp_per_soldier = bp->hp_per_soldier;
@@ -38,43 +28,36 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->units_count = bp->units_count;
     unit->attacks_per_unit = bp->attacks_per_unit;
 
-    // Create a unit genome array
-    UnitGenome* ug = &unit_genomes[type];
+    // Weapons FIRST, so max_range can be computed correctly
+    clear_weapons(unit);
+    for (int i = 0; i < bp->weapon_count; i++) {
+        add_weapon(unit, bp->weapons[i].type);
+    }
 
-    // Compute max range for this unit
+    // Now max_range is meaningful
     unit->max_range = get_weapon_range(unit);
     unit->max_range_sq = unit->max_range * unit->max_range;
 
-    // Unpack the array into usable variables
+    // Genome unpacking
+    UnitGenome* ug = &unit_genomes[type];
     unit->effective_aggression = ug->unit_aggression;
     unit->spacing_x = ug->spacing_x;
     unit->spacing_y = ug->spacing_y;
-    unit->preferred_range = ug->preferred_range;
-    if (unit->preferred_range > unit->max_range) {
-        unit->preferred_range = unit->max_range;
-    }
     unit->effective_local_force_ratio = ug->local_force_ratio;
-    
-    // Create preferences based on variables
-    unit->preferred_range_sq = unit->preferred_range * unit->preferred_range;
-    
-    // Reset unit status
+
+    // Clamp preferred_range to actual weapon reach
+    unit->preferred_range = (int)(ug->preferred_range * unit->max_range);
+    if (unit->preferred_range < 1) unit->preferred_range = 1;
+
+    // Status reset + position (unchanged)
     unit->pin_markers = 0;
     unit->has_acted = false;
     unit->is_stunned = false;
     unit->is_immobilized = false;
     unit->actions_taken = 0;
-    
-    // Give the unit its position
     unit->x = x;
     unit->y = y;
-    
-    // Give the unit weapons according to its specifications
-    clear_weapons(unit);
-    for (int i = 0; i < bp->weapon_count; i++) {
-        add_weapon(unit, bp->weapons[i].type);
-    }
-    
+
     return unit;
 }
 

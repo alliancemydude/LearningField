@@ -122,7 +122,16 @@ static int line_turn(Unit* unit, Battlefield* field, FactionStrategy* strat, boo
             int max_advance = unit->max_range + unit->half_movement;
             if (dist_sq > unit->preferred_range_sq && dist_sq <= max_advance * max_advance) {
                 move_toward_target(unit, enemy, unit->half_movement, field);
-                return unit->is_ranged ? ACTION_ADVANCE_FIRE : ACTION_ADVANCE_ATTACK;
+                target = enemy;   // for the log message
+
+                bool hit = unit->is_ranged ? execute_fire(unit, enemy, true)
+                                        : execute_attack(unit, enemy, true);
+
+                if (hit) {
+                    return unit->is_ranged ? ACTION_ADVANCE_FIRE : ACTION_ADVANCE_ATTACK;
+                }
+                // Moved but the attack missed — still consumed the turn.
+                return ACTION_DASH;
             }
         }
     }
@@ -201,11 +210,15 @@ static int ranged_turn(Unit* unit, Battlefield* field, FactionStrategy* strat, b
     if (should_engage && threat) {
         int dist_sq = get_distance_squared(unit, threat);
         if (dist_sq > unit->preferred_range_sq) {
-            move_toward_target(unit, threat, unit->half_movement, field);
-            return ACTION_ADVANCE_FIRE;
+            // Use full movement when we can't fire, half when we can
+            int move_amount = (dist_sq > unit->max_range_sq)
+                            ? unit->movement
+                            : unit->half_movement;
+            move_toward_target(unit, threat, move_amount, field);
+            target = threat;
+            if (execute_fire(unit, threat, true)) return ACTION_ADVANCE_FIRE;
+            return ACTION_DASH;
         }
-        // Inside preferred range but no shot available? Hold position.
-        return -1;
     }
 
     // 4. Regroup if not engaging

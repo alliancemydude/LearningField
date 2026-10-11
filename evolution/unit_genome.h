@@ -5,7 +5,7 @@
 
 typedef struct {
     float unit_aggression;            // 0–1 scaling of movement speed. How fast a unit closes the distance
-    float preferred_range;            // 0-36 when a unit will stop closing distance. 
+    float preferred_range;            // 0-1 percentage of a unit's max range they want to be at
     float spacing_x;                  // 1-8 minimum horizontal distance to its nearest ally
     float spacing_y;                  // 1-8 minimum vertical distance to its nearest ally
     float local_force_ratio;          // 0.5-2.0 required local advantage before advancing

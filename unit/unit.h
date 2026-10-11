@@ -46,6 +46,7 @@ typedef struct Unit {
     int attack_order;
     int preferred_range;
     int preferred_range_sq;
+    int closest_enemy_dist_sq;
 
     // Genomes
     float effective_aggression;

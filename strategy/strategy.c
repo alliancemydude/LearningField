@@ -87,10 +87,9 @@ void set_republic_strategy(const float weights[7]) {
     republic_strategy.strategic.threat_weight         = weights[1];
     republic_strategy.strategic.flank_percentage      = weights[2];
     republic_strategy.strategic.flanking_bias         = weights[3];
-    republic_strategy.strategic.flank_depth           = weights[4];
-
-    republic_strategy.deployment.deploy_horizontal_spread = weights[5];
-    republic_strategy.deployment.deploy_vertical_offset   = weights[6];
+    republic_strategy.deployment.deploy_horizontal_spread = weights[4];
+    republic_strategy.deployment.deploy_vertical_offset   = weights[5];
+    republic_strategy.strategic.flank_depth           = weights[6];
 }
 
 void set_separatist_strategy(const float weights[7]) {
@@ -98,13 +97,43 @@ void set_separatist_strategy(const float weights[7]) {
     separatist_strategy.strategic.threat_weight         = weights[1];
     separatist_strategy.strategic.flank_percentage      = weights[2];
     separatist_strategy.strategic.flanking_bias         = weights[3];
-    separatist_strategy.strategic.flank_depth           = weights[4];
-
-    separatist_strategy.deployment.deploy_horizontal_spread = weights[5];
-    separatist_strategy.deployment.deploy_vertical_offset   = weights[6];
+    separatist_strategy.deployment.deploy_horizontal_spread = weights[4];
+    separatist_strategy.deployment.deploy_vertical_offset   = weights[5];
+    separatist_strategy.strategic.flank_depth           = weights[6];
 }
 
 // Load strategies
+static UnitType parse_unit_type(const char* name) {
+    if (strcmp(name, "swordsman")      == 0) return UNIT_SWORDSMAN;
+    if (strcmp(name, "elite_swordsman")== 0) return UNIT_ELITE_SWORDSMAN;
+    if (strcmp(name, "spear_thrower")  == 0) return UNIT_SPEAR_THROWER;
+    if (strcmp(name, "horseman")       == 0) return UNIT_HORSEMAN;
+    if (strcmp(name, "spearman")       == 0) return UNIT_SPEARMAN;
+    if (strcmp(name, "elite_spearman") == 0) return UNIT_ELITE_SPEARMAN;
+    if (strcmp(name, "bowman")         == 0) return UNIT_BOWMAN;
+    if (strcmp(name, "cavalry")        == 0) return UNIT_CAVALRY;
+    return UNIT_TYPE_COUNT;   // sentinel: not found
+}
+
+static void set_strategy_gene(FactionStrategy* strat, const char* gene, float value) {
+    if      (strcmp(gene, "aggression_bias")          == 0) strat->strategic.aggression_bias = value;
+    else if (strcmp(gene, "threat_weight")            == 0) strat->strategic.threat_weight = value;
+    else if (strcmp(gene, "flank_percentage")         == 0) strat->strategic.flank_percentage = value;
+    else if (strcmp(gene, "flanking_bias")            == 0) strat->strategic.flanking_bias = value;
+    else if (strcmp(gene, "flank_depth")              == 0) strat->strategic.flank_depth = value;
+    else if (strcmp(gene, "deploy_horizontal_spread") == 0) strat->deployment.deploy_horizontal_spread = value;
+    else if (strcmp(gene, "deploy_vertical_offset")   == 0) strat->deployment.deploy_vertical_offset = value;
+}
+
+static void set_unit_gene(UnitType type, const char* gene, float value) {
+    UnitGenome* ug = &unit_genomes[type];
+    if      (strcmp(gene, "aggression")        == 0) ug->unit_aggression = value;
+    else if (strcmp(gene, "preferred_range")   == 0) ug->preferred_range = value;
+    else if (strcmp(gene, "spacing_x")         == 0) ug->spacing_x = value;
+    else if (strcmp(gene, "spacing_y")         == 0) ug->spacing_y = value;
+    else if (strcmp(gene, "local_force_ratio") == 0) ug->local_force_ratio = value;
+}
+
 void load_strategy_from_file(const char* filename) {
     FILE* f = fopen(filename, "r");
     if (!f) {
@@ -112,39 +141,46 @@ void load_strategy_from_file(const char* filename) {
         return;
     }
 
-    float rep_weights[7] = {0};
-    float sep_weights[7] = {0};
-    int rep_count = 0, sep_count = 0;
-    int current_faction = -1;
+    FactionStrategy* current_strat = NULL;
+
     char line[256];
-
     while (fgets(line, sizeof(line), f)) {
-        char* newline = strchr(line, '\n');
-        if (newline) *newline = '\0';
+        // Strip trailing newline / carriage return
+        char* nl = strchr(line, '\n');
+        if (nl) *nl = '\0';
+        nl = strchr(line, '\r');
+        if (nl) *nl = '\0';
 
-        if (line[0] == '#' || line[0] == '\0') continue;
+        // Skip blanks and comments
+        if (line[0] == '\0' || line[0] == '#') continue;
 
-        if (strstr(line, "[REPUBLIC]"))  { current_faction = 0; continue; }
-        if (strstr(line, "[SEPARATIST]")){ current_faction = 1; continue; }
+        // Section headers
+        if (strstr(line, "[REPUBLIC]"))   { current_strat = &republic_strategy;  continue; }
+        if (strstr(line, "[SEPARATIST]")) { current_strat = &separatist_strategy; continue; }
+        if (!current_strat) continue;
 
+        // Split "prefix.gene value"
         char key[64];
         float value;
-        if (sscanf(line, "%s %f", key, &value) == 2) {
-            if (current_faction == 0 && rep_count < 8) {
-                rep_weights[rep_count++] = value;
-            } else if (current_faction == 1 && sep_count < 8) {
-                sep_weights[sep_count++] = value;
+        if (sscanf(line, "%63s %f", key, &value) != 2) continue;
+
+        char* dot = strchr(key, '.');
+        if (!dot) continue;
+        *dot = '\0';
+        const char* prefix = key;
+        const char* gene   = dot + 1;
+
+        if (strcmp(prefix, "strategy") == 0) {
+            set_strategy_gene(current_strat, gene, value);
+        } else {
+            UnitType type = parse_unit_type(prefix);
+            if (type != UNIT_TYPE_COUNT) {
+                set_unit_gene(type, gene, value);
             }
         }
     }
     fclose(f);
-
-    while (rep_count < 8) rep_weights[rep_count++] = 0.6f;
-    while (sep_count < 8) sep_weights[sep_count++] = 0.6f;
-
-    set_republic_strategy(rep_weights);
-    set_separatist_strategy(sep_weights);
-    printf("Loaded strategies from %s\n", filename);
+    printf("Loaded genomes from %s\n", filename);
 }
 
 // Fitness evaluation

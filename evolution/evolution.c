@@ -27,25 +27,25 @@ const GeneInfo REP_GENES[] = {
     {"strategy.flank_depth",              0.0f, 20.0f, 4.0f},
     // Swordsman (7-10)
     {"swordsman.aggression",      0.0f,  1.0f, 0.5f},
-    {"swordsman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"swordsman.preferred_range", 0.0f, 1.0f, 0.5f},
     {"swordsman.spacing_x",       1.0f,  8.0f, 3.0f},
     {"swordsman.spacing_y",       1.0f,  8.0f, 3.0f},
     {"swordsman.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
     {"elite_swordsman.aggression",      0.0f,  1.0f, 0.5f},
-    {"elite_swordsman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"elite_swordsman.preferred_range", 0.0f, 1.0f, 0.5f},
     {"elite_swordsman.spacing_x",       1.0f,  8.0f, 3.0f},
     {"elite_swordsman.spacing_y",       1.0f,  8.0f, 3.0f},
     {"elite_swordsman.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
     {"spear_thrower.aggression",      0.0f,  1.0f, 0.5f},
-    {"spear_thrower.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"spear_thrower.preferred_range", 0.0f, 1.0f, 0.5f},
     {"spear_thrower.spacing_x",       1.0f,  8.0f, 3.0f},
     {"spear_thrower.spacing_y",       1.0f,  8.0f, 3.0f},
     {"spear_thrower.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
     {"horseman.aggression",      0.0f,  1.0f, 0.5f},
-    {"horseman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"horseman.preferred_range", 0.0f, 1.0f, 0.5f},
     {"horseman.spacing_x",       1.0f,  8.0f, 3.0f},
     {"horseman.spacing_y",       1.0f,  8.0f, 3.0f},
     {"horseman.local_force_ratio", 0.5f,  2.0f, 1.0f}
@@ -63,25 +63,25 @@ const GeneInfo SEP_GENES[] = {
     {"strategy.flank_depth",              0.0f, 20.0f, 4.0f},
     // Spearman (7-10)
     {"spearman.aggression",      0.0f,  1.0f, 0.5f},
-    {"spearman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"spearman.preferred_range", 0.0f, 1.0f, 0.5f},
     {"spearman.spacing_x",       1.0f,  8.0f, 3.0f},
     {"spearman.spacing_y",       1.0f,  8.0f, 3.0f},
     {"spearman.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
     {"elite_spearman.aggression",      0.0f,  1.0f, 0.5f},
-    {"elite_spearman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"elite_spearman.preferred_range", 0.0f, 1.0f, 0.5f},
     {"elite_spearman.spacing_x",       1.0f,  8.0f, 3.0f},
     {"elite_spearman.spacing_y",       1.0f,  8.0f, 3.0f},
     {"elite_spearman.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
     {"bowman.aggression",      0.0f,  1.0f, 0.5f},
-    {"bowman.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"bowman.preferred_range", 0.0f, 1.0f, 0.5f},
     {"bowman.spacing_x",       1.0f,  8.0f, 3.0f},
     {"bowman.spacing_y",       1.0f,  8.0f, 3.0f},
     {"bowman.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
     {"cavalry.aggression",      0.0f,  1.0f, 0.5f},
-    {"cavalry.preferred_range", 0.0f, 36.0f, 12.0f},
+    {"cavalry.preferred_range", 0.0f, 1.0f, 0.5f},
     {"cavalry.spacing_x",       1.0f,  8.0f, 3.0f},
     {"cavalry.spacing_y",       1.0f,  8.0f, 3.0f},
     {"cavalry.local_force_ratio", 0.5f,  2.0f, 1.0f}
@@ -90,10 +90,10 @@ const size_t SEP_GENE_COUNT = sizeof(SEP_GENES) / sizeof(GeneInfo);
 
 // Evolution parameters
 int battles_min = 30;
-int battles_max = 60;
+int battles_max = 40;
 
-int pop_size = 40;
-int num_generations = 60;
+int pop_size = 30;
+int num_generations = 40;
 
 float mutation_rate_start = 0.5f;
 float mutation_rate_end = 0.15f;
@@ -418,7 +418,11 @@ void run_coevolution(const GeneInfo* rep_genes, size_t rep_gene_count,
         printf("Gen %2d: %s Rep best=%.4f avg=%.4f | Sep best=%.4f avg=%.4f\n",
                gen, name_prefix, rep_pop[0].fitness, avg_rep, sep_pop[0].fitness, avg_sep);
 
+        
+        // Run several matchups:
         print_generation_diagnostics(rep_pop[0].weights, sep_pop[0].weights, num_battles);
+        print_generation_diagnostics(rep_pop[0].weights, sep_pop[pop_size/2].weights, num_battles);
+        print_generation_diagnostics(rep_pop[pop_size/2].weights, sep_pop[pop_size/2].weights, num_battles);
 
         // Rank-based selection scores. pop[0]
         // index 0 gets 1.0 and index pop_size-1 gets 0.0.

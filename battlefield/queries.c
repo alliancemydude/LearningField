@@ -193,19 +193,12 @@ Unit* select_closest_unit(Battlefield* field, Faction faction) {
 
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
-        if (!u || u->hp <= 0 || u->faction != faction || u->has_acted) continue;
+        if (!u || u->hp <= 0) continue;
+        if (u->faction != faction) continue;
+        if (u->has_acted) continue;
 
-        int min_enemy_dist_sq = 9999 * 9999;
-        for (int j = 0; j < field->unit_count; j++) {
-            Unit* e = field->units[j];
-            if (!e || e == u || e->hp <= 0) continue;
-            if (e->faction == u->faction) continue;
-            int d = get_distance_squared(u, e);
-            if (d < min_enemy_dist_sq) min_enemy_dist_sq = d;
-        }
-
-        if (min_enemy_dist_sq < best_dist_sq) {
-            best_dist_sq = min_enemy_dist_sq;
+        if (u->closest_enemy_dist_sq < best_dist_sq) {
+            best_dist_sq = u->closest_enemy_dist_sq;
             best = u;
         }
     }
@@ -233,6 +226,23 @@ void get_faction_center(Battlefield* field, Faction faction, int* out_x, int* ou
 
     *out_x = sum_x / count;
     *out_y = sum_y / count;
+}
+
+void compute_closest_enemy_distances(Battlefield* field) {
+    for (int i = 0; i < field->unit_count; i++) {
+        Unit* u = field->units[i];
+        if (!u || u->hp <= 0) continue;
+
+        int min_dist_sq = 9999 * 9999;
+        for (int j = 0; j < field->unit_count; j++) {
+            Unit* e = field->units[j];
+            if (!e || e == u || e->hp <= 0) continue;
+            if (e->faction == u->faction) continue;
+            int d = get_distance_squared(u, e);
+            if (d < min_dist_sq) min_dist_sq = d;
+        }
+        u->closest_enemy_dist_sq = min_dist_sq;
+    }
 }
 
 // Handle finding allies by type

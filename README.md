@@ -9,3 +9,8 @@ Army compositions are changed in battlefield.c, then the program is run with ent
 
 Known Issues:
 Double-printing of greeting message between runs of the program
+
+Valgrind:
+valgrind --tool=callgrind --callgrind-out-file=callgrind.out ./battle
+ls -la callgrind.out.*
+callgrind_annotate callgrind.out.12345 | head -40

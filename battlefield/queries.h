@@ -18,6 +18,7 @@ Unit* find_highest_pin_enemy(Unit* unit, Battlefield* field, int weapon_range);
 Unit* find_highest_value_enemy(Unit* unit, Battlefield* field, int weapon_range);
 int get_enemies_in_range(Unit* unit, Battlefield* field, int range, Unit* enemies[]);
 Unit* select_closest_unit(Battlefield* field, Faction faction);
+void compute_closest_enemy_distances(Battlefield* field);
 
 // Ally queries:
 Unit* find_closest_ally(Unit* unit, Battlefield* field);
