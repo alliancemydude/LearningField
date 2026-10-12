@@ -57,10 +57,8 @@ static float measure_mixed_value (ForceComposition* mixed, int mixed_count, Unit
     int lo = 1, hi = 40;
     while (hi - lo > 1) {
         int mid = (lo + hi) / 2;
-        float wr = win_rate_against_reference(meter_type, meter_faction, mid,
-                                              mixed, mixed_count, battles);
-        printf("      %2d %s vs mixed -> %.1f%%\n", mid,
-               get_unit_type_name(meter_type), wr * 100.0f);
+        float wr = win_rate_against_reference(meter_type, meter_faction, mid, mixed, mixed_count, battles);
+        printf("      %2d %s vs mixed -> %.1f%%\n", mid, get_unit_type_name(meter_type), wr * 100.0f);
         if (wr >= 0.5f) hi = mid;
         else            lo = mid;
     }
@@ -74,15 +72,13 @@ static float win_rate_stderr(float wr, int n) {
 }
 
 static int find_crossover (UnitType test_type, Faction test_faction, ForceComposition* ref, int ref_count,
-    int min_count, int max_count, int battles_per_step, float* out_fractional, int* out_integer, float* out_winrate) 
-    {
+    int min_count, int max_count, int battles_per_step, float* out_fractional, int* out_integer, float* out_winrate) {
     int lo = min_count;
     int hi = max_count;
 
     while (hi - lo > 1) {
         int mid = (lo + hi) / 2;
-        float wr = win_rate_against_reference(test_type, test_faction, mid,
-                                              ref, ref_count, battles_per_step);
+        float wr = win_rate_against_reference(test_type, test_faction, mid, ref, ref_count, battles_per_step);
         float se = win_rate_stderr(wr, battles_per_step);
 
         printf("      N=%2d -> %.1f%% (±%.1f%%)\n", mid,
@@ -118,22 +114,17 @@ static int find_crossover (UnitType test_type, Faction test_faction, ForceCompos
 }
 
 static float calibrate_unit(UnitType type, Faction test_faction, ForceComposition* ref, int ref_count,
-                            float reference_value, int battles_per_step, int* out_crossover)
-{
-    printf("  %-20s (ref value %.0f):\n",
-           get_unit_type_name(type), reference_value);
+                            float reference_value, int battles_per_step, int* out_crossover) {
+    printf("  %-20s (ref value %.0f):\n", get_unit_type_name(type), reference_value);
 
     float fractional = 0.0f;
     int   integer    = 0;
 
-    find_crossover(type, test_faction, ref, ref_count,
-                   1, 40, battles_per_step,
-                   &fractional, &integer, NULL);
+    find_crossover(type, test_faction, ref, ref_count, 1, 40, battles_per_step, &fractional, &integer, NULL);
 
     float cost = reference_value / fractional;
 
-    printf("    => N=%.2f (integer %d), cost = %.2f points\n\n",
-           fractional, integer, cost);
+    printf("    => N=%.2f (integer %d), cost = %.2f points\n\n", fractional, integer, cost);
 
     if (out_crossover) *out_crossover = integer;
     return cost;
@@ -143,8 +134,8 @@ static float calibrate_unit(UnitType type, Faction test_faction, ForceCompositio
 
 static void verify_cost(UnitType type, Faction test_faction, ForceComposition* ref, int ref_count,
                         int test_count, float test_cost, float ref_cost, int battles) {
-    printf("  %-20s: %2d @ %.1f pts vs %2d ref @ %.1f pts ... ",
-           get_unit_type_name(type), test_count, test_cost, ref[0].count, ref_cost);
+    printf("  %-20s: %2d @ %.1f pts vs %2d ref @ %.1f pts ... ", 
+        get_unit_type_name(type), test_count, test_cost, ref[0].count, ref_cost);
 
     float wr = win_rate_against_reference(type, test_faction, test_count, ref, ref_count, battles);
     float se = win_rate_stderr(wr, battles);
@@ -160,14 +151,12 @@ void run_point_calibration(int battles_per_step) {
     printf("--- Phase 0: Valuing mixed reference armies ---\n\n");
 
     printf("German meter (swordsmen) vs Roman mixed army:\n");
-    float roman_mixed_value = measure_mixed_value(
-        mixed_roman, mixed_roman_count,
+    float roman_mixed_value = measure_mixed_value(mixed_roman, mixed_roman_count,
         UNIT_SWORDSMAN, FACTION_GERMAN, 10.0f, battles_per_step);
     printf("  => Roman mixed army is worth %.1f points\n\n", roman_mixed_value);
 
     printf("Roman meter (spearmen) vs German mixed army:\n");
-    float german_mixed_value = measure_mixed_value(
-        mixed_german, mixed_german_count,
+    float german_mixed_value = measure_mixed_value(mixed_german, mixed_german_count,
         UNIT_SPEARMAN, FACTION_ROMAN, 10.0f, battles_per_step);
     printf("  => German mixed army is worth %.1f points\n\n", german_mixed_value);
 
@@ -177,28 +166,30 @@ void run_point_calibration(int battles_per_step) {
 
     printf("--- Phase 1: Calibration against mixed references ---\n\n");
 
-    printf("German units (vs Roman mixed army, value %.1f):\n",
-           roman_mixed_value);
+    printf("German units (vs Roman mixed army, value %.1f):\n", roman_mixed_value);
     for (int i = 0; i < UNIT_TYPE_COUNT; i++) {
         UnitType type = (UnitType)i;
-        if (get_faction_of_unit(type) != FACTION_GERMAN) continue;
-        if (type == UNIT_SWORDSMAN) { costs[type] = 10.0f; crossovers[type] = 20; continue; }
-        costs[type] = calibrate_unit(type, FACTION_GERMAN,
-                                     mixed_roman, mixed_roman_count,
-                                     roman_mixed_value, battles_per_step,
-                                     &crossovers[type]);
+        if (get_faction_of_unit(type) != FACTION_GERMAN) {
+            continue;
+        }
+        if (type == UNIT_SWORDSMAN) {
+            costs[type] = 10.0f; crossovers[type] = 20; continue;
+        }
+        costs[type] = calibrate_unit(type, FACTION_GERMAN, mixed_roman, mixed_roman_count,
+                                     roman_mixed_value, battles_per_step, &crossovers[type]);
     }
 
-    printf("Roman units (vs German mixed army, value %.1f):\n",
-           german_mixed_value);
+    printf("Roman units (vs German mixed army, value %.1f):\n", german_mixed_value);
     for (int i = 0; i < UNIT_TYPE_COUNT; i++) {
         UnitType type = (UnitType)i;
-        if (get_faction_of_unit(type) != FACTION_ROMAN) continue;
-        if (type == UNIT_SPEARMAN) { costs[type] = 10.0f; crossovers[type] = 20; continue; }
-        costs[type] = calibrate_unit(type, FACTION_ROMAN,
-                                     mixed_german, mixed_german_count,
-                                     german_mixed_value, battles_per_step,
-                                     &crossovers[type]);
+        if (get_faction_of_unit(type) != FACTION_ROMAN) {
+            continue;
+        }
+        if (type == UNIT_SPEARMAN) {
+            costs[type] = 10.0f; crossovers[type] = 20; continue;
+        }
+        costs[type] = calibrate_unit(type, FACTION_ROMAN, mixed_german, mixed_german_count,
+                                     german_mixed_value, battles_per_step, &crossovers[type]);
     }
 
     // Phase 2: verify at the discovered crossover count
@@ -207,34 +198,37 @@ void run_point_calibration(int battles_per_step) {
     printf("German units vs Roman mixed army:\n");
     for (int i = 0; i < UNIT_TYPE_COUNT; i++) {
         UnitType type = (UnitType)i;
-        if (get_faction_of_unit(type) != FACTION_GERMAN) continue;
-        if (type == UNIT_SWORDSMAN) continue;
-        verify_cost(type, FACTION_GERMAN,
-                    mixed_roman, mixed_roman_count,
-                    crossovers[type], costs[type],
-                    0.0f,  // ref_cost is meaningless now; pass 0
-                    battles_per_step * 2);
+        if (get_faction_of_unit(type) != FACTION_GERMAN) {
+            continue;
+        }
+        if (type == UNIT_SWORDSMAN) {
+            continue;
+        }
+        verify_cost(type, FACTION_GERMAN, mixed_roman, mixed_roman_count,
+                    crossovers[type], costs[type], 0.0f, battles_per_step * 2);
     }
 
     printf("\nRoman units vs German mixed army:\n");
     for (int i = 0; i < UNIT_TYPE_COUNT; i++) {
         UnitType type = (UnitType)i;
-        if (get_faction_of_unit(type) != FACTION_ROMAN) continue;
-        if (type == UNIT_SPEARMAN) continue;
-        verify_cost(type, FACTION_ROMAN,
-                    mixed_german, mixed_german_count,
-                    crossovers[type], costs[type],
-                    0.0f,
-                    battles_per_step * 2);
+        if (get_faction_of_unit(type) != FACTION_ROMAN) {
+            continue;
+        }
+        if (type == UNIT_SPEARMAN) {
+            continue;
+        }
+        verify_cost(type, FACTION_ROMAN, mixed_german, mixed_german_count,
+                    crossovers[type], costs[type], 0.0f, battles_per_step * 2);
     }
 
     // Summary
     printf("\n=== FINAL COSTS (mixed-army calibration) ===\n");
     for (int i = 0; i < UNIT_TYPE_COUNT; i++) {
         UnitType type = (UnitType)i;
-        if (costs[type] <= 0) continue;
-        printf("  %-20s  %.1f points  (N=%d)\n",
-               get_unit_type_name(type), costs[type], crossovers[type]);
+        if (costs[type] <= 0) {
+            continue;
+        }
+        printf("  %-20s  %.1f points  (N=%d)\n", get_unit_type_name(type), costs[type], crossovers[type]);
     }
     printf("\n");
 }

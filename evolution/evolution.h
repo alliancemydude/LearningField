@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include "config.h"
 
-#define STRATEGY_GENE_COUNT 7
+#define STRATEGY_GENE_COUNT 10
 #define UNIT_TYPE_GENE_COUNT 5
 
 typedef struct {

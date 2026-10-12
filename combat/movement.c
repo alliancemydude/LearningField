@@ -27,15 +27,21 @@ static int step_axis(Unit* unit, Battlefield* field, int* cur_x, int* cur_y, int
     return taken;
 }
 
+static int dir_from_delta(int dx, int dy) {
+    if (dx > 0) return FACE_EAST;
+    if (dx < 0) return FACE_WEST;
+    if (dy > 0) return FACE_SOUTH;
+    return FACE_NORTH;
+}
+
 void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y, int max_steps) {
     if (!unit || !field) return;
     if (unit->movement == 0 || unit->is_immobilized) return;
 
-    int cur_x = unit->x, cur_y = unit->y;
+    int orig_x = unit->x, orig_y = unit->y;
+    int cur_x = orig_x, cur_y = orig_y;
     int steps = max_steps;
 
-    // Alternate axis order by unit id so the army doesn't collapse
-    // into a single column. Even ids go X-then-Y, odd ids Y-then-X.
     bool y_first = (unit->id % 2 != 0);
 
     if (!y_first) {
@@ -46,9 +52,20 @@ void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y, in
         steps -= step_axis(unit, field, &cur_x, &cur_y, target_x, true,  steps);
     }
 
+    field->occupancy[orig_y][orig_x] = NULL;
+
     unit->x = cur_x;
     unit->y = cur_y;
     clamp_unit_position(unit, field);
+
+    // Set facing from the actual displacement
+    int dx = unit->x - orig_x;
+    int dy = unit->y - orig_y;
+    if (dx != 0 || dy != 0) {
+        unit->facing = dir_from_delta(dx, dy);
+    }
+
+    field->occupancy[unit->y][unit->x] = unit;
 }
 
 void move_toward_target(Unit* unit, Unit* target, int move_amount, Battlefield* field) {
@@ -56,10 +73,10 @@ void move_toward_target(Unit* unit, Unit* target, int move_amount, Battlefield* 
     if (!target || move_amount <= 0) return;
     if (unit->is_immobilized) return;
 
-    int cur_x = unit->x, cur_y = unit->y;
+    int orig_x = unit->x, orig_y = unit->y;
+    int cur_x = orig_x, cur_y = orig_y;
     int steps = move_amount;
 
-    // Same alternating axis order as execute_move
     bool y_first = (unit->id % 2 != 0);
 
     if (!y_first) {
@@ -70,7 +87,17 @@ void move_toward_target(Unit* unit, Unit* target, int move_amount, Battlefield* 
         steps -= step_axis(unit, field, &cur_x, &cur_y, target->x, true,  steps);
     }
 
+    field->occupancy[orig_y][orig_x] = NULL;
+
     unit->x = cur_x;
     unit->y = cur_y;
     clamp_unit_position(unit, field);
+
+    int dx = unit->x - orig_x;
+    int dy = unit->y - orig_y;
+    if (dx != 0 || dy != 0) {
+        unit->facing = dir_from_delta(dx, dy);
+    }
+
+    field->occupancy[unit->y][unit->x] = unit;
 }

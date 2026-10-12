@@ -15,7 +15,10 @@ FactionStrategy german_strategy = {
         .threat_weight         = 0.5f,
         .flank_percentage      = 0.3f,
         .flanking_bias         = 1.0f,
-        .flank_depth           = 4.0f
+        .flank_depth           = 4.0f,
+        .face_threat_weight    = 0.0f,
+        .flank_targeting_weight = 0.0f,
+        .cohesion_weight       = 0.0f
     },
     .deployment = {
         .deploy_horizontal_spread = 4.00f,
@@ -29,7 +32,10 @@ FactionStrategy roman_strategy = {
         .threat_weight         = 0.5f,
         .flank_percentage      = 0.3f,
         .flanking_bias         = 1.0f,
-        .flank_depth           = 4.0f
+        .flank_depth           = 4.0f,
+        .face_threat_weight    = 0.0f,
+        .flank_targeting_weight = 0.0f,
+        .cohesion_weight       = 0.0f
     },
     .deployment = {
         .deploy_horizontal_spread = 4.00f,
@@ -82,24 +88,30 @@ void assign_unit_roles(Battlefield* field, Faction faction) {
 }
 
 // Set genes
-void set_german_strategy(const float weights[7]) {
-    german_strategy.strategic.aggression_bias       = weights[0];
-    german_strategy.strategic.threat_weight         = weights[1];
-    german_strategy.strategic.flank_percentage      = weights[2];
-    german_strategy.strategic.flanking_bias         = weights[3];
+void set_german_strategy(const float weights[10]) {
+    german_strategy.strategic.aggression_bias           = weights[0];
+    german_strategy.strategic.threat_weight             = weights[1];
+    german_strategy.strategic.flank_percentage          = weights[2];
+    german_strategy.strategic.flanking_bias             = weights[3];
     german_strategy.deployment.deploy_horizontal_spread = weights[4];
     german_strategy.deployment.deploy_vertical_offset   = weights[5];
-    german_strategy.strategic.flank_depth           = weights[6];
+    german_strategy.strategic.flank_depth               = weights[6];
+    german_strategy.strategic.face_threat_weight        = weights[7];
+    german_strategy.strategic.flank_targeting_weight    = weights[8];
+    german_strategy.strategic.cohesion_weight           = weights[9];
 }
 
-void set_roman_strategy(const float weights[7]) {
-    roman_strategy.strategic.aggression_bias       = weights[0];
-    roman_strategy.strategic.threat_weight         = weights[1];
-    roman_strategy.strategic.flank_percentage      = weights[2];
-    roman_strategy.strategic.flanking_bias         = weights[3];
+void set_roman_strategy(const float weights[10]) {
+    roman_strategy.strategic.aggression_bias           = weights[0];
+    roman_strategy.strategic.threat_weight             = weights[1];
+    roman_strategy.strategic.flank_percentage          = weights[2];
+    roman_strategy.strategic.flanking_bias             = weights[3];
     roman_strategy.deployment.deploy_horizontal_spread = weights[4];
     roman_strategy.deployment.deploy_vertical_offset   = weights[5];
-    roman_strategy.strategic.flank_depth           = weights[6];
+    roman_strategy.strategic.flank_depth               = weights[6];
+    roman_strategy.strategic.face_threat_weight        = weights[7];
+    roman_strategy.strategic.flank_targeting_weight    = weights[8];
+    roman_strategy.strategic.cohesion_weight           = weights[9];
 }
 
 // Load strategies

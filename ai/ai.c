@@ -27,11 +27,27 @@ void unit_turn(Unit* unit, Battlefield* field) {
     FactionStrategy* strat = (unit->faction == FACTION_GERMAN)
                              ? &german_strategy : &roman_strategy;
 
-    int local_allies  = count_faction_in_radius(unit, field, unit->faction, LOCAL_FORCE_RADIUS) + 1;
-    int local_enemies = count_faction_in_radius(unit, field,
-                            enemy_faction(unit->faction), LOCAL_FORCE_RADIUS);
+    int local_allies  = unit->local_allies + 1;
+    int local_enemies = unit->local_enemies;
     bool should_engage = (local_enemies == 0) ||
         ((float)local_allies >= unit->effective_local_force_ratio * (float)local_enemies);
+
+    // Face the nearest threat if it's on our flank or rear.
+    if (strat->strategic.face_threat_weight > 0.0f) {
+        Unit* threat = find_closest_enemy(unit, field);
+        if (threat) {
+            int angle = get_attack_angle(threat, unit);
+            if (angle > 0 && roll(0, 99) < (int)(strat->strategic.face_threat_weight * 100.0f)) {
+                int dx = threat->x - unit->x;
+                int dy = threat->y - unit->y;
+                if (abs(dx) > abs(dy)) {
+                    unit->facing = (dx > 0) ? FACE_EAST : FACE_WEST;
+                } else {
+                    unit->facing = (dy > 0) ? FACE_SOUTH : FACE_NORTH;
+                }
+            }
+        }
+    }
 
     int action_taken;
     switch (unit->role) {
@@ -40,12 +56,31 @@ void unit_turn(Unit* unit, Battlefield* field) {
         default:          action_taken = line_turn(unit, field, strat, should_engage);   break;
     }
 
-    // --- shared logging block below, unchanged ---
+    // --- Logging for turn-based mode ---
     if (turn_based) {
-        // ... existing action_names, snprintf, strncat ...
+        const char* action_names[] = {
+            "Fire", "Advance+Fire",
+            "Attack", "Advance+Attack",
+            "Rally", "Dash"
+        };
+        const char* action_name;
+        if (action_taken >= 0 && action_taken < 6) {
+            action_name = action_names[action_taken];
+        } else {
+            action_name = "Nothing";
+        }
+        int turn = get_turn_count();
+        const char* type_name = get_unit_type_name(unit->type);
+        char msg[128];
+        snprintf(msg, sizeof(msg), "Turn %d: [%s] Unit %d %s at (%d,%d)\n",
+                 turn, type_name, unit->id, action_name, unit->x, unit->y);
+        strncat(battle_action_log, msg, sizeof(battle_action_log) - strlen(battle_action_log) - 1);
     }
     if (turn_based && action_taken >= 0 && target) {
-        // ... existing target log ...
+        char target_msg[64];
+        snprintf(target_msg, sizeof(target_msg), "  -> Target: %s (HP:%d)\n",
+                 get_unit_type_name(target->type), target->hp);
+        strncat(battle_action_log, target_msg, sizeof(battle_action_log) - strlen(battle_action_log) - 1);
     }
 
     target = NULL;
@@ -296,7 +331,13 @@ Unit* select_enemy_by_preference(Unit* unit, Battlefield* field, int max_range, 
         float pin_modifier = 1.0f + pin_score * 0.3f;
         float value_modifier = 1.0f + ((float)candidate->point_value / 100.0f) * 0.2f;
 
-        float score = base_score * pin_modifier * value_modifier;
+        // Bonus for targets we can hit from the flank or rear.
+        int angle = get_attack_angle(unit, candidate);
+        float angle_bonus = 1.0f;
+        if (angle == 1) angle_bonus += strat->flank_targeting_weight * 0.3f;
+        if (angle == 2) angle_bonus += strat->flank_targeting_weight * 0.6f;
+
+        float score = base_score * angle_bonus * pin_modifier * value_modifier;
         if (score > best_score) {
             best_score = score;
             best = candidate;

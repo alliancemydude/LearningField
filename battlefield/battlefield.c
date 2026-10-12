@@ -11,18 +11,18 @@
 
 // Default force compositions
 ForceComposition default_german_composition[] = {
-    {UNIT_SWORDSMAN,        10},
-    {UNIT_ELITE_SWORDSMAN,  5},
-    {UNIT_JAVELIN_THROWER,  5},
+    {UNIT_SWORDSMAN,        0},
+    {UNIT_ELITE_SWORDSMAN,  2},
+    {UNIT_JAVELIN_THROWER,  8},
     {UNIT_HORSEMAN,         5}
 };
 int default_german_composition_count = sizeof(default_german_composition) / sizeof(default_german_composition[0]);
 
 ForceComposition default_roman_composition[] = {
-    {UNIT_SPEARMAN,         10},
-    {UNIT_ELITE_SPEARMAN,   5},
-    {UNIT_BOWMAN,           5},
-    {UNIT_CAVALRY,          5}
+    {UNIT_SPEARMAN,         11},
+    {UNIT_ELITE_SPEARMAN,   10},
+    {UNIT_BOWMAN,           1},
+    {UNIT_CAVALRY,          0}
 };
 int default_roman_composition_count = sizeof(default_roman_composition) / sizeof(default_roman_composition[0]);
 
@@ -60,8 +60,10 @@ static bool try_relocate(Battlefield* field, Unit* u) {
         int nx = u->x + dx[d];
         int ny = u->y + dy[d];
         if (is_tile_walkable(field, nx, ny, u)) {
+            field->occupancy[u->y][u->x] = NULL;
             u->x = nx;
             u->y = ny;
+            field->occupancy[u->y][u->x] = u;
             return true;
         }
     }
@@ -94,6 +96,13 @@ static bool try_relocate(Battlefield* field, Unit* u) {
         }
     }
     return false; // map is full
+}
+
+void place_unit(Battlefield* field, Unit* u, int new_x, int new_y) {
+    field->occupancy[u->y][u->x] = NULL;
+    u->x = new_x;
+    u->y = new_y;
+    field->occupancy[u->y][u->x] = u;
 }
 
 void resolve_overlaps(Battlefield* field) {
@@ -222,6 +231,7 @@ void spawn_german_forces(Battlefield* field, ForceComposition forces[], int forc
             Unit* unit = create_unit(forces[f].type, id++, x, y);
             if (unit) {
                 field->units[field->unit_count++] = unit;
+                field->occupancy[unit->y][unit->x] = unit;
             }
             unit_index++;
         }
@@ -317,6 +327,7 @@ void spawn_roman_forces(Battlefield* field, ForceComposition forces[], int force
             Unit* unit = create_unit(forces[f].type, id++, x, y);
             if (unit) {
                 field->units[field->unit_count++] = unit;
+                field->occupancy[unit->y][unit->x] = unit;
             }
             unit_index++;
         }
@@ -355,10 +366,20 @@ int run_battle(Battlefield* field, int max_turns) {
             return 0;
         }
 
+        // Reset if units have acted
         for (int i = 0; i < field->unit_count; i++) {
             if (field->units[i]->hp > 0) {
                 field->units[i]->has_acted = false;
             }
+        }
+
+        // Populate local enemies and allies
+        for (int i = 0; i < field->unit_count; i++) {
+            Unit* u = field->units[i];
+            if (!u || u->hp <= 0) continue;
+            u->local_allies    = count_faction_in_radius(u, field, u->faction, 5);
+            u->local_enemies   = count_faction_in_radius(u, field, enemy_faction(u->faction), 5);
+            u->cohesion_allies = count_same_facing_allies(u, field, 2);   // NEW
         }
 
         compute_closest_enemy_distances(field);
@@ -400,43 +421,9 @@ int run_battle(Battlefield* field, int max_turns) {
                 char press_next = getchar();
                 if (press_next) printf("\n");
             }
-
-            // Victory check
-            german_count = 0;
-            roman_count = 0;
-            for (int i = 0; i < field->unit_count; i++) {
-                if (field->units[i] == NULL || field->units[i]->hp <= 0) continue;
-                if (field->units[i]->faction == FACTION_GERMAN) german_count++;
-                else roman_count++;
-            }
-            if (german_count == 0) {
-                battle_stats.winner = 1;
-                if (turn_based) print_battle_summary_and_wait();
-                return 1;
-            }
-            if (roman_count == 0) {
-                battle_stats.winner = 0;
-                if (turn_based) print_battle_summary_and_wait();
-                return 0;
-            }
-
-            // Update total active units
-            german_count = 0;
-            roman_count = 0;
-            for (int i = 0; i < field->unit_count; i++) {
-                if (field->units[i] == NULL || field->units[i]->hp <= 0) continue;
-                if (field->units[i]->faction == FACTION_GERMAN) german_count++;
-                else roman_count++;
-            }
-
-            // Update total_active
-            total_active = german_count + roman_count;
         }
 
-        // something went wrong, force an exit
-        if (safety >= total_active * 2) {
-            break;
-        }
+        if (safety >= total_active * 2) break;
 
         turn_count++;
     }
@@ -513,15 +500,18 @@ void print_action_stats() {
 
 void print_battle_summary() {
     printf("\n=== BATTLE SUMMARY ===\n");
-    printf("Winner: %s\n", (battle_stats.winner == 0) ? "German" : (battle_stats.winner == 1) ? "German" : "Timeout");
+    printf("Winner: %s\n",
+       (battle_stats.winner == 0) ? "German" :
+       (battle_stats.winner == 1) ? "Roman"  : "Timeout");
     printf("Turns: %d\n", turn_count);
     printf("Shots fired: %d\n", battle_stats.shots_fired);
     printf("Shots hit: %d\n", battle_stats.shots_hit);
     printf("Kills: %d\n", battle_stats.kills);
+    printf("  Flank kills: %d, Rear kills: %d\n", battle_stats.flank_kills, battle_stats.rear_kills);
     int german_dealt = battle_stats.damage_taken_roman;
     int roman_dealt = battle_stats.damage_taken_german;
-    printf("Damage dealt: German %d, German %d\n", german_dealt, roman_dealt);
-    printf("Casualties: German %d, German %d\n", battle_stats.casualties_german, battle_stats.casualties_roman);
+    printf("Damage dealt: German %d, Roman %d\n", german_dealt, roman_dealt);
+    printf("Casualties: German %d, Roman %d\n", battle_stats.casualties_german, battle_stats.casualties_roman);
     // Print kills by type
     for (int i = 0; i < UNIT_TYPE_COUNT; i++) {
         printf("  %s: %d kills\n", get_unit_type_name((UnitType)i), battle_stats.kills_by_type[i]);

@@ -9,6 +9,7 @@
 #include <time.h>
 #include "evolution.h"
 #include "battlefield.h"
+#include "composition.h"
 #include "strategy.h"
 #include "unit_genome.h"
 #include "utils.h"
@@ -25,6 +26,9 @@ const GeneInfo GERMAN_GENES[] = {
     {"strategy.deploy_horizontal_spread", 0.0f, 10.0f, 6.0f},
     {"strategy.deploy_vertical_offset",   0.0f, 10.0f, 4.0f},
     {"strategy.flank_depth",              0.0f, 20.0f, 4.0f},
+    {"strategy.face_threat_weight",       0.0f,  1.0f, 0.0f},
+    {"strategy.flank_targeting_weight",   0.0f,  1.0f, 0.0f},
+    {"strategy.cohesion_weight",          0.0f,  1.0f, 0.0f},
     // Swordsman (7-10)
     {"swordsman.aggression",      0.0f,  1.0f, 0.5f},
     {"swordsman.preferred_range", 0.0f, 1.0f, 0.5f},
@@ -48,7 +52,12 @@ const GeneInfo GERMAN_GENES[] = {
     {"horseman.preferred_range", 0.0f, 1.0f, 0.5f},
     {"horseman.spacing_x",       1.0f,  8.0f, 3.0f},
     {"horseman.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"horseman.local_force_ratio", 0.5f,  2.0f, 1.0f}
+    {"horseman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"composition.swordsman_share",        0.0f, 1.0f, 0.5f},
+    {"composition.elite_swordsman_share",  0.0f, 1.0f, 0.5f},
+    {"composition.javelin_thrower_share",  0.0f, 1.0f, 0.5f},
+    {"composition.horseman_share",         0.0f, 1.0f, 0.5f}
 };
 const size_t GERMAN_GENE_COUNT = sizeof(GERMAN_GENES) / sizeof(GeneInfo);
 
@@ -61,6 +70,9 @@ const GeneInfo ROMAN_GENES[] = {
     {"strategy.deploy_horizontal_spread", 0.0f, 10.0f, 6.0f},
     {"strategy.deploy_vertical_offset",   0.0f, 10.0f, 4.0f},
     {"strategy.flank_depth",              0.0f, 20.0f, 4.0f},
+    {"strategy.face_threat_weight",       0.0f,  1.0f, 0.0f},
+    {"strategy.flank_targeting_weight",   0.0f,  1.0f, 0.0f},
+    {"strategy.cohesion_weight",          0.0f,  1.0f, 0.0f},
     // Spearman (7-10)
     {"spearman.aggression",      0.0f,  1.0f, 0.5f},
     {"spearman.preferred_range", 0.0f, 1.0f, 0.5f},
@@ -84,16 +96,21 @@ const GeneInfo ROMAN_GENES[] = {
     {"cavalry.preferred_range", 0.0f, 1.0f, 0.5f},
     {"cavalry.spacing_x",       1.0f,  8.0f, 3.0f},
     {"cavalry.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"cavalry.local_force_ratio", 0.5f,  2.0f, 1.0f}
+    {"cavalry.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"composition.spearman_share",        0.0f, 1.0f, 0.5f},
+    {"composition.elite_spearman_share",  0.0f, 1.0f, 0.5f},
+    {"composition.bowman_share",  0.0f, 1.0f, 0.5f},
+    {"composition.cavalry_share",         0.0f, 1.0f, 0.5f}
 };
 const size_t ROMAN_GENE_COUNT = sizeof(ROMAN_GENES) / sizeof(GeneInfo);
 
 // Evolution parameters
-int battles_min = 20;
-int battles_max = 40;
+int battles_min = 30;
+int battles_max = 50;
 
 int pop_size = 30;
-int num_generations = 30;
+int num_generations = 60;
 
 float mutation_rate_start = 0.5f;
 float mutation_rate_end = 0.15f;
@@ -176,7 +193,6 @@ static void apply_genes(const float* german_weights, const float* roman_weights)
         UnitType type = (UnitType)i;
         Faction f = get_faction_of_unit(type);
         if (f == FACTION_UNKNOWN) continue;
-        if (!is_unit_used_in_composition(type)) continue;
 
         if (f == FACTION_GERMAN) {
             unit_genomes[i].unit_aggression = german_weights[german_idx + 0];
@@ -194,27 +210,65 @@ static void apply_genes(const float* german_weights, const float* roman_weights)
             roman_idx += UNIT_TYPE_GENE_COUNT;
         }
     }
+
+    // Read composition genes
+    german_strategy.composition.count = 4;
+    roman_strategy.composition.count  = 4;
+    for (int i = 0; i < 4; i++) {
+        german_strategy.composition.share[i] = german_weights[german_idx + i];
+        roman_strategy.composition.share[i]  = roman_weights[roman_idx + i];
+    }
 }
 
-static void print_generation_diagnostics(const float* german_weights,
-                                         const float* roman_weights,
-                                         int num_battles) {
+static const char* unit_abbrev(UnitType t) {
+    switch (t) {
+        case UNIT_SWORDSMAN:       return "sw";
+        case UNIT_ELITE_SWORDSMAN: return "es";
+        case UNIT_JAVELIN_THROWER: return "jt";
+        case UNIT_HORSEMAN:        return "hm";
+        case UNIT_SPEARMAN:        return "sp";
+        case UNIT_ELITE_SPEARMAN:  return "esp";
+        case UNIT_BOWMAN:          return "bw";
+        case UNIT_CAVALRY:         return "cv";
+        default: return "??";
+    }
+}
+
+static void print_comp_line(ForceComposition* comp, int n) {
+    int total = 0;
+    for (int i = 0; i < n; i++) {
+        total += comp[i].count;
+        if (comp[i].count > 0) {
+            printf("%d%s ", comp[i].count, unit_abbrev(comp[i].type));
+        }
+    }
+    printf("(%d units)", total);
+}
+
+static void print_generation_diagnostics(const float* german_weights, const float* roman_weights, int num_battles, const char* label)
+{
     FactionStrategy old_german = german_strategy;
-    FactionStrategy old_roman = roman_strategy;
+    FactionStrategy old_roman  = roman_strategy;
     UnitGenome old_genomes[UNIT_TYPE_COUNT];
     memcpy(old_genomes, unit_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
     apply_genes(german_weights, roman_weights);
 
+    ForceComposition german_comp[COMPOSITION_MAX_TYPES];
+    ForceComposition roman_comp[COMPOSITION_MAX_TYPES];
+    int german_comp_n = build_composition(&german_strategy.composition, FACTION_GERMAN, german_comp);
+    int roman_comp_n  = build_composition(&roman_strategy.composition,  FACTION_ROMAN,  roman_comp);
+
     int german_wins = 0, roman_wins = 0, timeouts = 0;
     long total_german_dmg = 0, total_roman_dmg = 0;
     long total_turns = 0;
+    long total_german_surv = 0, total_roman_surv = 0;
 
     for (int i = 0; i < num_battles; i++) {
         Battlefield field;
         initialize_battlefield(&field);
-        spawn_german_forces(&field, default_german_composition, default_german_composition_count);
-        spawn_roman_forces(&field, default_roman_composition, default_roman_composition_count);
+        spawn_german_forces(&field, german_comp, german_comp_n);
+        spawn_roman_forces(&field, roman_comp, roman_comp_n);
 
         int winner = run_battle(&field, MAX_TURNS);
         if (winner == 0) german_wins++;
@@ -222,8 +276,19 @@ static void print_generation_diagnostics(const float* german_weights,
         else timeouts++;
 
         total_german_dmg += battle_stats.damage_taken_roman;
-        total_roman_dmg += battle_stats.damage_taken_german;
-        total_turns   += turn_count;
+        total_roman_dmg  += battle_stats.damage_taken_german;
+        total_turns      += turn_count;
+
+        // Count survivors per faction
+        int g_surv = 0, r_surv = 0;
+        for (int u = 0; u < field.unit_count; u++) {
+            Unit* unit = field.units[u];
+            if (!unit || unit->hp <= 0) continue;
+            if (unit->faction == FACTION_GERMAN) g_surv++;
+            else                                 r_surv++;
+        }
+        total_german_surv += g_surv;
+        total_roman_surv  += r_surv;
 
         cleanup_battlefield(&field);
     }
@@ -233,15 +298,19 @@ static void print_generation_diagnostics(const float* german_weights,
     memcpy(unit_genomes, old_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
     long total_dmg = total_german_dmg + total_roman_dmg;
-    float german_share = (total_dmg > 0) ? 100.0f * total_german_dmg / total_dmg : 0.0f;
-    float roman_share = (total_dmg > 0) ? 100.0f * total_roman_dmg / total_dmg : 0.0f;
+    float g_dmg_pct = (total_dmg > 0) ? 100.0f * total_german_dmg / total_dmg : 0.0f;
+    float r_dmg_pct = (total_dmg > 0) ? 100.0f * total_roman_dmg  / total_dmg : 0.0f;
 
-    printf("     Outcomes: German %2d W, Roman %2d W, %2d TO   |   "
-           "Damage: German %ld (%3.0f%%) / Roman %ld (%3.0f%%)   |   "
-           "Avg turns %.1f\n",
+    printf("  [%s]\n", label);
+    printf("    G: "); print_comp_line(german_comp, german_comp_n); printf("\n");
+    printf("    R: "); print_comp_line(roman_comp,  roman_comp_n);  printf("\n");
+    printf("    G %2dW / R %2dW / %2dTO  |  Dmg %3.0f/%3.0f  |  "
+           "Turns %.1f  |  Surv %.1f/%.1f\n",
            german_wins, roman_wins, timeouts,
-           total_german_dmg, german_share, total_roman_dmg, roman_share,
-           (double)total_turns / num_battles);
+           g_dmg_pct, r_dmg_pct,
+           (double)total_turns / num_battles,
+           (double)total_german_surv / num_battles,
+           (double)total_roman_surv / num_battles);
 }
 
 // Combined evaluator
@@ -254,6 +323,12 @@ PairFitness evaluate_all(const float* german_weights, const float* roman_weights
 
     // Apply strategy genes
     apply_genes(german_weights, roman_weights);
+
+    // Build force compositions from the genes.
+    ForceComposition german_comp[COMPOSITION_MAX_TYPES];
+    ForceComposition roman_comp[COMPOSITION_MAX_TYPES];
+    int german_comp_n = build_composition(&german_strategy.composition, FACTION_GERMAN, german_comp);
+    int roman_comp_n  = build_composition(&roman_strategy.composition,  FACTION_ROMAN,  roman_comp);
 
     // Weights (TUNE THESE IF NEEDED)
     const float W_WIN           = 1.0f;
@@ -269,8 +344,8 @@ PairFitness evaluate_all(const float* german_weights, const float* roman_weights
     for (int i = 0; i < num_battles; i++) {
         Battlefield field;
         initialize_battlefield(&field);
-        spawn_german_forces(&field, default_german_composition, default_german_composition_count);
-        spawn_roman_forces(&field, default_roman_composition, default_roman_composition_count);
+        spawn_german_forces(&field, german_comp, german_comp_n);
+        spawn_roman_forces(&field, roman_comp, roman_comp_n);
 
         int winner = run_battle(&field, MAX_TURNS);
 
@@ -326,11 +401,8 @@ PairFitness evaluate_all(const float* german_weights, const float* roman_weights
 }
 
 // Co-evolution
-void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count,
-                     const GeneInfo* roman_genes, size_t roman_gene_count,
-                     int pop_size, int num_generations,
-                     PairFitness (*evaluate_pair)(const float*, const float*, int),
-                     const char* name_prefix) {
+void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, const GeneInfo* roman_genes, size_t roman_gene_count,
+                     int pop_size, int num_generations, PairFitness (*evaluate_pair)(const float*, const float*, int), const char* name_prefix) {
     Individual* german_pop = malloc(pop_size * sizeof(Individual));
     Individual* roman_pop = malloc(pop_size * sizeof(Individual));
     Individual* next_german = malloc(pop_size * sizeof(Individual));
@@ -420,9 +492,9 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count,
 
         
         // Run several matchups:
-        print_generation_diagnostics(german_pop[0].weights, roman_pop[0].weights, num_battles);
-        print_generation_diagnostics(german_pop[0].weights, roman_pop[pop_size/2].weights, num_battles);
-        print_generation_diagnostics(german_pop[pop_size/2].weights, roman_pop[pop_size/2].weights, num_battles);
+                print_generation_diagnostics(german_pop[0].weights, roman_pop[0].weights, num_battles, "best G vs best R");
+        print_generation_diagnostics(german_pop[0].weights, roman_pop[pop_size/2].weights, num_battles, "best G vs mid R");
+        print_generation_diagnostics(german_pop[pop_size/2].weights, roman_pop[pop_size/2].weights, num_battles, "mid G vs mid R");
 
         // Rank-based selection scores. pop[0]
         // index 0 gets 1.0 and index pop_size-1 gets 0.0.
@@ -462,8 +534,8 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count,
             next_roman[i].selection_score = 0.0f;
         }
 
-        // Checkpoint save every 15 generations
-        if ((gen + 1) % 15 == 0) {
+        // Checkpoint save every 20 generations
+        if ((gen + 1) % 20 == 0) {
             char ckpt[64];
             snprintf(ckpt, sizeof(ckpt), "checkpoint_gen%d", gen + 1);
             printf("\n--- Checkpoint at generation %d ---\n", gen + 1);
@@ -471,6 +543,16 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count,
                          roman_pop[0].weights, roman_gene_count,
                          german_genes, roman_genes, ckpt);
             printf("\n");
+        }
+
+        // Inject fresh random individuals every 10 generations to maintain diversity.
+        if ((gen + 1) % 10 == 0) {
+            int immigrants = pop_size / 10;   // 3 out of 30
+            for (int i = 0; i < immigrants; i++) {
+                int slot = pop_size - 1 - i;   // replace the worst performers
+                random_individual(&next_german[slot], german_genes, german_gene_count);
+                random_individual(&next_roman[slot], roman_genes, roman_gene_count);
+            }
         }
 
         Individual* tmp = german_pop;

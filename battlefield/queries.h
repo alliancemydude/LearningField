@@ -10,6 +10,7 @@ Faction get_faction_of_unit(UnitType type);
 int get_weapon_range(Unit* unit);
 Faction enemy_faction(Faction f);
 void get_faction_center(Battlefield* field, Faction faction, int* out_x, int* out_y);
+int get_attack_angle(Unit* attacker, Unit* target);
 
 // Enemy queries:
 Unit* find_closest_enemy(Unit* unit, Battlefield* field);
@@ -23,5 +24,6 @@ void compute_closest_enemy_distances(Battlefield* field);
 // Ally queries:
 Unit* find_closest_ally(Unit* unit, Battlefield* field);
 int count_faction_in_radius(Unit* unit, Battlefield* field, Faction faction, int radius);
+int count_same_facing_allies(Unit* unit, Battlefield* field, int radius);
 
 #endif

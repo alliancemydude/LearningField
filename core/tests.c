@@ -170,6 +170,23 @@ static int test_distance_squared(void) {
     return 0;
 }
 
+static int test_movement_updates_grid(void) {
+    Battlefield f;
+    initialize_battlefield(&f);
+
+    Unit* u = create_unit(UNIT_SWORDSMAN, 1, 10, 10);
+    f.units[f.unit_count++] = u;
+    f.occupancy[10][10] = u;
+
+    execute_move(u, &f, 15, 10, 10);
+
+    ASSERT(f.occupancy[10][10] == NULL, "old tile not cleared");
+    ASSERT(f.occupancy[u->y][u->x] == u, "new tile not set");
+
+    destroy_unit(u);
+    return 0;
+}
+
 int run_tests(void) {
     srand(42);   // fixed seed for reproducible failures
 
@@ -186,6 +203,7 @@ int run_tests(void) {
     RUN(test_spawn_no_overlaps);
     RUN(test_battle_completes);
     RUN(test_distance_squared);
+    RUN(test_movement_updates_grid);
 
     printf("\n%d/%d passed.\n\n", tests_run - tests_failed, tests_run);
     return tests_failed == 0 ? 0 : 1;

@@ -19,7 +19,6 @@ typedef struct {
     int movement;
     int morale;
     int armor_class;
-    int point_value;
     bool is_ranged;
     int units_count;
     int attacks_per_unit;

@@ -5,11 +5,6 @@
 #include "unit.h"
 #include "strategy.h"
 
-typedef struct {
-    UnitType type;
-    int count;
-} ForceComposition;
-
 extern ForceComposition default_german_composition[];
 extern int default_german_composition_count;
 extern ForceComposition default_roman_composition[];
@@ -41,6 +36,8 @@ typedef struct {
     int shots_fired;
     int shots_hit;
     int kills;
+    int flank_kills;
+    int rear_kills;
     int damage_taken_german;
     int damage_taken_roman;
     int casualties_german;
@@ -62,6 +59,7 @@ extern bool print_battle_summary_flag;
 
 // Initialization:
 void resolve_overlaps(Battlefield* field);
+void place_unit(Battlefield* field, Unit* u, int new_x, int new_y);
 void initialize_battlefield(Battlefield* field);
 void spawn_german_forces(Battlefield* field, ForceComposition forces[], int force_count);
 void spawn_roman_forces(Battlefield* field, ForceComposition forces[], int force_count);

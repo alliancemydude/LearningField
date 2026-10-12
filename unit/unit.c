@@ -1,7 +1,7 @@
 #include "unit.h"
 #include "unit_blueprint.h"
-#include "battlefield.h"
 #include "unit_utils.h"
+#include "battlefield.h"
 #include "queries.h"
 #include <stdlib.h>
 
@@ -23,7 +23,7 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->half_movement = bp->movement / 2;
     unit->morale = bp->morale;
     unit->armor_class = bp->armor_class;
-    unit->point_value = bp->point_value;
+    unit->point_value = unit_point_values[type];
     unit->is_ranged = bp->is_ranged;
     unit->units_count = bp->units_count;
     unit->attacks_per_unit = bp->attacks_per_unit;
@@ -44,6 +44,9 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->spacing_x = ug->spacing_x;
     unit->spacing_y = ug->spacing_y;
     unit->effective_local_force_ratio = ug->local_force_ratio;
+    FactionStrategy* strat = (bp->faction == FACTION_GERMAN)
+                             ? &german_strategy : &roman_strategy;
+    unit->effective_cohesion_weight = strat->strategic.cohesion_weight;
 
     // Clamp preferred_range to actual weapon reach
     unit->preferred_range = (int)(ug->preferred_range * unit->max_range);
@@ -55,8 +58,14 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->is_stunned = false;
     unit->is_immobilized = false;
     unit->actions_taken = 0;
+    unit->cohesion_allies = 0;
     unit->x = x;
     unit->y = y;
+    if (unit->faction == FACTION_GERMAN) {
+        unit->facing = 0; // default face north
+    } else {
+        unit->facing = 2; // Romans face south
+    }
 
     return unit;
 }
@@ -92,12 +101,12 @@ void add_weapon(Unit* unit, WeaponType type) {
     switch (type) {
         case WEAPON_SWORD:
             w->damage_bonus = 1;
-            w->range = 2;
+            w->range = 1;
             w->penetration_bonus = 0;
             break;
         case WEAPON_SPEAR:
             w->damage_bonus = 0;
-            w->range = 4;
+            w->range = 2;
             w->penetration_bonus = 1;
             break;
         case WEAPON_JAVELIN:
@@ -112,7 +121,7 @@ void add_weapon(Unit* unit, WeaponType type) {
             break;
         default:
             w->damage_bonus = 0;
-            w->range = 2;
+            w->range = 1;
             break;
     }
     unit->weapon_count++;

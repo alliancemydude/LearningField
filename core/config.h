@@ -29,6 +29,18 @@ typedef enum {
     FACTION_UNKNOWN
 } Faction;
 
+typedef enum {
+    FACE_NORTH = 0,
+    FACE_EAST  = 1,
+    FACE_SOUTH = 2,
+    FACE_WEST  = 3
+} Facing;
+
+typedef struct {
+    UnitType type;
+    int count;
+} ForceComposition;
+
 // Constants
 #define MAX_UNITS 200
 #define MAX_ROWS 60

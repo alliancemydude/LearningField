@@ -53,6 +53,7 @@ typedef struct Unit {
     float spacing_x;
     float spacing_y;
     float effective_local_force_ratio;
+    float effective_cohesion_weight;
 
     // Status
     int rally_bonus;
@@ -66,6 +67,10 @@ typedef struct Unit {
 
     // Position
     int x, y;
+    int local_allies;
+    int local_enemies;
+    int facing; // 0 = N, 1 = E, 2 = S, 3 = W
+    int cohesion_allies;
 
     // Weapons
     Weapon weapons[WEAPON_COUNT];

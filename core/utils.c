@@ -40,8 +40,8 @@ void print_screen(Battlefield* field) {
     printf("\033[2J\033[H");
 
     // turn count and faction summary
-    int german_count = 0, sep_count = 0;
-    float german_hp = 0.0f, sep_hp = 0.0f;
+    int german_count = 0, roman_count = 0;
+    float german_hp = 0.0f, roman_hp = 0.0f;
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
         if (u->hp <= 0) continue;
@@ -49,14 +49,15 @@ void print_screen(Battlefield* field) {
             german_count++;
             german_hp += u->hp;
         } else {
-            sep_count++;
-            sep_hp += u->hp;
+            roman_count++;
+            roman_hp += u->hp;
         }
     }
-    printf("Turn %d | German: %d units (HP: %.1f) | Separatist: %d units (HP: %.1f)\n",
-           turn_count, german_count, german_hp, sep_count, sep_hp);
-    printf("Legend: S=Swordsman, E=Elite, H=Horseman, B=Bowman P = Spearman,\n");
-    printf("Blue = German, Red = Separatist, . open\n\n");
+    printf("Turn %d | German: %d units (HP: %.1f) | Roman: %d units (HP: %.1f)\n",
+           turn_count, german_count, german_hp, roman_count, roman_hp);
+    printf("Legend: S=Swordsman, E=Elite, R=Ranged, H=Horseman\n");
+    printf("Arrows show facing: ^ north, > east, v south, < west\n");
+    printf("Blue = German, Red = Roman, . open\n\n");
 
     // Print column headers
     printf("   ");
@@ -86,12 +87,18 @@ void print_screen(Battlefield* field) {
 
             if (unit_on_tile != NULL) {
                 const char* symbol = get_unit_symbol(unit_on_tile);
-                int soldier_count = unit_on_tile->units_count;
-                if (soldier_count < 0) soldier_count = 0;
-                if (soldier_count > 9) soldier_count = 9;
                 const char* color = get_unit_color(unit_on_tile);
+
+                const char* facing_char = "^";
+                switch (unit_on_tile->facing) {
+                    case FACE_EAST:  facing_char = ">"; break;
+                    case FACE_SOUTH: facing_char = "v"; break;
+                    case FACE_WEST:  facing_char = "<"; break;
+                    default:         facing_char = "^"; break;   // FACE_NORTH
+                }
+
                 char buf[16];
-                snprintf(buf, sizeof(buf), "%s%d", symbol, soldier_count);
+                snprintf(buf, sizeof(buf), "%s%s", symbol, facing_char);
                 printf("%s%2s%s ", color, buf, COLOR_RESET);
             } else if (is_dead) {
                 printf(" $ ");
@@ -160,8 +167,8 @@ void print_screen_to_file(Battlefield* field, const char* filename) {
 }
 
 void print_screen_summary(Battlefield* field) {
-    int german_count = 0, sep_count = 0;
-    float german_hp = 0.0f, sep_hp = 0.0f;
+    int german_count = 0, roman_count = 0;
+    float german_hp = 0.0f, roman_hp = 0.0f;
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
         if (u->hp <= 0) continue;
@@ -169,12 +176,12 @@ void print_screen_summary(Battlefield* field) {
             german_count++;
             german_hp += u->hp;
         } else {
-            sep_count++;
-            sep_hp += u->hp;
+            roman_count++;
+            roman_hp += u->hp;
         }
     }
-    printf("Turn %d | German: %d units (HP: %.1f) | Separatist: %d units (HP: %.1f)\n",
-           turn_count, german_count, german_hp, sep_count, sep_hp);
+    printf("Turn %d | German: %d units (HP: %.1f) | Roman: %d units (HP: %.1f)\n",
+           turn_count, german_count, german_hp, roman_count, roman_hp);
 }
 
 const char* get_unit_symbol(Unit* unit) {

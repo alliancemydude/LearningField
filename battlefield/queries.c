@@ -43,6 +43,25 @@ int get_weapon_range(Unit* unit) {
     return max_range;
 }
 
+int get_attack_angle(Unit* attacker, Unit* target) {
+    // Returns 0 for frontal, 1 for flank, 2 for rear.
+    int dx = attacker->x - target->x;
+    int dy = attacker->y - target->y;
+    
+    // Dominant axis of the approach
+    int approach_dir;
+    if (abs(dx) > abs(dy)) {
+        approach_dir = (dx > 0) ? FACE_EAST : FACE_WEST;
+    } else {
+        approach_dir = (dy > 0) ? FACE_SOUTH : FACE_NORTH;
+    }
+    
+    int diff = (approach_dir - target->facing + 4) % 4;
+    if (diff == 0) return 0;      // front
+    if (diff == 2) return 2;      // rear
+    return 1;                      // flank
+}
+
 // Handle finding enemies by type
 Unit* find_closest_enemy(Unit* unit, Battlefield* field) {
     Unit* closest = NULL;
@@ -283,6 +302,19 @@ int count_faction_in_radius(Unit* unit, Battlefield* field, Faction faction, int
         Unit* other = field->units[i];
         if (!other || other == unit || other->hp <= 0) continue;
         if (other->faction != faction) continue;
+        if (get_distance_squared(unit, other) <= radius_sq) count++;
+    }
+    return count;
+}
+
+int count_same_facing_allies(Unit* unit, Battlefield* field, int radius) {
+    int count = 0;
+    int radius_sq = radius * radius;
+    for (int i = 0; i < field->unit_count; i++) {
+        Unit* other = field->units[i];
+        if (!other || other == unit || other->hp <= 0) continue;
+        if (other->faction != unit->faction) continue;
+        if (other->facing != unit->facing) continue;
         if (get_distance_squared(unit, other) <= radius_sq) count++;
     }
     return count;

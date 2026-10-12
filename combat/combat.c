@@ -87,9 +87,22 @@ bool execute_attack(Unit* unit, Unit* target, bool advanced) {
         int penetration_bonus = w->penetration_bonus;
         int hits = 0;
 
+        // Get angle
+        int angle = get_attack_angle(unit, target);
+        int to_hit_bonus = 0;
+        int damage_bonus_from_angle = 0;
+        int cohesion_bonus = 0;
+        if (angle == 1) to_hit_bonus = 1; // side
+        if (angle == 2) { to_hit_bonus = 2; damage_bonus_from_angle = 1; }  // rear
+        if (unit->cohesion_allies >= 3 &&
+            roll(0, 99) < (int)(unit->effective_cohesion_weight * 100.0f)) {
+            cohesion_bonus = 1;
+        }
+        to_hit_bonus += cohesion_bonus;
+
         // Roll attack for each shot
         for (int attack_number = 0; attack_number < attacks; attack_number++) {
-            int attack_roll = roll(1, 6) + penetration_bonus;
+            int attack_roll = roll(1, 6) + penetration_bonus + to_hit_bonus;
             if (advanced) {
                 attack_roll -= 1;  // Penalty for advancing
             }
@@ -115,7 +128,7 @@ bool execute_attack(Unit* unit, Unit* target, bool advanced) {
         int kills = 0;
         
         for (int h = 0; h < hits; h++) {
-            int damage = roll(1, 6) + damage_bonus;
+            int damage = roll(1, 6) + damage_bonus + damage_bonus_from_angle;
             if (damage >= target->armor_class) {
                 kills++;
             }
@@ -124,6 +137,11 @@ bool execute_attack(Unit* unit, Unit* target, bool advanced) {
         if (kills > 0) {
             battle_stats.kills += kills;
             battle_stats.kills_by_type[target->type] += kills;
+            if (to_hit_bonus == 1) {
+                battle_stats.flank_kills += kills;
+            } else if (to_hit_bonus == 2) {
+                battle_stats.rear_kills += kills;
+            }
             take_damage(target, kills);
         }
 
@@ -158,9 +176,22 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced) {
         int penetration_bonus = w->penetration_bonus;
         int hits = 0;
 
+        // Get angle bonus
+        int angle = get_attack_angle(unit, target);
+        int to_hit_bonus = 0;
+        int cohesion_bonus = 0;
+        int damage_bonus_from_angle = 0;
+        if (angle == 1) to_hit_bonus = 1; // side
+        if (angle == 2) { to_hit_bonus = 2; damage_bonus_from_angle = 1; }  // rear
+        if (unit->cohesion_allies >= 3 &&
+            roll(0, 99) < (int)(unit->effective_cohesion_weight * 100.0f)) {
+            cohesion_bonus = 1;
+        }
+        to_hit_bonus += cohesion_bonus;
+
         // Roll attack for each shot
         for (int shot = 0; shot < shots; shot++) {
-            int attack_roll = roll(1, 6) + penetration_bonus;
+            int attack_roll = roll(1, 6) + penetration_bonus + to_hit_bonus;
             if (advanced) {
                 attack_roll -= 1;  // Penalty for advancing
             }
@@ -186,7 +217,7 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced) {
         // Deal damage
         int kills = 0;
         for (int h = 0; h < hits; h++) {
-            int damage = roll(1, 6) + damage_bonus;
+            int damage = roll(1, 6) + damage_bonus + damage_bonus_from_angle;
             if (damage >= 4) {
                 kills++;
             }
@@ -195,6 +226,11 @@ bool execute_fire(Unit* unit, Unit* target, bool advanced) {
         if (kills > 0) {
             battle_stats.kills += kills;
             battle_stats.kills_by_type[target->type] += kills;
+            if (to_hit_bonus == 1) {
+                battle_stats.flank_kills += kills;
+            } else if (to_hit_bonus == 2) {
+                battle_stats.rear_kills += kills;
+            }
             take_damage(target, kills);
         }
 
