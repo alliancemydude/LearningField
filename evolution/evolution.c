@@ -89,11 +89,11 @@ const GeneInfo ROMAN_GENES[] = {
 const size_t ROMAN_GENE_COUNT = sizeof(ROMAN_GENES) / sizeof(GeneInfo);
 
 // Evolution parameters
-int battles_min = 40;
-int battles_max = 70;
+int battles_min = 20;
+int battles_max = 40;
 
-int pop_size = 40;
-int num_generations = 60;
+int pop_size = 30;
+int num_generations = 30;
 
 float mutation_rate_start = 0.5f;
 float mutation_rate_end = 0.15f;

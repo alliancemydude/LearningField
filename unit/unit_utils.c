@@ -5,13 +5,13 @@
 int unit_point_values[UNIT_TYPE_COUNT] = {
     // German Infantry
     [UNIT_SWORDSMAN] = 10,
-    [UNIT_ELITE_SWORDSMAN] = 20,
-    [UNIT_JAVELIN_THROWER] = 30,
-    [UNIT_HORSEMAN] = 15,
+    [UNIT_ELITE_SWORDSMAN] = 25,
+    [UNIT_JAVELIN_THROWER] = 35,
+    [UNIT_HORSEMAN] = 20,
 
     // Roman Infantry
     [UNIT_SPEARMAN] = 10,
-    [UNIT_ELITE_SPEARMAN] = 20,
-    [UNIT_BOWMAN] = 30,
-    [UNIT_CAVALRY] = 15
+    [UNIT_ELITE_SPEARMAN] = 25,
+    [UNIT_BOWMAN] = 35,
+    [UNIT_CAVALRY] = 20
 };

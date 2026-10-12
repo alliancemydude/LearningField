@@ -13,7 +13,7 @@
 ForceComposition default_german_composition[] = {
     {UNIT_SWORDSMAN,        10},
     {UNIT_ELITE_SWORDSMAN,  5},
-    {UNIT_JAVELIN_THROWER,    5},
+    {UNIT_JAVELIN_THROWER,  5},
     {UNIT_HORSEMAN,         5}
 };
 int default_german_composition_count = sizeof(default_german_composition) / sizeof(default_german_composition[0]);

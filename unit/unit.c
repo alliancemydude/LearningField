@@ -102,7 +102,7 @@ void add_weapon(Unit* unit, WeaponType type) {
             break;
         case WEAPON_JAVELIN:
             w->damage_bonus = 1;
-            w->range = 12;
+            w->range = 16;
             w->penetration_bonus = 1;
             break;
         case WEAPON_BOW:

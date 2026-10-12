@@ -63,8 +63,8 @@ void print_results() {
 
     printf("Results for %d battles:\n", battles);
     printf("\n");
-    printf("Swordsmen: %.1f%% (%d/%d)\n", german_percent, german_wins, battles);
-    printf("Spearmen: %.1f%% (%d/%d)\n", roman_percent, roman_wins, battles);
+    printf("Germany: %.1f%% (%d/%d)\n", german_percent, german_wins, battles);
+    printf("Rome: %.1f%% (%d/%d)\n", roman_percent, roman_wins, battles);
     printf("Timeouts: %.1f%% (%d/%d)\n", timeout_percent, timeouts, battles);
     printf("\n");
 }
@@ -78,7 +78,7 @@ int main() {
         printf("2. Full screen battle (f)\n");
         printf("3. Verbose analysis (v)\n");
         printf("4. Strategic evolution (e)\n");
-        printf("5. Run test (r)\n");
+        printf("5. Run debug test (r)\n");
         printf("6. Run point calibration (c)\n");
 
         char battle_type = getchar();
@@ -123,7 +123,7 @@ int main() {
         } else if (battle_type == 'r') {
             run_tests();
         } else if (battle_type == 'c') {
-            run_point_calibration(1000);
+            run_point_calibration(500);
         } else { 
             printf("Listen man just hit the right button\n");
         }

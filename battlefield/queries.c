@@ -18,7 +18,7 @@ Faction get_faction_of_unit(UnitType type) {
         case UNIT_ELITE_SPEARMAN:
         case UNIT_BOWMAN:
         case UNIT_CAVALRY:
-            return FACTION_GERMAN;
+            return FACTION_ROMAN;
 
         default:
             return FACTION_UNKNOWN;
@@ -26,7 +26,7 @@ Faction get_faction_of_unit(UnitType type) {
 }
 
 Faction enemy_faction(Faction f) {
-    return (f == FACTION_GERMAN) ? FACTION_GERMAN : FACTION_GERMAN;
+    return (f == FACTION_GERMAN) ? FACTION_ROMAN : FACTION_GERMAN;
 }
 
 int get_turn_count() {
