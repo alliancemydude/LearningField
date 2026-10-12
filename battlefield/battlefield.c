@@ -10,32 +10,32 @@
 #include "queries.h"
 
 // Default force compositions
-ForceComposition default_republic_composition[] = {
+ForceComposition default_german_composition[] = {
     {UNIT_SWORDSMAN,        10},
     {UNIT_ELITE_SWORDSMAN,  5},
-    {UNIT_SPEAR_THROWER,    5},
+    {UNIT_JAVELIN_THROWER,    5},
     {UNIT_HORSEMAN,         5}
 };
-int default_republic_composition_count = sizeof(default_republic_composition) / sizeof(default_republic_composition[0]);
+int default_german_composition_count = sizeof(default_german_composition) / sizeof(default_german_composition[0]);
 
-ForceComposition default_separatist_composition[] = {
+ForceComposition default_roman_composition[] = {
     {UNIT_SPEARMAN,         10},
     {UNIT_ELITE_SPEARMAN,   5},
     {UNIT_BOWMAN,           5},
     {UNIT_CAVALRY,          5}
 };
-int default_separatist_composition_count = sizeof(default_separatist_composition) / sizeof(default_separatist_composition[0]);
+int default_roman_composition_count = sizeof(default_roman_composition) / sizeof(default_roman_composition[0]);
 
 bool is_unit_used_in_composition(UnitType type) {
-    // Check Republic composition
-    for (int i = 0; i < default_republic_composition_count; i++) {
-        if (default_republic_composition[i].type == type && default_republic_composition[i].count > 0) {
+    // Check German composition
+    for (int i = 0; i < default_german_composition_count; i++) {
+        if (default_german_composition[i].type == type && default_german_composition[i].count > 0) {
             return true;
         }
     }
-    // Check Separatist composition
-    for (int i = 0; i < default_separatist_composition_count; i++) {
-        if (default_separatist_composition[i].type == type && default_separatist_composition[i].count > 0) {
+    // Check Roman composition
+    for (int i = 0; i < default_roman_composition_count; i++) {
+        if (default_roman_composition[i].type == type && default_roman_composition[i].count > 0) {
             return true;
         }
     }
@@ -134,14 +134,14 @@ void initialize_battlefield(Battlefield* field) {
     }
 }
 
-void spawn_republic_forces(Battlefield* field, ForceComposition forces[], int force_count) {
+void spawn_german_forces(Battlefield* field, ForceComposition forces[], int force_count) {
     int id = field->unit_count + 1;
     int y_min = field->height * 3 / 4;
     int y_max = field->height - 1;
     int x_min = 0;
     int x_max = field->width - 1;
 
-    FactionStrategy* strat = &republic_strategy;
+    FactionStrategy* strat = &german_strategy;
 
     int total_units = 0;
     for (int f = 0; f < force_count; f++) {
@@ -229,14 +229,14 @@ void spawn_republic_forces(Battlefield* field, ForceComposition forces[], int fo
     resolve_overlaps(field);
 }
 
-void spawn_separatist_forces(Battlefield* field, ForceComposition forces[], int force_count) {
+void spawn_roman_forces(Battlefield* field, ForceComposition forces[], int force_count) {
     int id = field->unit_count + 1;
     int y_min = 0;
     int y_max = field->height / 4 - 1;
     int x_min = 0;
     int x_max = field->width - 1;
 
-    FactionStrategy* strat = &separatist_strategy;
+    FactionStrategy* strat = &roman_strategy;
 
     int total_units = 0;
     for (int f = 0; f < force_count; f++) {
@@ -340,17 +340,17 @@ int run_battle(Battlefield* field, int max_turns) {
     }
 
     while (turn_count < max_turns) {
-        int republic_count = 0, separatist_count = 0;
+        int german_count = 0, roman_count = 0;
         for (int i = 0; i < field->unit_count; i++) {
             if (field->units[i] == NULL || field->units[i]->hp <= 0) continue;
-            if (field->units[i]->faction == FACTION_REPUBLIC) republic_count++;
-            else separatist_count++;
+            if (field->units[i]->faction == FACTION_GERMAN) german_count++;
+            else roman_count++;
         }
-        if (republic_count == 0) {
+        if (german_count == 0) {
             battle_stats.winner = 1;
             return 1;
         }
-        if (separatist_count == 0) {
+        if (roman_count == 0) {
             battle_stats.winner = 0;
             return 0;
         }
@@ -363,22 +363,22 @@ int run_battle(Battlefield* field, int max_turns) {
 
         compute_closest_enemy_distances(field);
 
-        bool republic_turn = (roll(1, 2) == 1);
+        bool german_turn = (roll(1, 2) == 1);
         int acted_this_turn = 0;
-        int total_active = republic_count + separatist_count;
+        int total_active = german_count + roman_count;
 
         bool toggled_once = false;  // track if we already tried both sides
 
         int safety = 0; // infinite loop prevention
 
         while (acted_this_turn < total_active && safety++ < total_active * 2) {
-            Faction current_faction = republic_turn ? FACTION_REPUBLIC : FACTION_SEPARATIST;
+            Faction current_faction = german_turn ? FACTION_GERMAN : FACTION_ROMAN;
             Unit* acting_unit = select_closest_unit(field, current_faction);
 
             if (!acting_unit) {
                 // If we've already toggled and still no unit, all units have acted
                 if (toggled_once) break;
-                republic_turn = !republic_turn;
+                german_turn = !german_turn;
                 toggled_once = true;
                 continue;
             }
@@ -388,7 +388,7 @@ int run_battle(Battlefield* field, int max_turns) {
             unit_turn(acting_unit, field);
             acted_this_turn++;
 
-            republic_turn = !republic_turn;
+            german_turn = !german_turn;
 
             if (turn_based) {
                 print_screen(field);
@@ -402,35 +402,35 @@ int run_battle(Battlefield* field, int max_turns) {
             }
 
             // Victory check
-            republic_count = 0;
-            separatist_count = 0;
+            german_count = 0;
+            roman_count = 0;
             for (int i = 0; i < field->unit_count; i++) {
                 if (field->units[i] == NULL || field->units[i]->hp <= 0) continue;
-                if (field->units[i]->faction == FACTION_REPUBLIC) republic_count++;
-                else separatist_count++;
+                if (field->units[i]->faction == FACTION_GERMAN) german_count++;
+                else roman_count++;
             }
-            if (republic_count == 0) {
+            if (german_count == 0) {
                 battle_stats.winner = 1;
                 if (turn_based) print_battle_summary_and_wait();
                 return 1;
             }
-            if (separatist_count == 0) {
+            if (roman_count == 0) {
                 battle_stats.winner = 0;
                 if (turn_based) print_battle_summary_and_wait();
                 return 0;
             }
 
             // Update total active units
-            republic_count = 0;
-            separatist_count = 0;
+            german_count = 0;
+            roman_count = 0;
             for (int i = 0; i < field->unit_count; i++) {
                 if (field->units[i] == NULL || field->units[i]->hp <= 0) continue;
-                if (field->units[i]->faction == FACTION_REPUBLIC) republic_count++;
-                else separatist_count++;
+                if (field->units[i]->faction == FACTION_GERMAN) german_count++;
+                else roman_count++;
             }
 
             // Update total_active
-            total_active = republic_count + separatist_count;
+            total_active = german_count + roman_count;
         }
 
         // something went wrong, force an exit
@@ -513,15 +513,15 @@ void print_action_stats() {
 
 void print_battle_summary() {
     printf("\n=== BATTLE SUMMARY ===\n");
-    printf("Winner: %s\n", (battle_stats.winner == 0) ? "Republic" : (battle_stats.winner == 1) ? "Separatist" : "Timeout");
+    printf("Winner: %s\n", (battle_stats.winner == 0) ? "German" : (battle_stats.winner == 1) ? "German" : "Timeout");
     printf("Turns: %d\n", turn_count);
     printf("Shots fired: %d\n", battle_stats.shots_fired);
     printf("Shots hit: %d\n", battle_stats.shots_hit);
     printf("Kills: %d\n", battle_stats.kills);
-    int rep_dealt = battle_stats.damage_taken_sep;
-    int sep_dealt = battle_stats.damage_taken_rep;
-    printf("Damage dealt: Republic %d, Separatist %d\n", rep_dealt, sep_dealt);
-    printf("Casualties: Republic %d, Separatist %d\n", battle_stats.casualties_rep, battle_stats.casualties_sep);
+    int german_dealt = battle_stats.damage_taken_roman;
+    int roman_dealt = battle_stats.damage_taken_german;
+    printf("Damage dealt: German %d, German %d\n", german_dealt, roman_dealt);
+    printf("Casualties: German %d, German %d\n", battle_stats.casualties_german, battle_stats.casualties_roman);
     // Print kills by type
     for (int i = 0; i < UNIT_TYPE_COUNT; i++) {
         printf("  %s: %d kills\n", get_unit_type_name((UnitType)i), battle_stats.kills_by_type[i]);

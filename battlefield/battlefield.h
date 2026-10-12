@@ -10,10 +10,10 @@ typedef struct {
     int count;
 } ForceComposition;
 
-extern ForceComposition default_republic_composition[];
-extern int default_republic_composition_count;
-extern ForceComposition default_separatist_composition[];
-extern int default_separatist_composition_count;
+extern ForceComposition default_german_composition[];
+extern int default_german_composition_count;
+extern ForceComposition default_roman_composition[];
+extern int default_roman_composition_count;
 
 // Action tracking struct
 typedef struct {
@@ -41,10 +41,10 @@ typedef struct {
     int shots_fired;
     int shots_hit;
     int kills;
-    int damage_taken_rep;
-    int damage_taken_sep;
-    int casualties_rep;
-    int casualties_sep;
+    int damage_taken_german;
+    int damage_taken_roman;
+    int casualties_german;
+    int casualties_roman;
     int kills_by_type[UNIT_TYPE_COUNT];
     int casualties_by_type[UNIT_TYPE_COUNT];
     int event_count;
@@ -63,8 +63,8 @@ extern bool print_battle_summary_flag;
 // Initialization:
 void resolve_overlaps(Battlefield* field);
 void initialize_battlefield(Battlefield* field);
-void spawn_republic_forces(Battlefield* field, ForceComposition forces[], int force_count);
-void spawn_separatist_forces(Battlefield* field, ForceComposition forces[], int force_count);
+void spawn_german_forces(Battlefield* field, ForceComposition forces[], int force_count);
+void spawn_roman_forces(Battlefield* field, ForceComposition forces[], int force_count);
 bool is_unit_used_in_composition(UnitType type);
 
 // Start of battle:

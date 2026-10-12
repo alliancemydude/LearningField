@@ -9,7 +9,7 @@
 #include <string.h>
 
 // Set the current weights
-FactionStrategy republic_strategy = {
+FactionStrategy german_strategy = {
     .strategic = {
         .aggression_bias       = 1.2f,
         .threat_weight         = 0.5f,
@@ -23,7 +23,7 @@ FactionStrategy republic_strategy = {
     }
 };
 
-FactionStrategy separatist_strategy = {
+FactionStrategy roman_strategy = {
     .strategic = {
         .aggression_bias       = 1.2f,
         .threat_weight         = 0.5f,
@@ -40,8 +40,8 @@ FactionStrategy separatist_strategy = {
 //Role assignment
 
 void assign_unit_roles(Battlefield* field, Faction faction) {
-    FactionStrategy* strat = (faction == FACTION_REPUBLIC)
-                             ? &republic_strategy : &separatist_strategy;
+    FactionStrategy* strat = (faction == FACTION_GERMAN)
+                             ? &german_strategy : &roman_strategy;
     float pct = strat->strategic.flank_percentage;
 
     Unit* list[MAX_UNITS];
@@ -82,31 +82,31 @@ void assign_unit_roles(Battlefield* field, Faction faction) {
 }
 
 // Set genes
-void set_republic_strategy(const float weights[7]) {
-    republic_strategy.strategic.aggression_bias       = weights[0];
-    republic_strategy.strategic.threat_weight         = weights[1];
-    republic_strategy.strategic.flank_percentage      = weights[2];
-    republic_strategy.strategic.flanking_bias         = weights[3];
-    republic_strategy.deployment.deploy_horizontal_spread = weights[4];
-    republic_strategy.deployment.deploy_vertical_offset   = weights[5];
-    republic_strategy.strategic.flank_depth           = weights[6];
+void set_german_strategy(const float weights[7]) {
+    german_strategy.strategic.aggression_bias       = weights[0];
+    german_strategy.strategic.threat_weight         = weights[1];
+    german_strategy.strategic.flank_percentage      = weights[2];
+    german_strategy.strategic.flanking_bias         = weights[3];
+    german_strategy.deployment.deploy_horizontal_spread = weights[4];
+    german_strategy.deployment.deploy_vertical_offset   = weights[5];
+    german_strategy.strategic.flank_depth           = weights[6];
 }
 
-void set_separatist_strategy(const float weights[7]) {
-    separatist_strategy.strategic.aggression_bias       = weights[0];
-    separatist_strategy.strategic.threat_weight         = weights[1];
-    separatist_strategy.strategic.flank_percentage      = weights[2];
-    separatist_strategy.strategic.flanking_bias         = weights[3];
-    separatist_strategy.deployment.deploy_horizontal_spread = weights[4];
-    separatist_strategy.deployment.deploy_vertical_offset   = weights[5];
-    separatist_strategy.strategic.flank_depth           = weights[6];
+void set_roman_strategy(const float weights[7]) {
+    roman_strategy.strategic.aggression_bias       = weights[0];
+    roman_strategy.strategic.threat_weight         = weights[1];
+    roman_strategy.strategic.flank_percentage      = weights[2];
+    roman_strategy.strategic.flanking_bias         = weights[3];
+    roman_strategy.deployment.deploy_horizontal_spread = weights[4];
+    roman_strategy.deployment.deploy_vertical_offset   = weights[5];
+    roman_strategy.strategic.flank_depth           = weights[6];
 }
 
 // Load strategies
 static UnitType parse_unit_type(const char* name) {
     if (strcmp(name, "swordsman")      == 0) return UNIT_SWORDSMAN;
     if (strcmp(name, "elite_swordsman")== 0) return UNIT_ELITE_SWORDSMAN;
-    if (strcmp(name, "spear_thrower")  == 0) return UNIT_SPEAR_THROWER;
+    if (strcmp(name, "javelin_thrower")  == 0) return UNIT_JAVELIN_THROWER;
     if (strcmp(name, "horseman")       == 0) return UNIT_HORSEMAN;
     if (strcmp(name, "spearman")       == 0) return UNIT_SPEARMAN;
     if (strcmp(name, "elite_spearman") == 0) return UNIT_ELITE_SPEARMAN;
@@ -155,8 +155,8 @@ void load_strategy_from_file(const char* filename) {
         if (line[0] == '\0' || line[0] == '#') continue;
 
         // Section headers
-        if (strstr(line, "[REPUBLIC]"))   { current_strat = &republic_strategy;  continue; }
-        if (strstr(line, "[SEPARATIST]")) { current_strat = &separatist_strategy; continue; }
+        if (strstr(line, "[GERMAN]"))   { current_strat = &german_strategy;  continue; }
+        if (strstr(line, "[ROMAN]")) { current_strat = &roman_strategy; continue; }
         if (!current_strat) continue;
 
         // Split "prefix.gene value"
@@ -184,36 +184,36 @@ void load_strategy_from_file(const char* filename) {
 }
 
 // Fitness evaluation
-PairFitness evaluate_matchup(const float* rep_weights, const float* sep_weights, int num_battles) {
-    FactionStrategy old_rep = republic_strategy;
-    FactionStrategy old_sep = separatist_strategy;
+PairFitness evaluate_matchup(const float* german_weights, const float* roman_weights, int num_battles) {
+    FactionStrategy old_german = german_strategy;
+    FactionStrategy old_roman = roman_strategy;
 
-    set_republic_strategy(rep_weights);
-    set_separatist_strategy(sep_weights);
+    set_german_strategy(german_weights);
+    set_roman_strategy(roman_weights);
 
-    int rep_wins = 0, sep_wins = 0, timeouts = 0;
+    int german_wins = 0, roman_wins = 0, timeouts = 0;
 
     for (int i = 0; i < num_battles; i++) {
         Battlefield field;
         initialize_battlefield(&field);
 
-        spawn_republic_forces(&field, default_republic_composition, default_republic_composition_count);
-        spawn_separatist_forces(&field, default_separatist_composition, default_separatist_composition_count);
+        spawn_german_forces(&field, default_german_composition, default_german_composition_count);
+        spawn_roman_forces(&field, default_roman_composition, default_roman_composition_count);
 
         int winner = run_battle(&field, MAX_TURNS);
-        if (winner == 0) rep_wins++;
-        else if (winner == 1) sep_wins++;
+        if (winner == 0) german_wins++;
+        else if (winner == 1) roman_wins++;
         else if (winner == 2) timeouts++;
 
         cleanup_battlefield(&field);
     }
 
-    republic_strategy = old_rep;
-    separatist_strategy = old_sep;
+    german_strategy = old_german;
+    roman_strategy = old_roman;
 
     float penalty = 2.0f;
     PairFitness out;
-    out.rep_fitness = (float)rep_wins / num_battles - penalty * (float)timeouts / num_battles;
-    out.sep_fitness = (float)sep_wins / num_battles - penalty * (float)timeouts / num_battles;
+    out.german_fitness = (float)german_wins / num_battles - penalty * (float)timeouts / num_battles;
+    out.roman_fitness = (float)roman_wins / num_battles - penalty * (float)timeouts / num_battles;
     return out;
 }

@@ -14,7 +14,7 @@ typedef enum {
 typedef enum { 
     UNIT_SWORDSMAN, 
     UNIT_ELITE_SWORDSMAN, 
-    UNIT_SPEAR_THROWER,
+    UNIT_JAVELIN_THROWER,
     UNIT_HORSEMAN, 
     UNIT_SPEARMAN,
     UNIT_ELITE_SPEARMAN,
@@ -24,8 +24,8 @@ typedef enum {
 
 // Factions
 typedef enum { 
-    FACTION_REPUBLIC, 
-    FACTION_SEPARATIST,
+    FACTION_GERMAN, 
+    FACTION_ROMAN,
     FACTION_UNKNOWN
 } Faction;
 

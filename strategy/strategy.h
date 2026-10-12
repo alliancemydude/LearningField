@@ -17,13 +17,13 @@ typedef struct {
 
 void assign_unit_roles(struct Battlefield* field, Faction faction);
 
-extern FactionStrategy republic_strategy;
-extern FactionStrategy separatist_strategy;
+extern FactionStrategy german_strategy;
+extern FactionStrategy roman_strategy;
 
-void set_republic_strategy(const float weights[7]);
-void set_separatist_strategy(const float weights[7]);
+void set_german_strategy(const float weights[7]);
+void set_roman_strategy(const float weights[7]);
 void load_strategy_from_file(const char* filename);
 
-PairFitness evaluate_matchup(const float* rep_weights, const float* sep_weights, int num_battles);
+PairFitness evaluate_matchup(const float* german_weights, const float* roman_weights, int num_battles);
 
 #endif

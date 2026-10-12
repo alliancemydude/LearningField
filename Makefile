@@ -4,6 +4,7 @@ CFLAGS = -O3 -march=native -Wall -Wextra \
          -I. \
          -Iai \
          -Ibattlefield \
+         -Icalibration \
          -Icombat \
          -Icore \
          -Iunit \

@@ -67,7 +67,7 @@ const char* get_unit_type_name(UnitType type) {
     switch(type) {
         case UNIT_SWORDSMAN: return "UNIT_SWORDSMAN";
         case UNIT_ELITE_SWORDSMAN: return "UNIT_ELITE_SWORDSMAN";
-        case UNIT_SPEAR_THROWER: return "UNIT_SPEAR_THROWER";
+        case UNIT_JAVELIN_THROWER: return "UNIT_JAVELIN_THROWER";
         case UNIT_HORSEMAN: return "UNIT_HORSEMAN";
 
         case UNIT_SPEARMAN: return "UNIT_SPEARMAN";

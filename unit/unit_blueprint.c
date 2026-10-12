@@ -3,13 +3,13 @@
 
 
 const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
-    // Republic Infantry
+    // German Infantry
     [UNIT_SWORDSMAN] = {
         .type = UNIT_SWORDSMAN,
-        .faction = FACTION_REPUBLIC,
+        .faction = FACTION_GERMAN,
         .hp = 1,
         .hp_per_soldier = 1,
-        .movement = 8,
+        .movement = 6,
         .morale = 7,
         .armor_class = 4,
         .point_value = 10,
@@ -24,13 +24,13 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
     },
     [UNIT_ELITE_SWORDSMAN] = {
         .type = UNIT_ELITE_SWORDSMAN,
-        .faction = FACTION_REPUBLIC,
+        .faction = FACTION_GERMAN,
         .hp = 2,
         .hp_per_soldier = 2,
         .movement = 8,
         .morale = 8,
         .armor_class = 5,
-        .point_value = 17,
+        .point_value = 22,
         .is_ranged = false,
         .units_count = 1,
         .attacks_per_unit = 3,
@@ -40,15 +40,15 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         },
         .weapon_count = 1
     },
-    [UNIT_SPEAR_THROWER] = {
-        .type = UNIT_SPEAR_THROWER,
-        .faction = FACTION_REPUBLIC,
+    [UNIT_JAVELIN_THROWER] = {
+        .type = UNIT_JAVELIN_THROWER,
+        .faction = FACTION_GERMAN,
         .hp = 1,
         .hp_per_soldier = 1,
         .movement = 6,
         .morale = 7,
-        .armor_class = 4,
-        .point_value = 27,
+        .armor_class = 5,
+        .point_value = 33,
         .is_ranged = true,
         .units_count = 1,
         .attacks_per_unit = 1,
@@ -60,16 +60,16 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
     },
     [UNIT_HORSEMAN] = {
         .type = UNIT_HORSEMAN,
-        .faction = FACTION_REPUBLIC,
-        .hp = 2,
-        .hp_per_soldier = 2,
+        .faction = FACTION_GERMAN,
+        .hp = 1,
+        .hp_per_soldier = 1,
         .movement = 18,
         .morale = 7,
         .armor_class = 5,
-        .point_value = 24,
+        .point_value = 25,
         .is_ranged = false,
         .units_count = 1,
-        .attacks_per_unit = 3,
+        .attacks_per_unit = 2,
         .preferred_range = 1,
         .weapons = {
             {WEAPON_SWORD}
@@ -78,10 +78,10 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
     },
     
     
-    // Separatist Infantry
+    // Roman Infantry
     [UNIT_SPEARMAN] = {
         .type = UNIT_SPEARMAN,
-        .faction = FACTION_SEPARATIST,
+        .faction = FACTION_ROMAN,
         .hp = 1,
         .hp_per_soldier = 1,
         .movement = 6,
@@ -99,13 +99,13 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
     },
     [UNIT_ELITE_SPEARMAN] = {
         .type = UNIT_ELITE_SPEARMAN,
-        .faction = FACTION_SEPARATIST,
+        .faction = FACTION_ROMAN,
         .hp = 2,
         .hp_per_soldier = 2,
         .movement = 6,
         .morale = 8,
         .armor_class = 5,
-        .point_value = 20,
+        .point_value = 17,
         .is_ranged = false,
         .units_count = 1,
         .attacks_per_unit = 1,
@@ -117,13 +117,13 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
     },
     [UNIT_BOWMAN] = {
         .type = UNIT_BOWMAN,
-        .faction = FACTION_SEPARATIST,
+        .faction = FACTION_ROMAN,
         .hp = 1,
         .hp_per_soldier = 1,
         .movement = 6,
         .morale = 7,
         .armor_class = 4,
-        .point_value = 22,
+        .point_value = 25,
         .is_ranged = true,
         .units_count = 1,
         .attacks_per_unit = 1,
@@ -135,13 +135,13 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
     },
     [UNIT_CAVALRY] = {
         .type = UNIT_CAVALRY,
-        .faction = FACTION_SEPARATIST,
+        .faction = FACTION_ROMAN,
         .hp = 2,
         .hp_per_soldier = 2,
-        .movement = 18,
+        .movement = 14,
         .morale = 7,
         .armor_class = 5,
-        .point_value = 12,
+        .point_value = 17,
         .is_ranged = false,
         .units_count = 1,
         .attacks_per_unit = 1,

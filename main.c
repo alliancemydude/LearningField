@@ -5,6 +5,7 @@
 #include "evolution.h"
 #include "utils.h"
 #include "tests.h"
+#include "calibration.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -13,8 +14,8 @@
 #define STRATEGY_FILE "strategy.txt"
 
 // Do not adjust
-int clone_wins = 0;
-int droid_wins = 0;
+int german_wins = 0;
+int roman_wins = 0;
 int timeouts = 0;
 
 // Basic adjustable values
@@ -36,15 +37,15 @@ void start_match() {
         initialize_battlefield(&field);
         
         // Spawn forces for both sides
-        spawn_republic_forces(&field, default_republic_composition, default_republic_composition_count);
-        spawn_separatist_forces(&field, default_separatist_composition, default_separatist_composition_count);
+        spawn_german_forces(&field, default_german_composition, default_german_composition_count);
+        spawn_roman_forces(&field, default_roman_composition, default_roman_composition_count);
         
         // Increment stats based on the winner
         int winner = run_battle(&field, MAX_TURNS);
         if (winner == 0) {
-            clone_wins++;
+            german_wins++;
         } else if (winner == 1) {
-            droid_wins++;
+            roman_wins++;
         } else {
             timeouts++;
         }
@@ -56,14 +57,14 @@ void start_match() {
 
 void print_results() {
     // Calculate percentage of wins for each side and timeouts
-    float clone_percent = (clone_wins * 100.0f) / battles;
-    float droid_percent = (droid_wins * 100.0f) / battles;
+    float german_percent = (german_wins * 100.0f) / battles;
+    float roman_percent = (roman_wins * 100.0f) / battles;
     float timeout_percent = (timeouts * 100.0f) / battles;
 
     printf("Results for %d battles:\n", battles);
     printf("\n");
-    printf("Swordsmen: %.1f%% (%d/%d)\n", clone_percent, clone_wins, battles);
-    printf("Spearmen: %.1f%% (%d/%d)\n", droid_percent, droid_wins, battles);
+    printf("Swordsmen: %.1f%% (%d/%d)\n", german_percent, german_wins, battles);
+    printf("Spearmen: %.1f%% (%d/%d)\n", roman_percent, roman_wins, battles);
     printf("Timeouts: %.1f%% (%d/%d)\n", timeout_percent, timeouts, battles);
     printf("\n");
 }
@@ -78,6 +79,7 @@ int main() {
         printf("3. Verbose analysis (v)\n");
         printf("4. Strategic evolution (e)\n");
         printf("5. Run test (r)\n");
+        printf("6. Run point calibration (c)\n");
 
         char battle_type = getchar();
 
@@ -120,6 +122,8 @@ int main() {
             printf("\nEvolution took %.1f seconds.\n", time_taken);
         } else if (battle_type == 'r') {
             run_tests();
+        } else if (battle_type == 'c') {
+            run_point_calibration(1000);
         } else { 
             printf("Listen man just hit the right button\n");
         }

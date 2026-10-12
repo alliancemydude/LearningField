@@ -40,17 +40,17 @@ int take_damage(Unit* unit, int kills) {
         damage_dealt = 0;
     }
 
-    if (unit->faction == FACTION_REPUBLIC) {
-        battle_stats.damage_taken_rep += damage_dealt;
+    if (unit->faction == FACTION_GERMAN) {
+        battle_stats.damage_taken_german += damage_dealt;
     } else {
-        battle_stats.damage_taken_sep += damage_dealt;
+        battle_stats.damage_taken_roman += damage_dealt;
     }
 
     if (unit->hp <= 0) {
-        if (unit->faction == FACTION_REPUBLIC) {
-            battle_stats.casualties_rep++;
+        if (unit->faction == FACTION_GERMAN) {
+            battle_stats.casualties_german++;
         } else {
-            battle_stats.casualties_sep++;
+            battle_stats.casualties_roman++;
         }
         battle_stats.casualties_by_type[unit->type]++;
     }

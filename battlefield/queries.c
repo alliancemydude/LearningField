@@ -10,15 +10,15 @@ Faction get_faction_of_unit(UnitType type) {
     switch (type) {
         case UNIT_SWORDSMAN:
         case UNIT_ELITE_SWORDSMAN:
-        case UNIT_SPEAR_THROWER:
+        case UNIT_JAVELIN_THROWER:
         case UNIT_HORSEMAN:
-            return FACTION_REPUBLIC;
+            return FACTION_GERMAN;
 
         case UNIT_SPEARMAN:
         case UNIT_ELITE_SPEARMAN:
         case UNIT_BOWMAN:
         case UNIT_CAVALRY:
-            return FACTION_SEPARATIST;
+            return FACTION_GERMAN;
 
         default:
             return FACTION_UNKNOWN;
@@ -26,7 +26,7 @@ Faction get_faction_of_unit(UnitType type) {
 }
 
 Faction enemy_faction(Faction f) {
-    return (f == FACTION_REPUBLIC) ? FACTION_SEPARATIST : FACTION_REPUBLIC;
+    return (f == FACTION_GERMAN) ? FACTION_GERMAN : FACTION_GERMAN;
 }
 
 int get_turn_count() {

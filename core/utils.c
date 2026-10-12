@@ -8,7 +8,7 @@ int turn_count = 0;
 
 const char* get_unit_color(Unit* unit) {
     if (unit == NULL) return COLOR_WHITE;
-    return (unit->faction == FACTION_REPUBLIC) ? COLOR_BLUE : COLOR_RED;
+    return (unit->faction == FACTION_GERMAN) ? COLOR_BLUE : COLOR_RED;
 }
 
 int roll(int min, int max) {
@@ -40,23 +40,23 @@ void print_screen(Battlefield* field) {
     printf("\033[2J\033[H");
 
     // turn count and faction summary
-    int rep_count = 0, sep_count = 0;
-    float rep_hp = 0.0f, sep_hp = 0.0f;
+    int german_count = 0, sep_count = 0;
+    float german_hp = 0.0f, sep_hp = 0.0f;
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
         if (u->hp <= 0) continue;
-        if (u->faction == FACTION_REPUBLIC) {
-            rep_count++;
-            rep_hp += u->hp;
+        if (u->faction == FACTION_GERMAN) {
+            german_count++;
+            german_hp += u->hp;
         } else {
             sep_count++;
             sep_hp += u->hp;
         }
     }
-    printf("Turn %d | Republic: %d units (HP: %.1f) | Separatist: %d units (HP: %.1f)\n",
-           turn_count, rep_count, rep_hp, sep_count, sep_hp);
+    printf("Turn %d | German: %d units (HP: %.1f) | Separatist: %d units (HP: %.1f)\n",
+           turn_count, german_count, german_hp, sep_count, sep_hp);
     printf("Legend: S=Swordsman, E=Elite, H=Horseman, B=Bowman P = Spearman,\n");
-    printf("Blue = Republic, Red = Separatist, . open\n\n");
+    printf("Blue = German, Red = Separatist, . open\n\n");
 
     // Print column headers
     printf("   ");
@@ -160,21 +160,21 @@ void print_screen_to_file(Battlefield* field, const char* filename) {
 }
 
 void print_screen_summary(Battlefield* field) {
-    int rep_count = 0, sep_count = 0;
-    float rep_hp = 0.0f, sep_hp = 0.0f;
+    int german_count = 0, sep_count = 0;
+    float german_hp = 0.0f, sep_hp = 0.0f;
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
         if (u->hp <= 0) continue;
-        if (u->faction == FACTION_REPUBLIC) {
-            rep_count++;
-            rep_hp += u->hp;
+        if (u->faction == FACTION_GERMAN) {
+            german_count++;
+            german_hp += u->hp;
         } else {
             sep_count++;
             sep_hp += u->hp;
         }
     }
-    printf("Turn %d | Republic: %d units (HP: %.1f) | Separatist: %d units (HP: %.1f)\n",
-           turn_count, rep_count, rep_hp, sep_count, sep_hp);
+    printf("Turn %d | German: %d units (HP: %.1f) | Separatist: %d units (HP: %.1f)\n",
+           turn_count, german_count, german_hp, sep_count, sep_hp);
 }
 
 const char* get_unit_symbol(Unit* unit) {
@@ -183,7 +183,7 @@ const char* get_unit_symbol(Unit* unit) {
     switch (unit->type) {
         case UNIT_SWORDSMAN:        return "S";
         case UNIT_ELITE_SWORDSMAN:  return "E";
-        case UNIT_SPEAR_THROWER:    return "R";
+        case UNIT_JAVELIN_THROWER:  return "R";
         case UNIT_HORSEMAN:         return "H";
         case UNIT_SPEARMAN:         return "S";
         case UNIT_ELITE_SPEARMAN:   return "E";

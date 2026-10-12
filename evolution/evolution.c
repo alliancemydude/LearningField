@@ -16,7 +16,7 @@
 #include "unit.h"
 
 // Gene definitions
-const GeneInfo REP_GENES[] = {
+const GeneInfo GERMAN_GENES[] = {
     // Strategy (0-6)
     {"strategy.aggression_bias",          0.5f,  2.0f, 1.2f},
     {"strategy.threat_weight",            0.0f,  1.0f, 0.5f},
@@ -38,11 +38,11 @@ const GeneInfo REP_GENES[] = {
     {"elite_swordsman.spacing_y",       1.0f,  8.0f, 3.0f},
     {"elite_swordsman.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
-    {"spear_thrower.aggression",      0.0f,  1.0f, 0.5f},
-    {"spear_thrower.preferred_range", 0.0f, 1.0f, 0.5f},
-    {"spear_thrower.spacing_x",       1.0f,  8.0f, 3.0f},
-    {"spear_thrower.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"spear_thrower.local_force_ratio", 0.5f,  2.0f, 1.0f},
+    {"javelin_thrower.aggression",      0.0f,  1.0f, 0.5f},
+    {"javelin_thrower.preferred_range", 0.0f, 1.0f, 0.5f},
+    {"javelin_thrower.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"javelin_thrower.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"javelin_thrower.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
     {"horseman.aggression",      0.0f,  1.0f, 0.5f},
     {"horseman.preferred_range", 0.0f, 1.0f, 0.5f},
@@ -50,9 +50,9 @@ const GeneInfo REP_GENES[] = {
     {"horseman.spacing_y",       1.0f,  8.0f, 3.0f},
     {"horseman.local_force_ratio", 0.5f,  2.0f, 1.0f}
 };
-const size_t REP_GENE_COUNT = sizeof(REP_GENES) / sizeof(GeneInfo);
+const size_t GERMAN_GENE_COUNT = sizeof(GERMAN_GENES) / sizeof(GeneInfo);
 
-const GeneInfo SEP_GENES[] = {
+const GeneInfo ROMAN_GENES[] = {
     // Strategy (0-6)
     {"strategy.aggression_bias",          0.5f,  2.0f, 1.2f},
     {"strategy.threat_weight",            0.0f,  1.0f, 0.5f},
@@ -86,14 +86,14 @@ const GeneInfo SEP_GENES[] = {
     {"cavalry.spacing_y",       1.0f,  8.0f, 3.0f},
     {"cavalry.local_force_ratio", 0.5f,  2.0f, 1.0f}
 };
-const size_t SEP_GENE_COUNT = sizeof(SEP_GENES) / sizeof(GeneInfo);
+const size_t ROMAN_GENE_COUNT = sizeof(ROMAN_GENES) / sizeof(GeneInfo);
 
 // Evolution parameters
-int battles_min = 30;
-int battles_max = 40;
+int battles_min = 40;
+int battles_max = 70;
 
-int pop_size = 30;
-int num_generations = 40;
+int pop_size = 40;
+int num_generations = 60;
 
 float mutation_rate_start = 0.5f;
 float mutation_rate_end = 0.15f;
@@ -166,94 +166,94 @@ int compare_individual(const void *a, const void *b) {
     return 0;
 }
 
-static void apply_genes(const float* rep_weights, const float* sep_weights) {
-    set_republic_strategy(rep_weights);
-    set_separatist_strategy(sep_weights);
+static void apply_genes(const float* german_weights, const float* roman_weights) {
+    set_german_strategy(german_weights);
+    set_roman_strategy(roman_weights);
 
-    int rep_idx = STRATEGY_GENE_COUNT;
-    int sep_idx = STRATEGY_GENE_COUNT;
+    int german_idx = STRATEGY_GENE_COUNT;
+    int roman_idx = STRATEGY_GENE_COUNT;
     for (unsigned int i = 0; i < UNIT_TYPE_COUNT; i++) {
         UnitType type = (UnitType)i;
         Faction f = get_faction_of_unit(type);
         if (f == FACTION_UNKNOWN) continue;
         if (!is_unit_used_in_composition(type)) continue;
 
-        if (f == FACTION_REPUBLIC) {
-            unit_genomes[i].unit_aggression = rep_weights[rep_idx + 0];
-            unit_genomes[i].preferred_range = rep_weights[rep_idx + 1];
-            unit_genomes[i].spacing_x       = rep_weights[rep_idx + 2];
-            unit_genomes[i].spacing_y       = rep_weights[rep_idx + 3];
-            unit_genomes[i].local_force_ratio    = rep_weights[rep_idx + 4];
-            rep_idx += UNIT_TYPE_GENE_COUNT;
+        if (f == FACTION_GERMAN) {
+            unit_genomes[i].unit_aggression = german_weights[german_idx + 0];
+            unit_genomes[i].preferred_range = german_weights[german_idx + 1];
+            unit_genomes[i].spacing_x       = german_weights[german_idx + 2];
+            unit_genomes[i].spacing_y       = german_weights[german_idx + 3];
+            unit_genomes[i].local_force_ratio    = german_weights[german_idx + 4];
+            german_idx += UNIT_TYPE_GENE_COUNT;
         } else {
-            unit_genomes[i].unit_aggression = sep_weights[sep_idx + 0];
-            unit_genomes[i].preferred_range = sep_weights[sep_idx + 1];
-            unit_genomes[i].spacing_x       = sep_weights[sep_idx + 2];
-            unit_genomes[i].spacing_y       = sep_weights[sep_idx + 3];
-            unit_genomes[i].local_force_ratio    = sep_weights[sep_idx + 4];
-            sep_idx += UNIT_TYPE_GENE_COUNT;
+            unit_genomes[i].unit_aggression = roman_weights[roman_idx + 0];
+            unit_genomes[i].preferred_range = roman_weights[roman_idx + 1];
+            unit_genomes[i].spacing_x       = roman_weights[roman_idx + 2];
+            unit_genomes[i].spacing_y       = roman_weights[roman_idx + 3];
+            unit_genomes[i].local_force_ratio    = roman_weights[roman_idx + 4];
+            roman_idx += UNIT_TYPE_GENE_COUNT;
         }
     }
 }
 
-static void print_generation_diagnostics(const float* rep_weights,
-                                         const float* sep_weights,
+static void print_generation_diagnostics(const float* german_weights,
+                                         const float* roman_weights,
                                          int num_battles) {
-    FactionStrategy old_rep = republic_strategy;
-    FactionStrategy old_sep = separatist_strategy;
+    FactionStrategy old_german = german_strategy;
+    FactionStrategy old_roman = roman_strategy;
     UnitGenome old_genomes[UNIT_TYPE_COUNT];
     memcpy(old_genomes, unit_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
-    apply_genes(rep_weights, sep_weights);
+    apply_genes(german_weights, roman_weights);
 
-    int rep_wins = 0, sep_wins = 0, timeouts = 0;
-    long total_rep_dmg = 0, total_sep_dmg = 0;
+    int german_wins = 0, roman_wins = 0, timeouts = 0;
+    long total_german_dmg = 0, total_roman_dmg = 0;
     long total_turns = 0;
 
     for (int i = 0; i < num_battles; i++) {
         Battlefield field;
         initialize_battlefield(&field);
-        spawn_republic_forces(&field, default_republic_composition, default_republic_composition_count);
-        spawn_separatist_forces(&field, default_separatist_composition, default_separatist_composition_count);
+        spawn_german_forces(&field, default_german_composition, default_german_composition_count);
+        spawn_roman_forces(&field, default_roman_composition, default_roman_composition_count);
 
         int winner = run_battle(&field, MAX_TURNS);
-        if (winner == 0) rep_wins++;
-        else if (winner == 1) sep_wins++;
+        if (winner == 0) german_wins++;
+        else if (winner == 1) roman_wins++;
         else timeouts++;
 
-        total_rep_dmg += battle_stats.damage_taken_sep;
-        total_sep_dmg += battle_stats.damage_taken_rep;
+        total_german_dmg += battle_stats.damage_taken_roman;
+        total_roman_dmg += battle_stats.damage_taken_german;
         total_turns   += turn_count;
 
         cleanup_battlefield(&field);
     }
 
-    republic_strategy = old_rep;
-    separatist_strategy = old_sep;
+    german_strategy = old_german;
+    roman_strategy = old_roman;
     memcpy(unit_genomes, old_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
-    long total_dmg = total_rep_dmg + total_sep_dmg;
-    float rep_share = (total_dmg > 0) ? 100.0f * total_rep_dmg / total_dmg : 0.0f;
-    float sep_share = (total_dmg > 0) ? 100.0f * total_sep_dmg / total_dmg : 0.0f;
+    long total_dmg = total_german_dmg + total_roman_dmg;
+    float german_share = (total_dmg > 0) ? 100.0f * total_german_dmg / total_dmg : 0.0f;
+    float roman_share = (total_dmg > 0) ? 100.0f * total_roman_dmg / total_dmg : 0.0f;
 
-    printf("     Outcomes: Rep %2d W, Sep %2d W, %2d TO   |   "
-           "Damage: Rep %ld (%3.0f%%) / Sep %ld (%3.0f%%)   |   "
+    printf("     Outcomes: German %2d W, Roman %2d W, %2d TO   |   "
+           "Damage: German %ld (%3.0f%%) / Roman %ld (%3.0f%%)   |   "
            "Avg turns %.1f\n",
-           rep_wins, sep_wins, timeouts,
-           total_rep_dmg, rep_share, total_sep_dmg, sep_share,
+           german_wins, roman_wins, timeouts,
+           total_german_dmg, german_share, total_roman_dmg, roman_share,
            (double)total_turns / num_battles);
 }
 
 // Combined evaluator
-PairFitness evaluate_all(const float* rep_weights, const float* sep_weights, int num_battles) {
+PairFitness evaluate_all(const float* german_weights, const float* roman_weights, int num_battles) {
     // Stash current state so we can restore after the batch.
-    FactionStrategy old_rep = republic_strategy;
-    FactionStrategy old_sep = separatist_strategy;
+    FactionStrategy old_german = german_strategy;
+    FactionStrategy old_roman = roman_strategy;
     UnitGenome old_genomes[UNIT_TYPE_COUNT];
     memcpy(old_genomes, unit_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
     // Apply strategy genes
-    apply_genes(rep_weights, sep_weights);
+    apply_genes(german_weights, roman_weights);
 
     // Weights (TUNE THESE IF NEEDED)
     const float W_WIN           = 1.0f;
@@ -262,91 +262,91 @@ PairFitness evaluate_all(const float* rep_weights, const float* sep_weights, int
     const float W_TIMEOUT       = 0.5f;
     const float W_NO_ENGAGE     = 0.05f;
 
-    float rep_score = 0.0f;
-    float sep_score = 0.0f;
+    float german_score = 0.0f;
+    float roman_score = 0.0f;
     int   timeouts  = 0;
 
     for (int i = 0; i < num_battles; i++) {
         Battlefield field;
         initialize_battlefield(&field);
-        spawn_republic_forces(&field, default_republic_composition, default_republic_composition_count);
-        spawn_separatist_forces(&field, default_separatist_composition, default_separatist_composition_count);
+        spawn_german_forces(&field, default_german_composition, default_german_composition_count);
+        spawn_roman_forces(&field, default_roman_composition, default_roman_composition_count);
 
         int winner = run_battle(&field, MAX_TURNS);
 
         // Outcome
         if (winner == 0) {
-            rep_score += W_WIN;
+            german_score += W_WIN;
         } else if (winner == 1) {
-            sep_score += W_WIN;
+            roman_score += W_WIN;
         } else {
             timeouts++;
         }
 
         // Damage share
-        int rep_dmg = battle_stats.damage_taken_sep;
-        int sep_dmg = battle_stats.damage_taken_rep;
-        int total_dmg = rep_dmg + sep_dmg;
+        int german_dmg = battle_stats.damage_taken_roman;
+        int roman_dmg = battle_stats.damage_taken_german;
+        int total_dmg = german_dmg + roman_dmg;
 
         if (total_dmg > 0) {
-            rep_score += W_DAMAGE_SHARE * ((float)rep_dmg / total_dmg);
-            sep_score += W_DAMAGE_SHARE * ((float)sep_dmg / total_dmg);
+            german_score += W_DAMAGE_SHARE * ((float)german_dmg / total_dmg);
+            roman_score += W_DAMAGE_SHARE * ((float)roman_dmg / total_dmg);
         } else {
             // Nobody engaged at all
-            rep_score -= W_NO_ENGAGE;
-            sep_score -= W_NO_ENGAGE;
+            german_score -= W_NO_ENGAGE;
+            roman_score -= W_NO_ENGAGE;
         }
 
         // Turn efficiency penalty (both sides)
         float turn_ratio = (float)turn_count / MAX_TURNS;
-        rep_score -= W_TURN_PENALTY * turn_ratio;
-        sep_score -= W_TURN_PENALTY * turn_ratio;
+        german_score -= W_TURN_PENALTY * turn_ratio;
+        roman_score -= W_TURN_PENALTY * turn_ratio;
 
         cleanup_battlefield(&field);
     }
 
     // Average over battles
-    rep_score /= num_battles;
-    sep_score /= num_battles;
+    german_score /= num_battles;
+    roman_score /= num_battles;
 
     // Timeout penalty applied to both sides
     float timeout_rate = (float)timeouts / num_battles;
-    rep_score -= W_TIMEOUT * timeout_rate;
-    sep_score -= W_TIMEOUT * timeout_rate;
+    german_score -= W_TIMEOUT * timeout_rate;
+    roman_score -= W_TIMEOUT * timeout_rate;
 
     // Restore
-    republic_strategy = old_rep;
-    separatist_strategy = old_sep;
+    german_strategy = old_german;
+    roman_strategy = old_roman;
     memcpy(unit_genomes, old_genomes, sizeof(UnitGenome) * UNIT_TYPE_COUNT);
 
     PairFitness out;
-    out.rep_fitness = rep_score;
-    out.sep_fitness = sep_score;
+    out.german_fitness = german_score;
+    out.roman_fitness = roman_score;
     return out;
 }
 
 // Co-evolution
-void run_coevolution(const GeneInfo* rep_genes, size_t rep_gene_count,
-                     const GeneInfo* sep_genes, size_t sep_gene_count,
+void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count,
+                     const GeneInfo* roman_genes, size_t roman_gene_count,
                      int pop_size, int num_generations,
                      PairFitness (*evaluate_pair)(const float*, const float*, int),
                      const char* name_prefix) {
-    Individual* rep_pop = malloc(pop_size * sizeof(Individual));
-    Individual* sep_pop = malloc(pop_size * sizeof(Individual));
-    Individual* next_rep = malloc(pop_size * sizeof(Individual));
-    Individual* next_sep = malloc(pop_size * sizeof(Individual));
-    if (!rep_pop || !sep_pop || !next_rep || !next_sep) {
+    Individual* german_pop = malloc(pop_size * sizeof(Individual));
+    Individual* roman_pop = malloc(pop_size * sizeof(Individual));
+    Individual* next_german = malloc(pop_size * sizeof(Individual));
+    Individual* next_roman = malloc(pop_size * sizeof(Individual));
+    if (!german_pop || !roman_pop || !next_german || !next_roman) {
         printf("Memory allocation failed.\n");
         return;
     }
 
     for (int i = 0; i < pop_size; i++) {
-        random_individual(&rep_pop[i], rep_genes, rep_gene_count);
-        random_individual(&sep_pop[i], sep_genes, sep_gene_count);
-        next_rep[i].weights = malloc(rep_gene_count * sizeof(float));
-        next_sep[i].weights = malloc(sep_gene_count * sizeof(float));
-        next_rep[i].fitness = 0.0f;
-        next_sep[i].fitness = 0.0f;
+        random_individual(&german_pop[i], german_genes, german_gene_count);
+        random_individual(&roman_pop[i], roman_genes, roman_gene_count);
+        next_german[i].weights = malloc(german_gene_count * sizeof(float));
+        next_roman[i].weights = malloc(roman_gene_count * sizeof(float));
+        next_german[i].fitness = 0.0f;
+        next_roman[i].fitness = 0.0f;
     }
 
     int gen;
@@ -360,106 +360,106 @@ void run_coevolution(const GeneInfo* rep_genes, size_t rep_gene_count,
         float current_mutation_delta = mutation_delta_start + (mutation_delta_end - mutation_delta_start) * gen_ratio;
 
         // Compute every pairing once and cache both scores.
-        // cache[i * pop_size + j] holds the scores for Republic individual i
-        // vs Separatist individual j.
+        // cache[i * pop_size + j] holds the scores for German individual i
+        // vs roman individual j.
         PairFitness* cache = malloc(pop_size * pop_size * sizeof(PairFitness));
         if (!cache) {
             printf("Memory allocation failed (cache).\n");
             for (int i = 0; i < pop_size; i++) {
-                free(rep_pop[i].weights);
-                free(sep_pop[i].weights);
-                free(next_rep[i].weights);
-                free(next_sep[i].weights);
+                free(german_pop[i].weights);
+                free(roman_pop[i].weights);
+                free(next_german[i].weights);
+                free(next_roman[i].weights);
             }
-            free(rep_pop);
-            free(sep_pop);
-            free(next_rep);
-            free(next_sep);
+            free(german_pop);
+            free(roman_pop);
+            free(next_german);
+            free(next_roman);
             return;
         }
 
         for (int i = 0; i < pop_size; i++) {
             for (int j = 0; j < pop_size; j++) {
-                cache[i * pop_size + j] = evaluate_pair(rep_pop[i].weights, sep_pop[j].weights, num_battles);
+                cache[i * pop_size + j] = evaluate_pair(german_pop[i].weights, roman_pop[j].weights, num_battles);
             }
         }
 
-        // Republic scores: average across each row
+        // German scores: average across each row
         for (int i = 0; i < pop_size; i++) {
             float total = 0.0f;
             for (int j = 0; j < pop_size; j++) {
-                total += cache[i * pop_size + j].rep_fitness;
+                total += cache[i * pop_size + j].german_fitness;
             }
-            rep_pop[i].fitness = total / pop_size;
+            german_pop[i].fitness = total / pop_size;
         }
 
-        // Separatist scores: average down each column
+        // Roman scores: average down each column
         for (int j = 0; j < pop_size; j++) {
             float total = 0.0f;
             for (int i = 0; i < pop_size; i++) {
-                total += cache[i * pop_size + j].sep_fitness;
+                total += cache[i * pop_size + j].roman_fitness;
             }
-            sep_pop[j].fitness = total / pop_size;
+            roman_pop[j].fitness = total / pop_size;
         }
 
         free(cache);
 
-        qsort(rep_pop, pop_size, sizeof(Individual), compare_individual);
-        qsort(sep_pop, pop_size, sizeof(Individual), compare_individual);
+        qsort(german_pop, pop_size, sizeof(Individual), compare_individual);
+        qsort(roman_pop, pop_size, sizeof(Individual), compare_individual);
 
-        float avg_rep = 0.0f, avg_sep = 0.0f;
+        float avg_german = 0.0f, avg_roman = 0.0f;
         for (int i = 0; i < pop_size; i++) {
-            avg_rep += rep_pop[i].fitness;
-            avg_sep += sep_pop[i].fitness;
+            avg_german += german_pop[i].fitness;
+            avg_roman += roman_pop[i].fitness;
         }
-        avg_rep /= pop_size;
-        avg_sep /= pop_size;
+        avg_german /= pop_size;
+        avg_roman /= pop_size;
 
-        printf("Gen %2d: %s Rep best=%.4f avg=%.4f | Sep best=%.4f avg=%.4f\n",
-               gen, name_prefix, rep_pop[0].fitness, avg_rep, sep_pop[0].fitness, avg_sep);
+        printf("Gen %2d: %s German best=%.4f avg=%.4f | Roman best=%.4f avg=%.4f\n",
+               gen, name_prefix, german_pop[0].fitness, avg_german, roman_pop[0].fitness, avg_roman);
 
         
         // Run several matchups:
-        print_generation_diagnostics(rep_pop[0].weights, sep_pop[0].weights, num_battles);
-        print_generation_diagnostics(rep_pop[0].weights, sep_pop[pop_size/2].weights, num_battles);
-        print_generation_diagnostics(rep_pop[pop_size/2].weights, sep_pop[pop_size/2].weights, num_battles);
+        print_generation_diagnostics(german_pop[0].weights, roman_pop[0].weights, num_battles);
+        print_generation_diagnostics(german_pop[0].weights, roman_pop[pop_size/2].weights, num_battles);
+        print_generation_diagnostics(german_pop[pop_size/2].weights, roman_pop[pop_size/2].weights, num_battles);
 
         // Rank-based selection scores. pop[0]
         // index 0 gets 1.0 and index pop_size-1 gets 0.0.
         for (int i = 0; i < pop_size; i++) {
             float score = 1.0f - (float)i / (pop_size - 1);
-            rep_pop[i].selection_score = score;
-            sep_pop[i].selection_score = score;
+            german_pop[i].selection_score = score;
+            roman_pop[i].selection_score = score;
         }
 
         int elite_count = 3;
 
         for (int i = 0; i < elite_count; i++) {
-            memcpy(next_rep[i].weights, rep_pop[i].weights, rep_gene_count * sizeof(float));
-            next_rep[i].fitness = rep_pop[i].fitness;
-            next_rep[i].selection_score = rep_pop[i].selection_score;
+            memcpy(next_german[i].weights, german_pop[i].weights, german_gene_count * sizeof(float));
+            next_german[i].fitness = german_pop[i].fitness;
+            next_german[i].selection_score = german_pop[i].selection_score;
         }
         for (int i = elite_count; i < pop_size; i++) {
-            int p1 = tournament_select(rep_pop, pop_size, 3);
-            int p2 = tournament_select(rep_pop, pop_size, 3);
-            crossover(rep_pop[p1].weights, rep_pop[p2].weights, next_rep[i].weights, rep_gene_count, crossover_rate);
-            mutate(next_rep[i].weights, rep_genes, rep_gene_count, current_mutation_rate, current_mutation_delta);
-            next_rep[i].fitness = 0.0f;
-            next_rep[i].selection_score = 0.0f;
+            int p1 = tournament_select(german_pop, pop_size, 3);
+            int p2 = tournament_select(german_pop, pop_size, 3);
+            crossover(german_pop[p1].weights, german_pop[p2].weights, next_german[i].weights, german_gene_count, crossover_rate);
+            mutate(next_german[i].weights, german_genes, german_gene_count, current_mutation_rate, current_mutation_delta);
+            next_german[i].fitness = 0.0f;
+            next_german[i].selection_score = 0.0f;
         }
 
         for (int i = 0; i < elite_count; i++) {
-            memcpy(next_sep[i].weights, sep_pop[i].weights, sep_gene_count * sizeof(float));
-            next_sep[i].fitness = sep_pop[i].fitness;
-            next_sep[i].selection_score = sep_pop[i].selection_score;
+            memcpy(next_roman[i].weights, roman_pop[i].weights, roman_gene_count * sizeof(float));
+            next_roman[i].fitness = roman_pop[i].fitness;
+            next_roman[i].selection_score = roman_pop[i].selection_score;
         }
         for (int i = elite_count; i < pop_size; i++) {
-            int p1 = tournament_select(sep_pop, pop_size, 3);
-            int p2 = tournament_select(sep_pop, pop_size, 3);
-            crossover(sep_pop[p1].weights, sep_pop[p2].weights, next_sep[i].weights, sep_gene_count, crossover_rate);
-            mutate(next_sep[i].weights, sep_genes, sep_gene_count, current_mutation_rate, current_mutation_delta);
-            next_sep[i].fitness = 0.0f;
-            next_sep[i].selection_score = 0.0f;
+            int p1 = tournament_select(roman_pop, pop_size, 3);
+            int p2 = tournament_select(roman_pop, pop_size, 3);
+            crossover(roman_pop[p1].weights, roman_pop[p2].weights, next_roman[i].weights, roman_gene_count, crossover_rate);
+            mutate(next_roman[i].weights, roman_genes, roman_gene_count, current_mutation_rate, current_mutation_delta);
+            next_roman[i].fitness = 0.0f;
+            next_roman[i].selection_score = 0.0f;
         }
 
         // Checkpoint save every 15 generations
@@ -467,44 +467,44 @@ void run_coevolution(const GeneInfo* rep_genes, size_t rep_gene_count,
             char ckpt[64];
             snprintf(ckpt, sizeof(ckpt), "checkpoint_gen%d", gen + 1);
             printf("\n--- Checkpoint at generation %d ---\n", gen + 1);
-            save_genomes(rep_pop[0].weights, rep_gene_count,
-                         sep_pop[0].weights, sep_gene_count,
-                         rep_genes, sep_genes, ckpt);
+            save_genomes(german_pop[0].weights, german_gene_count,
+                         roman_pop[0].weights, roman_gene_count,
+                         german_genes, roman_genes, ckpt);
             printf("\n");
         }
 
-        Individual* tmp = rep_pop;
-        rep_pop = next_rep;
-        next_rep = tmp;
-        tmp = sep_pop;
-        sep_pop = next_sep;
-        next_sep = tmp;
+        Individual* tmp = german_pop;
+        german_pop = next_german;
+        next_german = tmp;
+        tmp = roman_pop;
+        roman_pop = next_roman;
+        next_roman = tmp;
     }
 
     int generations_run = gen + 1;
     float completion = (float)generations_run / num_generations;
     if (completion >= 0.75f) {
         printf("\n=== CO-EVOLUTION COMPLETE (%s) ===\n", name_prefix);
-        printf("Best Republic fitness: %.4f\n", rep_pop[0].fitness);
-        printf("Best Separatist fitness: %.4f\n", sep_pop[0].fitness);
+        printf("Best German fitness: %.4f\n", german_pop[0].fitness);
+        printf("Best Roman fitness: %.4f\n", roman_pop[0].fitness);
 
-        print_genome(rep_pop[0].weights, rep_genes, rep_gene_count, "Republic");
-        print_genome(sep_pop[0].weights, sep_genes, sep_gene_count, "Separatist");
-        save_genomes(rep_pop[0].weights, rep_gene_count, sep_pop[0].weights, sep_gene_count, rep_genes, sep_genes, name_prefix);
+        print_genome(german_pop[0].weights, german_genes, german_gene_count, "German");
+        print_genome(roman_pop[0].weights, roman_genes, roman_gene_count, "Roman");
+        save_genomes(german_pop[0].weights, german_gene_count, roman_pop[0].weights, roman_gene_count, german_genes, roman_genes, name_prefix);
     } else {
         printf("\nWARNING: Stopped early (%.1f%%). Skipping save.\n", completion * 100);
     }
 
     for (int i = 0; i < pop_size; i++) {
-        free(rep_pop[i].weights);
-        free(sep_pop[i].weights);
-        free(next_rep[i].weights);
-        free(next_sep[i].weights);
+        free(german_pop[i].weights);
+        free(roman_pop[i].weights);
+        free(next_german[i].weights);
+        free(next_roman[i].weights);
     }
-    free(rep_pop);
-    free(sep_pop);
-    free(next_rep);
-    free(next_sep);
+    free(german_pop);
+    free(roman_pop);
+    free(next_german);
+    free(next_roman);
 }
 
 // Print and save
@@ -515,9 +515,9 @@ void print_genome(const float* w, const GeneInfo* genes, size_t gene_count, cons
     }
 }
 
-void save_genomes(const float* rep_weights, size_t rep_count,
-                  const float* sep_weights, size_t sep_count,
-                  const GeneInfo* rep_genes, const GeneInfo* sep_genes,
+void save_genomes(const float* german_weights, size_t german_count,
+                  const float* roman_weights, size_t roman_count,
+                  const GeneInfo* german_genes, const GeneInfo* roman_genes,
                   const char* prefix) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
@@ -531,13 +531,13 @@ void save_genomes(const float* rep_weights, size_t rep_count,
         return;
     }
     fprintf(f, "# Best co-evolved genomes for %s\n\n", prefix);
-    fprintf(f, "[REPUBLIC]\n");
-    for (size_t i = 0; i < rep_count; i++) {
-        fprintf(f, "%s %.2f\n", rep_genes[i].name, rep_weights[i]);
+    fprintf(f, "[GERMAN]\n");
+    for (size_t i = 0; i < german_count; i++) {
+        fprintf(f, "%s %.2f\n", german_genes[i].name, german_weights[i]);
     }
-    fprintf(f, "\n[SEPARATIST]\n");
-    for (size_t i = 0; i < sep_count; i++) {
-        fprintf(f, "%s %.2f\n", sep_genes[i].name, sep_weights[i]);
+    fprintf(f, "\n[ROMAN]\n");
+    for (size_t i = 0; i < roman_count; i++) {
+        fprintf(f, "%s %.2f\n", roman_genes[i].name, roman_weights[i]);
     }
     fclose(f);
     printf("Genomes saved to %s\n", filename);
@@ -547,14 +547,14 @@ void save_genomes(const float* rep_weights, size_t rep_count,
 void run_evolution(void) {
     printf("\n=== STARTING EVOLUTION ===\n");
     printf("Population: %d, Generations: %d, Genes: %zu\n",
-           pop_size, num_generations, REP_GENE_COUNT);
+           pop_size, num_generations, GERMAN_GENE_COUNT);
     printf("Mutation rate: %.2f -> %.2f, Delta: %.2f -> %.2f\n",
            mutation_rate_start, mutation_rate_end,
            mutation_delta_start, mutation_delta_end);
     printf("Crossover rate: %.2f\n", crossover_rate);
 
-    run_coevolution(REP_GENES, REP_GENE_COUNT,
-                SEP_GENES, SEP_GENE_COUNT,
+    run_coevolution(GERMAN_GENES, GERMAN_GENE_COUNT,
+                ROMAN_GENES, ROMAN_GENE_COUNT,
                 pop_size, num_generations,
                 evaluate_all, "combined");
 }

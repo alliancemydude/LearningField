@@ -28,20 +28,20 @@ static int tests_failed = 0;
 } while (0)
 
 static int test_faction_of_unit(void) {
-    ASSERT(get_faction_of_unit(UNIT_SWORDSMAN)       == FACTION_REPUBLIC, "sword");
-    ASSERT(get_faction_of_unit(UNIT_ELITE_SWORDSMAN) == FACTION_REPUBLIC, "elite sword");
-    ASSERT(get_faction_of_unit(UNIT_SPEAR_THROWER)   == FACTION_REPUBLIC, "thrower");
-    ASSERT(get_faction_of_unit(UNIT_HORSEMAN)        == FACTION_REPUBLIC, "horseman");
-    ASSERT(get_faction_of_unit(UNIT_SPEARMAN)        == FACTION_SEPARATIST, "spear");
-    ASSERT(get_faction_of_unit(UNIT_ELITE_SPEARMAN)  == FACTION_SEPARATIST, "elite spear");
-    ASSERT(get_faction_of_unit(UNIT_BOWMAN)          == FACTION_SEPARATIST, "bow");
-    ASSERT(get_faction_of_unit(UNIT_CAVALRY)         == FACTION_SEPARATIST, "cavalry");
+    ASSERT(get_faction_of_unit(UNIT_SWORDSMAN)       == FACTION_GERMAN, "sword");
+    ASSERT(get_faction_of_unit(UNIT_ELITE_SWORDSMAN) == FACTION_GERMAN, "elite sword");
+    ASSERT(get_faction_of_unit(UNIT_JAVELIN_THROWER)   == FACTION_GERMAN, "thrower");
+    ASSERT(get_faction_of_unit(UNIT_HORSEMAN)        == FACTION_GERMAN, "horseman");
+    ASSERT(get_faction_of_unit(UNIT_SPEARMAN)        == FACTION_ROMAN, "spear");
+    ASSERT(get_faction_of_unit(UNIT_ELITE_SPEARMAN)  == FACTION_ROMAN, "elite spear");
+    ASSERT(get_faction_of_unit(UNIT_BOWMAN)          == FACTION_ROMAN, "bow");
+    ASSERT(get_faction_of_unit(UNIT_CAVALRY)         == FACTION_ROMAN, "cavalry");
     return 0;
 }
 
 static int test_enemy_faction(void) {
-    ASSERT(enemy_faction(FACTION_REPUBLIC)  == FACTION_SEPARATIST, "rep->sep");
-    ASSERT(enemy_faction(FACTION_SEPARATIST) == FACTION_REPUBLIC, "sep->rep");
+    ASSERT(enemy_faction(FACTION_GERMAN)  == FACTION_ROMAN, "german->roman");
+    ASSERT(enemy_faction(FACTION_ROMAN) == FACTION_GERMAN, "roman->german");
     return 0;
 }
 
@@ -115,10 +115,10 @@ static int test_spawn_no_overlaps(void) {
     Battlefield f;
     initialize_battlefield(&f);
 
-    spawn_republic_forces(&f, default_republic_composition,
-                          default_republic_composition_count);
-    spawn_separatist_forces(&f, default_separatist_composition,
-                            default_separatist_composition_count);
+    spawn_german_forces(&f, default_german_composition,
+                          default_german_composition_count);
+    spawn_roman_forces(&f, default_roman_composition,
+                            default_roman_composition_count);
 
     for (int i = 0; i < f.unit_count; i++) {
         for (int j = i + 1; j < f.unit_count; j++) {
@@ -137,10 +137,10 @@ static int test_battle_completes(void) {
     Battlefield f;
     initialize_battlefield(&f);
 
-    spawn_republic_forces(&f, default_republic_composition,
-                          default_republic_composition_count);
-    spawn_separatist_forces(&f, default_separatist_composition,
-                            default_separatist_composition_count);
+    spawn_german_forces(&f, default_german_composition,
+                          default_german_composition_count);
+    spawn_roman_forces(&f, default_roman_composition,
+                            default_roman_composition_count);
 
     int winner = run_battle(&f, MAX_TURNS);
     ASSERT(winner == 0 || winner == 1 || winner == 2, "invalid winner code");

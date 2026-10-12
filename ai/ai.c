@@ -24,8 +24,8 @@ static Unit* target = NULL;
 void unit_turn(Unit* unit, Battlefield* field) {
     target = NULL;
 
-    FactionStrategy* strat = (unit->faction == FACTION_REPUBLIC)
-                             ? &republic_strategy : &separatist_strategy;
+    FactionStrategy* strat = (unit->faction == FACTION_GERMAN)
+                             ? &german_strategy : &roman_strategy;
 
     int local_allies  = count_faction_in_radius(unit, field, unit->faction, LOCAL_FORCE_RADIUS) + 1;
     int local_enemies = count_faction_in_radius(unit, field,
@@ -166,7 +166,7 @@ static int flank_turn(Unit* unit, Battlefield* field, FactionStrategy* strat, bo
     int ecx, ecy;
     get_faction_center(field, enemy_faction(unit->faction), &ecx, &ecy);
     int offset = (int)(strat->strategic.flanking_bias * 8.0f);
-    int push_dir = (unit->faction == FACTION_REPUBLIC) ? -1 : 1;
+    int push_dir = (unit->faction == FACTION_GERMAN) ? -1 : 1;
     bool go_left = (unit->id % 2 == 0);
     int tx = ecx + (go_left ? -offset : offset);
     int ty = ecy + push_dir * (int)strat->strategic.flank_depth;
