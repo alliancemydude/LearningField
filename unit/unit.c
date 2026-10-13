@@ -101,12 +101,12 @@ void add_weapon(Unit* unit, WeaponType type) {
     switch (type) {
         case WEAPON_SWORD:
             w->damage_bonus = 1;
-            w->range = 1;
+            w->range = 2;
             w->penetration_bonus = 0;
             break;
         case WEAPON_SPEAR:
             w->damage_bonus = 0;
-            w->range = 2;
+            w->range = 3;
             w->penetration_bonus = 1;
             break;
         case WEAPON_JAVELIN:
@@ -121,7 +121,7 @@ void add_weapon(Unit* unit, WeaponType type) {
             break;
         default:
             w->damage_bonus = 0;
-            w->range = 1;
+            w->range = 2;
             break;
     }
     unit->weapon_count++;

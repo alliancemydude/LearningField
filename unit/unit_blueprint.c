@@ -103,7 +103,7 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .is_ranged = false,
         .units_count = 1,
         .attacks_per_unit = 2,
-        .preferred_range = 3,
+        .preferred_range = 2,
         .weapons = {
             {WEAPON_SPEAR}
         },
