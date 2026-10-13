@@ -403,6 +403,8 @@ PairFitness evaluate_all(const float* german_weights, const float* roman_weights
 // Co-evolution
 void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, const GeneInfo* roman_genes, size_t roman_gene_count,
                      int pop_size, int num_generations, PairFitness (*evaluate_pair)(const float*, const float*, int), const char* name_prefix) {
+    
+    // Create populations of the current and next units
     Individual* german_pop = malloc(pop_size * sizeof(Individual));
     Individual* roman_pop = malloc(pop_size * sizeof(Individual));
     Individual* next_german = malloc(pop_size * sizeof(Individual));
@@ -412,6 +414,7 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, con
         return;
     }
 
+    // Select random individuals and assign weights, resetting fitness
     for (int i = 0; i < pop_size; i++) {
         random_individual(&german_pop[i], german_genes, german_gene_count);
         random_individual(&roman_pop[i], roman_genes, roman_gene_count);
@@ -421,19 +424,20 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, con
         next_roman[i].fitness = 0.0f;
     }
 
+    // Loop through the generations
     int gen;
-
     for (gen = 0; gen < num_generations; gen++) {
         float gen_ratio = (float)gen / num_generations;
         int num_battles = battles_min + (int)((battles_max - battles_min) * gen_ratio);
-        if (num_battles > battles_max) num_battles = battles_max;
+        if (num_battles > battles_max) {
+            num_battles = battles_max;
+        }
 
+        // Get current mutation rate and delta
         float current_mutation_rate = mutation_rate_start + (mutation_rate_end - mutation_rate_start) * gen_ratio;
         float current_mutation_delta = mutation_delta_start + (mutation_delta_end - mutation_delta_start) * gen_ratio;
 
-        // Compute every pairing once and cache both scores.
-        // cache[i * pop_size + j] holds the scores for German individual i
-        // vs roman individual j.
+        // Make a new cache for holding info on pairings in the form of a 2D array
         PairFitness* cache = malloc(pop_size * pop_size * sizeof(PairFitness));
         if (!cache) {
             printf("Memory allocation failed (cache).\n");
@@ -450,6 +454,9 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, con
             return;
         }
 
+        // Compute every pairing once and cache both scores.
+        // cache[i * pop_size + j] holds the scores for German individual i
+        // vs roman individual j.
         for (int i = 0; i < pop_size; i++) {
             for (int j = 0; j < pop_size; j++) {
                 cache[i * pop_size + j] = evaluate_pair(german_pop[i].weights, roman_pop[j].weights, num_battles);
@@ -476,10 +483,13 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, con
 
         free(cache);
 
+        // Sort the data in ascending order
         qsort(german_pop, pop_size, sizeof(Individual), compare_individual);
         qsort(roman_pop, pop_size, sizeof(Individual), compare_individual);
 
-        float avg_german = 0.0f, avg_roman = 0.0f;
+        // Compute average scores for both sides
+        float avg_german = 0.0f;
+        float avg_roman = 0.0f;
         for (int i = 0; i < pop_size; i++) {
             avg_german += german_pop[i].fitness;
             avg_roman += roman_pop[i].fitness;
@@ -487,30 +497,32 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, con
         avg_german /= pop_size;
         avg_roman /= pop_size;
 
-        printf("Gen %2d: %s German best=%.4f avg=%.4f | Roman best=%.4f avg=%.4f\n",
-               gen, name_prefix, german_pop[0].fitness, avg_german, roman_pop[0].fitness, avg_roman);
+        // Print best and average fitness
+        printf("Gen %2d: %s German best=%.4f avg=%.4f | Roman best=%.4f avg=%.4f\n", gen, name_prefix, german_pop[0].fitness, avg_german, roman_pop[0].fitness, avg_roman);
 
-        
-        // Run several matchups:
-                print_generation_diagnostics(german_pop[0].weights, roman_pop[0].weights, num_battles, "best G vs best R");
-        print_generation_diagnostics(german_pop[0].weights, roman_pop[pop_size/2].weights, num_battles, "best G vs mid R");
-        print_generation_diagnostics(german_pop[pop_size/2].weights, roman_pop[pop_size/2].weights, num_battles, "mid G vs mid R");
+        // Run several matchups. Uncomment later if you want?
+        print_generation_diagnostics(german_pop[0].weights, roman_pop[0].weights, num_battles, "best G vs best R");
+        // print_generation_diagnostics(german_pop[0].weights, roman_pop[pop_size/2].weights, num_battles, "best G vs mid R");
+        // print_generation_diagnostics(german_pop[pop_size/2].weights, roman_pop[pop_size/2].weights, num_battles, "mid G vs mid R");
 
-        // Rank-based selection scores. pop[0]
-        // index 0 gets 1.0 and index pop_size-1 gets 0.0.
+        // Rank-based selection scores. 
         for (int i = 0; i < pop_size; i++) {
             float score = 1.0f - (float)i / (pop_size - 1);
             german_pop[i].selection_score = score;
             roman_pop[i].selection_score = score;
         }
 
+        // Take the best 3 genomes to repopulate future generations. Adjust this count if need be
         int elite_count = 3;
 
+        // Populate next German units
         for (int i = 0; i < elite_count; i++) {
             memcpy(next_german[i].weights, german_pop[i].weights, german_gene_count * sizeof(float));
             next_german[i].fitness = german_pop[i].fitness;
             next_german[i].selection_score = german_pop[i].selection_score;
         }
+        
+        // Do a tournament select for crossover genes, and do mutation.
         for (int i = elite_count; i < pop_size; i++) {
             int p1 = tournament_select(german_pop, pop_size, 3);
             int p2 = tournament_select(german_pop, pop_size, 3);
@@ -520,11 +532,14 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, con
             next_german[i].selection_score = 0.0f;
         }
 
+        // Populate next Roman units
         for (int i = 0; i < elite_count; i++) {
             memcpy(next_roman[i].weights, roman_pop[i].weights, roman_gene_count * sizeof(float));
             next_roman[i].fitness = roman_pop[i].fitness;
             next_roman[i].selection_score = roman_pop[i].selection_score;
         }
+
+        // Same as above
         for (int i = elite_count; i < pop_size; i++) {
             int p1 = tournament_select(roman_pop, pop_size, 3);
             int p2 = tournament_select(roman_pop, pop_size, 3);
@@ -534,18 +549,18 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, con
             next_roman[i].selection_score = 0.0f;
         }
 
-        // Checkpoint save every 20 generations
+        // Checkpoint save every 20 generations, currently not needed but very safe
+        /*
         if ((gen + 1) % 20 == 0) {
             char ckpt[64];
             snprintf(ckpt, sizeof(ckpt), "checkpoint_gen%d", gen + 1);
             printf("\n--- Checkpoint at generation %d ---\n", gen + 1);
-            save_genomes(german_pop[0].weights, german_gene_count,
-                         roman_pop[0].weights, roman_gene_count,
-                         german_genes, roman_genes, ckpt);
+            save_genomes(german_pop[0].weights, german_gene_count, roman_pop[0].weights, roman_gene_count, german_genes, roman_genes, ckpt);
             printf("\n");
         }
+        */
 
-        // Inject fresh random individuals every 10 generations to maintain diversity.
+        // Add fresh random individuals every 10 generations to maintain diversity.
         if ((gen + 1) % 10 == 0) {
             int immigrants = pop_size / 10;   // 3 out of 30
             for (int i = 0; i < immigrants; i++) {
@@ -555,6 +570,7 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, con
             }
         }
 
+        // Swap pointers
         Individual* tmp = german_pop;
         german_pop = next_german;
         next_german = tmp;
@@ -563,6 +579,7 @@ void run_coevolution(const GeneInfo* german_genes, size_t german_gene_count, con
         next_roman = tmp;
     }
 
+    // Finish 
     int generations_run = gen + 1;
     float completion = (float)generations_run / num_generations;
     if (completion >= 0.75f) {
@@ -597,10 +614,8 @@ void print_genome(const float* w, const GeneInfo* genes, size_t gene_count, cons
     }
 }
 
-void save_genomes(const float* german_weights, size_t german_count,
-                  const float* roman_weights, size_t roman_count,
-                  const GeneInfo* german_genes, const GeneInfo* roman_genes,
-                  const char* prefix) {
+void save_genomes(const float* german_weights, size_t german_count, const float* roman_weights, size_t roman_count,
+                  const GeneInfo* german_genes, const GeneInfo* roman_genes, const char* prefix) {
     time_t t = time(NULL);
     struct tm *tm = localtime(&t);
     char filename[128];
@@ -625,18 +640,12 @@ void save_genomes(const float* german_weights, size_t german_count,
     printf("Genomes saved to %s\n", filename);
 }
 
-// Entry point
 void run_evolution(void) {
     printf("\n=== STARTING EVOLUTION ===\n");
-    printf("Population: %d, Generations: %d, Genes: %zu\n",
-           pop_size, num_generations, GERMAN_GENE_COUNT);
-    printf("Mutation rate: %.2f -> %.2f, Delta: %.2f -> %.2f\n",
-           mutation_rate_start, mutation_rate_end,
-           mutation_delta_start, mutation_delta_end);
+    printf("Population: %d, Generations: %d, Genes: %zu\n", pop_size, num_generations, GERMAN_GENE_COUNT);
+    printf("Mutation rate: %.2f -> %.2f, Delta: %.2f -> %.2f\n", mutation_rate_start, mutation_rate_end, mutation_delta_start, mutation_delta_end);
     printf("Crossover rate: %.2f\n", crossover_rate);
+    printf("Best possible fitness: 1.4. Good fitness: 0.6-0.8.\n");
 
-    run_coevolution(GERMAN_GENES, GERMAN_GENE_COUNT,
-                ROMAN_GENES, ROMAN_GENE_COUNT,
-                pop_size, num_generations,
-                evaluate_all, "combined");
+    run_coevolution(GERMAN_GENES, GERMAN_GENE_COUNT, ROMAN_GENES, ROMAN_GENE_COUNT, pop_size, num_generations, evaluate_all, "combined");
 }
