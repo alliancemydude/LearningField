@@ -9,20 +9,20 @@
 
 #define REFERENCE_POINTS 200
 
-// Mixed reference armies. Each is a "typical" army from the opposite faction.
+// Mixed reference armies.
 static ForceComposition mixed_roman[] = {
-    { UNIT_SPEARMAN,        10},
-    { UNIT_BOWMAN,           5},
-    { UNIT_CAVALRY,          5},
-    { UNIT_ELITE_SPEARMAN,   2},
+    { UNIT_LEGIONARE,        10},
+    { UNIT_CENTURION,        5},
+    { UNIT_ARCHER,           5},
+    { UNIT_ROMAN_CAVALRY,    2},
 };
 static int mixed_roman_count = 4;
 
 static ForceComposition mixed_german[] = {
-    { UNIT_SWORDSMAN,        10},
+    { UNIT_BARBARIAN,         10},
+    { UNIT_ELITE_BARBARIAN,   5},
     { UNIT_JAVELIN_THROWER,   5},
-    { UNIT_HORSEMAN,          5},
-    { UNIT_ELITE_SWORDSMAN,   2},
+    { UNIT_GERMAN_CAVALRY,    2},
 };
 static int mixed_german_count = 4;
 
@@ -150,14 +150,14 @@ void run_point_calibration(int battles_per_step) {
     // Mixed armies need their own value measured first
     printf("--- Phase 0: Valuing mixed reference armies ---\n\n");
 
-    printf("German meter (swordsmen) vs Roman mixed army:\n");
+    printf("German meter (barbarian) vs Roman mixed army:\n");
     float roman_mixed_value = measure_mixed_value(mixed_roman, mixed_roman_count,
-        UNIT_SWORDSMAN, FACTION_GERMAN, 10.0f, battles_per_step);
+        UNIT_BARBARIAN, FACTION_GERMAN, 10.0f, battles_per_step);
     printf("  => Roman mixed army is worth %.1f points\n\n", roman_mixed_value);
 
-    printf("Roman meter (spearmen) vs German mixed army:\n");
+    printf("Roman meter (legionare) vs German mixed army:\n");
     float german_mixed_value = measure_mixed_value(mixed_german, mixed_german_count,
-        UNIT_SPEARMAN, FACTION_ROMAN, 10.0f, battles_per_step);
+        UNIT_LEGIONARE, FACTION_ROMAN, 10.0f, battles_per_step);
     printf("  => German mixed army is worth %.1f points\n\n", german_mixed_value);
 
     // Phase 1: calibrate each unit against the appropriate mixed reference
@@ -172,7 +172,7 @@ void run_point_calibration(int battles_per_step) {
         if (get_faction_of_unit(type) != FACTION_GERMAN) {
             continue;
         }
-        if (type == UNIT_SWORDSMAN) {
+        if (type == UNIT_BARBARIAN) {
             costs[type] = 10.0f; crossovers[type] = 20; continue;
         }
         costs[type] = calibrate_unit(type, FACTION_GERMAN, mixed_roman, mixed_roman_count,
@@ -185,7 +185,7 @@ void run_point_calibration(int battles_per_step) {
         if (get_faction_of_unit(type) != FACTION_ROMAN) {
             continue;
         }
-        if (type == UNIT_SPEARMAN) {
+        if (type == UNIT_LEGIONARE) {
             costs[type] = 10.0f; crossovers[type] = 20; continue;
         }
         costs[type] = calibrate_unit(type, FACTION_ROMAN, mixed_german, mixed_german_count,
@@ -201,7 +201,7 @@ void run_point_calibration(int battles_per_step) {
         if (get_faction_of_unit(type) != FACTION_GERMAN) {
             continue;
         }
-        if (type == UNIT_SWORDSMAN) {
+        if (type == UNIT_BARBARIAN) {
             continue;
         }
         verify_cost(type, FACTION_GERMAN, mixed_roman, mixed_roman_count,
@@ -214,7 +214,7 @@ void run_point_calibration(int battles_per_step) {
         if (get_faction_of_unit(type) != FACTION_ROMAN) {
             continue;
         }
-        if (type == UNIT_SPEARMAN) {
+        if (type == UNIT_LEGIONARE) {
             continue;
         }
         verify_cost(type, FACTION_ROMAN, mixed_german, mixed_german_count,

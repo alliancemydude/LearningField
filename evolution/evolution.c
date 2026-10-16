@@ -29,18 +29,18 @@ const GeneInfo GERMAN_GENES[] = {
     {"strategy.face_threat_weight",       0.0f,  1.0f, 0.0f},
     {"strategy.flank_targeting_weight",   0.0f,  1.0f, 0.0f},
     {"strategy.cohesion_weight",          0.0f,  1.0f, 0.0f},
-    // Swordsman (7-10)
-    {"swordsman.aggression",      0.0f,  1.0f, 0.5f},
-    {"swordsman.preferred_range", 0.0f, 1.0f, 0.5f},
-    {"swordsman.spacing_x",       1.0f,  8.0f, 3.0f},
-    {"swordsman.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"swordsman.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
-    {"elite_swordsman.aggression",      0.0f,  1.0f, 0.5f},
-    {"elite_swordsman.preferred_range", 0.0f, 1.0f, 0.5f},
-    {"elite_swordsman.spacing_x",       1.0f,  8.0f, 3.0f},
-    {"elite_swordsman.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"elite_swordsman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+    {"barbarian.aggression",      0.0f,  1.0f, 0.5f},
+    {"barbarian.preferred_range", 0.0f, 1.0f, 0.5f},
+    {"barbarian.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"barbarian.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"barbarian.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"elite_barbarian.aggression",      0.0f,  1.0f, 0.5f},
+    {"elite_barbarian.preferred_range", 0.0f, 1.0f, 0.5f},
+    {"elite_barbarian.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"elite_barbarian.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"elite_barbarian.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
     {"javelin_thrower.aggression",      0.0f,  1.0f, 0.5f},
     {"javelin_thrower.preferred_range", 0.0f, 1.0f, 0.5f},
@@ -48,16 +48,16 @@ const GeneInfo GERMAN_GENES[] = {
     {"javelin_thrower.spacing_y",       1.0f,  8.0f, 3.0f},
     {"javelin_thrower.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
-    {"horseman.aggression",      0.0f,  1.0f, 0.5f},
-    {"horseman.preferred_range", 0.0f, 1.0f, 0.5f},
-    {"horseman.spacing_x",       1.0f,  8.0f, 3.0f},
-    {"horseman.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"horseman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+    {"german_cavalry.aggression",      0.0f,  1.0f, 0.5f},
+    {"german_cavalry.preferred_range", 0.0f, 1.0f, 0.5f},
+    {"german_cavalry.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"german_cavalry.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"german_cavalry.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
-    {"composition.swordsman_share",        0.0f, 1.0f, 0.5f},
-    {"composition.elite_swordsman_share",  0.0f, 1.0f, 0.5f},
+    {"composition.barbarian_share",        0.0f, 1.0f, 0.5f},
+    {"composition.elite_barbarian_share",  0.0f, 1.0f, 0.5f},
     {"composition.javelin_thrower_share",  0.0f, 1.0f, 0.5f},
-    {"composition.horseman_share",         0.0f, 1.0f, 0.5f}
+    {"composition.german_cavalry_share",         0.0f, 1.0f, 0.5f}
 };
 const size_t GERMAN_GENE_COUNT = sizeof(GERMAN_GENES) / sizeof(GeneInfo);
 
@@ -73,35 +73,35 @@ const GeneInfo ROMAN_GENES[] = {
     {"strategy.face_threat_weight",       0.0f,  1.0f, 0.0f},
     {"strategy.flank_targeting_weight",   0.0f,  1.0f, 0.0f},
     {"strategy.cohesion_weight",          0.0f,  1.0f, 0.0f},
-    // Spearman (7-10)
-    {"spearman.aggression",      0.0f,  1.0f, 0.5f},
-    {"spearman.preferred_range", 0.0f, 1.0f, 0.5f},
-    {"spearman.spacing_x",       1.0f,  8.0f, 3.0f},
-    {"spearman.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"spearman.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
-    {"elite_spearman.aggression",      0.0f,  1.0f, 0.5f},
-    {"elite_spearman.preferred_range", 0.0f, 1.0f, 0.5f},
-    {"elite_spearman.spacing_x",       1.0f,  8.0f, 3.0f},
-    {"elite_spearman.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"elite_spearman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+    {"legionare.aggression",      0.0f,  1.0f, 0.5f},
+    {"legionare.preferred_range", 0.0f, 1.0f, 0.5f},
+    {"legionare.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"legionare.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"legionare.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
-    {"bowman.aggression",      0.0f,  1.0f, 0.5f},
-    {"bowman.preferred_range", 0.0f, 1.0f, 0.5f},
-    {"bowman.spacing_x",       1.0f,  8.0f, 3.0f},
-    {"bowman.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"bowman.local_force_ratio", 0.5f,  2.0f, 1.0f},
+    {"centurion.aggression",      0.0f,  1.0f, 0.5f},
+    {"centurion.preferred_range", 0.0f, 1.0f, 0.5f},
+    {"centurion.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"centurion.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"centurion.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
-    {"cavalry.aggression",      0.0f,  1.0f, 0.5f},
-    {"cavalry.preferred_range", 0.0f, 1.0f, 0.5f},
-    {"cavalry.spacing_x",       1.0f,  8.0f, 3.0f},
-    {"cavalry.spacing_y",       1.0f,  8.0f, 3.0f},
-    {"cavalry.local_force_ratio", 0.5f,  2.0f, 1.0f},
+    {"archer.aggression",      0.0f,  1.0f, 0.5f},
+    {"archer.preferred_range", 0.0f, 1.0f, 0.5f},
+    {"archer.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"archer.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"archer.local_force_ratio", 0.5f,  2.0f, 1.0f},
 
-    {"composition.spearman_share",        0.0f, 1.0f, 0.5f},
-    {"composition.elite_spearman_share",  0.0f, 1.0f, 0.5f},
-    {"composition.bowman_share",  0.0f, 1.0f, 0.5f},
-    {"composition.cavalry_share",         0.0f, 1.0f, 0.5f}
+    {"roman_cavalry.aggression",      0.0f,  1.0f, 0.5f},
+    {"roman_cavalry.preferred_range", 0.0f, 1.0f, 0.5f},
+    {"roman_cavalry.spacing_x",       1.0f,  8.0f, 3.0f},
+    {"roman_cavalry.spacing_y",       1.0f,  8.0f, 3.0f},
+    {"roman_cavalry.local_force_ratio", 0.5f,  2.0f, 1.0f},
+
+    {"composition.legionare_share",        0.0f, 1.0f, 0.5f},
+    {"composition.centurion_share",  0.0f, 1.0f, 0.5f},
+    {"composition.archer_share",  0.0f, 1.0f, 0.5f},
+    {"composition.roman_cavalry_share",         0.0f, 1.0f, 0.5f}
 };
 const size_t ROMAN_GENE_COUNT = sizeof(ROMAN_GENES) / sizeof(GeneInfo);
 
@@ -222,14 +222,14 @@ static void apply_genes(const float* german_weights, const float* roman_weights)
 
 static const char* unit_abbrev(UnitType t) {
     switch (t) {
-        case UNIT_SWORDSMAN:       return "sw";
-        case UNIT_ELITE_SWORDSMAN: return "es";
-        case UNIT_JAVELIN_THROWER: return "jt";
-        case UNIT_HORSEMAN:        return "hm";
-        case UNIT_SPEARMAN:        return "sp";
-        case UNIT_ELITE_SPEARMAN:  return "esp";
-        case UNIT_BOWMAN:          return "bw";
-        case UNIT_CAVALRY:         return "cv";
+        case UNIT_BARBARIAN:       return "barbarian";
+        case UNIT_ELITE_BARBARIAN: return "elite";
+        case UNIT_JAVELIN_THROWER: return "javelin";
+        case UNIT_GERMAN_CAVALRY:        return "cavalry";
+        case UNIT_LEGIONARE:        return "legionare";
+        case UNIT_CENTURION:  return "centurion";
+        case UNIT_ARCHER:          return "archer";
+        case UNIT_ROMAN_CAVALRY:         return "cavalry";
         default: return "??";
     }
 }

@@ -116,14 +116,14 @@ void set_roman_strategy(const float weights[10]) {
 
 // Load strategies
 static UnitType parse_unit_type(const char* name) {
-    if (strcmp(name, "swordsman")      == 0) return UNIT_SWORDSMAN;
-    if (strcmp(name, "elite_swordsman")== 0) return UNIT_ELITE_SWORDSMAN;
-    if (strcmp(name, "javelin_thrower")  == 0) return UNIT_JAVELIN_THROWER;
-    if (strcmp(name, "horseman")       == 0) return UNIT_HORSEMAN;
-    if (strcmp(name, "spearman")       == 0) return UNIT_SPEARMAN;
-    if (strcmp(name, "elite_spearman") == 0) return UNIT_ELITE_SPEARMAN;
-    if (strcmp(name, "bowman")         == 0) return UNIT_BOWMAN;
-    if (strcmp(name, "cavalry")        == 0) return UNIT_CAVALRY;
+    if (strcmp(name, "barbarian")      == 0) return UNIT_BARBARIAN;
+    if (strcmp(name, "elite_barbarian")== 0) return UNIT_ELITE_BARBARIAN;
+    if (strcmp(name, "javelin_thrower")== 0) return UNIT_JAVELIN_THROWER;
+    if (strcmp(name, "german_cavalry") == 0) return UNIT_GERMAN_CAVALRY;
+    if (strcmp(name, "legionare")       == 0) return UNIT_LEGIONARE;
+    if (strcmp(name, "centurion") == 0) return UNIT_CENTURION;
+    if (strcmp(name, "archer")         == 0) return UNIT_ARCHER;
+    if (strcmp(name, "roman_cavalry")        == 0) return UNIT_ROMAN_CAVALRY;
     return UNIT_TYPE_COUNT;   // sentinel: not found
 }
 

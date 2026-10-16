@@ -44,8 +44,6 @@ const char* get_unit_symbol(Unit* unit);
 
 void print_screen(Battlefield* field);
 
-void print_screen_to_file(Battlefield* field, const char* filename);
-
 void print_screen_summary(Battlefield* field);
 
 #endif

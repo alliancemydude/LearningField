@@ -8,16 +8,16 @@
 // Handle finding overall parameters
 Faction get_faction_of_unit(UnitType type) {
     switch (type) {
-        case UNIT_SWORDSMAN:
-        case UNIT_ELITE_SWORDSMAN:
+        case UNIT_BARBARIAN:
+        case UNIT_ELITE_BARBARIAN:
         case UNIT_JAVELIN_THROWER:
-        case UNIT_HORSEMAN:
+        case UNIT_GERMAN_CAVALRY:
             return FACTION_GERMAN;
 
-        case UNIT_SPEARMAN:
-        case UNIT_ELITE_SPEARMAN:
-        case UNIT_BOWMAN:
-        case UNIT_CAVALRY:
+        case UNIT_LEGIONARE:
+        case UNIT_CENTURION:
+        case UNIT_ARCHER:
+        case UNIT_ROMAN_CAVALRY:
             return FACTION_ROMAN;
 
         default:

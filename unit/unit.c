@@ -74,15 +74,15 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
 
 const char* get_unit_type_name(UnitType type) {
     switch(type) {
-        case UNIT_SWORDSMAN: return "UNIT_SWORDSMAN";
-        case UNIT_ELITE_SWORDSMAN: return "UNIT_ELITE_SWORDSMAN";
+        case UNIT_BARBARIAN: return "UNIT_BARBARIAN";
+        case UNIT_ELITE_BARBARIAN: return "UNIT_ELITE_BARBARIAN";
         case UNIT_JAVELIN_THROWER: return "UNIT_JAVELIN_THROWER";
-        case UNIT_HORSEMAN: return "UNIT_HORSEMAN";
+        case UNIT_GERMAN_CAVALRY: return "UNIT_GERMAN_CAVALRY";
 
-        case UNIT_SPEARMAN: return "UNIT_SPEARMAN";
-        case UNIT_ELITE_SPEARMAN: return "UNIT_ELITE_SPEARMAN";
-        case UNIT_BOWMAN: return "UNIT_BOWMAN";
-        case UNIT_CAVALRY: return "UNIT_CAVALRY";
+        case UNIT_LEGIONARE: return "UNIT_LEGIONARE";
+        case UNIT_CENTURION: return "UNIT_CENTURION";
+        case UNIT_ARCHER: return "UNIT_ARCHER";
+        case UNIT_ROMAN_CAVALRY: return "UNIT_ROMAN_CAVALRY";
         default: return "UNKNOWN";
     }
 }
@@ -99,7 +99,7 @@ void add_weapon(Unit* unit, WeaponType type) {
     
     // Set stats based on weapon types
     switch (type) {
-        case WEAPON_SWORD:
+        case WEAPON_AXE:
             w->damage_bonus = 1;
             w->range = 2;
             w->penetration_bonus = 0;

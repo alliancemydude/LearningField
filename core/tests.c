@@ -28,14 +28,14 @@ static int tests_failed = 0;
 } while (0)
 
 static int test_faction_of_unit(void) {
-    ASSERT(get_faction_of_unit(UNIT_SWORDSMAN)       == FACTION_GERMAN, "sword");
-    ASSERT(get_faction_of_unit(UNIT_ELITE_SWORDSMAN) == FACTION_GERMAN, "elite sword");
+    ASSERT(get_faction_of_unit(UNIT_BARBARIAN)       == FACTION_GERMAN, "barbarian");
+    ASSERT(get_faction_of_unit(UNIT_ELITE_BARBARIAN) == FACTION_GERMAN, "elite barbarian");
     ASSERT(get_faction_of_unit(UNIT_JAVELIN_THROWER)   == FACTION_GERMAN, "thrower");
-    ASSERT(get_faction_of_unit(UNIT_HORSEMAN)        == FACTION_GERMAN, "horseman");
-    ASSERT(get_faction_of_unit(UNIT_SPEARMAN)        == FACTION_ROMAN, "spear");
-    ASSERT(get_faction_of_unit(UNIT_ELITE_SPEARMAN)  == FACTION_ROMAN, "elite spear");
-    ASSERT(get_faction_of_unit(UNIT_BOWMAN)          == FACTION_ROMAN, "bow");
-    ASSERT(get_faction_of_unit(UNIT_CAVALRY)         == FACTION_ROMAN, "cavalry");
+    ASSERT(get_faction_of_unit(UNIT_GERMAN_CAVALRY)        == FACTION_GERMAN, "german cavalry");
+    ASSERT(get_faction_of_unit(UNIT_LEGIONARE)        == FACTION_ROMAN, "legionare");
+    ASSERT(get_faction_of_unit(UNIT_CENTURION)  == FACTION_ROMAN, "centurion");
+    ASSERT(get_faction_of_unit(UNIT_ARCHER)          == FACTION_ROMAN, "archer");
+    ASSERT(get_faction_of_unit(UNIT_ROMAN_CAVALRY)         == FACTION_ROMAN, "roman cavalry");
     return 0;
 }
 
@@ -46,11 +46,11 @@ static int test_enemy_faction(void) {
 }
 
 static int test_create_unit_matches_blueprint(void) {
-    Unit* u = create_unit(UNIT_SWORDSMAN, 1, 10, 10);
+    Unit* u = create_unit(UNIT_BARBARIAN, 1, 10, 10);
     ASSERT(u != NULL, "create returned NULL");
 
-    const UnitBlueprint* bp = &unit_blueprints[UNIT_SWORDSMAN];
-    ASSERT(u->type == UNIT_SWORDSMAN, "wrong type");
+    const UnitBlueprint* bp = &unit_blueprints[UNIT_BARBARIAN];
+    ASSERT(u->type == UNIT_BARBARIAN, "wrong type");
     ASSERT(u->faction == bp->faction, "faction mismatch");
     ASSERT(u->hp == bp->hp, "hp mismatch");
     ASSERT(u->max_hp == bp->hp, "max_hp mismatch");
@@ -66,7 +66,7 @@ static int test_create_unit_matches_blueprint(void) {
 }
 
 static int test_take_damage_invariants(void) {
-    Unit* u = create_unit(UNIT_ELITE_SWORDSMAN, 1, 0, 0);
+    Unit* u = create_unit(UNIT_ELITE_BARBARIAN, 1, 0, 0);
     int initial_hp = u->hp;
 
     // Excessive damage never goes negative
@@ -79,20 +79,20 @@ static int test_take_damage_invariants(void) {
 }
 
 static int test_soldier_count_recompute(void) {
-    // Elite Swordsman: hp = 2, hp_per_soldier = 2, units_count = 1
+    // Elite Barbarian: hp = 2, hp_per_soldier = 2, units_count = 1
     // After 1 damage: hp = 1, units_count should still be 1.
-    Unit* u = create_unit(UNIT_ELITE_SWORDSMAN, 1, 0, 0);
+    Unit* u = create_unit(UNIT_ELITE_BARBARIAN, 1, 0, 0);
     take_damage(u, 1);
     ASSERT(u->hp == 1, "hp wrong after 1 damage");
     ASSERT(u->units_count == 1, "soldier count should be 1");
     destroy_unit(u);
 
-    // Swordsman: hp = 1, hp_per_soldier = 1, units_count = 1
+    // Barbarian: hp = 1, hp_per_soldier = 1, units_count = 1
     // After 1 damage: hp = 0, dead.
-    Unit* v = create_unit(UNIT_SWORDSMAN, 2, 0, 0);
+    Unit* v = create_unit(UNIT_BARBARIAN, 2, 0, 0);
     take_damage(v, 1);
-    ASSERT(v->hp == 0, "swordsman should be dead");
-    ASSERT(v->units_count == 0, "swordsman units_count should be 0");
+    ASSERT(v->hp == 0, "barbarian should be dead");
+    ASSERT(v->units_count == 0, "barbarian units_count should be 0");
     destroy_unit(v);
 
     return 0;
@@ -174,7 +174,7 @@ static int test_movement_updates_grid(void) {
     Battlefield f;
     initialize_battlefield(&f);
 
-    Unit* u = create_unit(UNIT_SWORDSMAN, 1, 10, 10);
+    Unit* u = create_unit(UNIT_BARBARIAN, 1, 10, 10);
     f.units[f.unit_count++] = u;
     f.occupancy[10][10] = u;
 

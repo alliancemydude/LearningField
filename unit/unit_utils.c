@@ -4,14 +4,14 @@
 // Point values for troops. Useful for when point estimations get added
 int unit_point_values[UNIT_TYPE_COUNT] = {
     // German Infantry
-    [UNIT_SWORDSMAN] = 10,
-    [UNIT_ELITE_SWORDSMAN] = 20,
+    [UNIT_BARBARIAN] = 10,
+    [UNIT_ELITE_BARBARIAN] = 20,
     [UNIT_JAVELIN_THROWER] = 35,
-    [UNIT_HORSEMAN] = 15,
+    [UNIT_GERMAN_CAVALRY] = 15,
 
     // Roman Infantry
-    [UNIT_SPEARMAN] = 10,
-    [UNIT_ELITE_SPEARMAN] = 25,
-    [UNIT_BOWMAN] = 35,
-    [UNIT_CAVALRY] = 15
+    [UNIT_LEGIONARE] = 10,
+    [UNIT_CENTURION] = 25,
+    [UNIT_ARCHER] = 35,
+    [UNIT_ROMAN_CAVALRY] = 15
 };

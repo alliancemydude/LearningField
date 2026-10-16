@@ -55,7 +55,8 @@ void print_screen(Battlefield* field) {
     }
     printf("Turn %d | German: %d units (HP: %.1f) | Roman: %d units (HP: %.1f)\n",
            turn_count, german_count, german_hp, roman_count, roman_hp);
-    printf("Legend: S=Swordsman, E=Elite, R=Ranged, H=Horseman\n");
+    printf("German Units: B=Barbarian, E=Elite, J=Javelin Thrower, C=Cavalry\n");
+    printf("Roman Units: L=Legionare, C=Centurion, A=Archer, H=Cavalry\n");
     printf("Arrows show facing: ^ north, > east, v south, < west\n");
     printf("Blue = German, Red = Roman, . open\n\n");
 
@@ -111,61 +112,6 @@ void print_screen(Battlefield* field) {
     printf("\n");
 }
 
-void print_screen_to_file(Battlefield* field, const char* filename) {
-    FILE* f = fopen(filename, "w");
-    if (!f) {
-        printf("Error: Could not open %s for writing.\n", filename);
-        return;
-    }
-
-    // Print header with map dimensions and turn number
-    fprintf(f, "Battlefield: %d x %d  |  Turn: %d\n", field->width, field->height, turn_count);
-    fprintf(f, "Legend: [R]epublic (green), [S]eparatist (red), . open\n\n");
-
-    // Print column headers (only if width is manageable)
-    fprintf(f, "   ");
-    for (int x = 0; x < field->width; x++) {
-        fprintf(f, "%2d ", x);
-    }
-    fprintf(f, "\n");
-
-    for (int y = 0; y < field->height; y++) {
-        fprintf(f, "%2d ", y);
-        for (int x = 0; x < field->width; x++) {
-            Unit* unit_on_tile = NULL;
-            bool is_dead = false;
-
-            for (int i = 0; i < field->unit_count; i++) {
-                Unit* u = field->units[i];
-                if (u == NULL) continue;
-                if (u->x == x && u->y == y) {
-                    if (u->hp <= 0) {
-                        is_dead = true;
-                    } else {
-                        unit_on_tile = u;
-                    }
-                    break;
-                }
-            }
-
-            if (unit_on_tile != NULL) {
-                const char* symbol = get_unit_symbol(unit_on_tile);
-                const char* color = get_unit_color(unit_on_tile);
-                fprintf(f, "%s %s %s", color, symbol, COLOR_RESET);
-            } else if (is_dead) {
-                // Unit is dead
-                fprintf(f, " $ ");
-            } else {
-                fprintf(f, " . ");
-            }
-        }
-        fprintf(f, "\n");
-    }
-
-    fprintf(f, "\n");
-    fclose(f);
-}
-
 void print_screen_summary(Battlefield* field) {
     int german_count = 0, roman_count = 0;
     float german_hp = 0.0f, roman_hp = 0.0f;
@@ -188,14 +134,14 @@ const char* get_unit_symbol(Unit* unit) {
     if (unit == NULL) return "?";
     
     switch (unit->type) {
-        case UNIT_SWORDSMAN:        return "S";
-        case UNIT_ELITE_SWORDSMAN:  return "E";
-        case UNIT_JAVELIN_THROWER:  return "R";
-        case UNIT_HORSEMAN:         return "H";
-        case UNIT_SPEARMAN:         return "S";
-        case UNIT_ELITE_SPEARMAN:   return "E";
-        case UNIT_BOWMAN:           return "R";
-        case UNIT_CAVALRY:          return "H";
+        case UNIT_BARBARIAN:        return "B";
+        case UNIT_ELITE_BARBARIAN:  return "E";
+        case UNIT_JAVELIN_THROWER:  return "J";
+        case UNIT_GERMAN_CAVALRY:         return "C";
+        case UNIT_LEGIONARE:         return "L";
+        case UNIT_CENTURION:   return "C";
+        case UNIT_ARCHER:           return "A";
+        case UNIT_ROMAN_CAVALRY:          return "H";
         
         default: return "???";
     }

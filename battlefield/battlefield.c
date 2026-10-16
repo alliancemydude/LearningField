@@ -11,18 +11,18 @@
 
 // Default force compositions
 ForceComposition default_german_composition[] = {
-    {UNIT_SWORDSMAN,        20},
-    {UNIT_ELITE_SWORDSMAN,  5},
+    {UNIT_BARBARIAN,        20},
+    {UNIT_ELITE_BARBARIAN,  5},
     {UNIT_JAVELIN_THROWER,  5},
-    {UNIT_HORSEMAN,         5}
+    {UNIT_GERMAN_CAVALRY,   5}
 };
 int default_german_composition_count = sizeof(default_german_composition) / sizeof(default_german_composition[0]);
 
 ForceComposition default_roman_composition[] = {
-    {UNIT_SPEARMAN,         20},
-    {UNIT_ELITE_SPEARMAN,   5},
-    {UNIT_BOWMAN,           5},
-    {UNIT_CAVALRY,          5}
+    {UNIT_LEGIONARE,        20},
+    {UNIT_CENTURION,        5},
+    {UNIT_ARCHER,           5},
+    {UNIT_ROMAN_CAVALRY,    5}
 };
 int default_roman_composition_count = sizeof(default_roman_composition) / sizeof(default_roman_composition[0]);
 

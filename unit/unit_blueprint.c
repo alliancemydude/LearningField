@@ -4,8 +4,8 @@
 
 const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
     // German Infantry
-    [UNIT_SWORDSMAN] = {
-        .type = UNIT_SWORDSMAN,
+    [UNIT_BARBARIAN] = {
+        .type = UNIT_BARBARIAN,
         .faction = FACTION_GERMAN,
         .hp = 1,
         .hp_per_soldier = 1,
@@ -17,12 +17,12 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .attacks_per_unit = 3,
         .preferred_range = 1,
         .weapons = {
-            {WEAPON_SWORD}
+            {WEAPON_AXE}
         },
         .weapon_count = 1
     },
-    [UNIT_ELITE_SWORDSMAN] = {
-        .type = UNIT_ELITE_SWORDSMAN,
+    [UNIT_ELITE_BARBARIAN] = {
+        .type = UNIT_ELITE_BARBARIAN,
         .faction = FACTION_GERMAN,
         .hp = 2,
         .hp_per_soldier = 2,
@@ -34,7 +34,7 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .attacks_per_unit = 3,
         .preferred_range = 1,
         .weapons = {
-            {WEAPON_SWORD}
+            {WEAPON_AXE}
         },
         .weapon_count = 1
     },
@@ -55,8 +55,8 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         },
         .weapon_count = 1
     },
-    [UNIT_HORSEMAN] = {
-        .type = UNIT_HORSEMAN,
+    [UNIT_GERMAN_CAVALRY] = {
+        .type = UNIT_GERMAN_CAVALRY,
         .faction = FACTION_GERMAN,
         .hp = 2,
         .hp_per_soldier = 2,
@@ -68,15 +68,15 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         .attacks_per_unit = 1,
         .preferred_range = 1,
         .weapons = {
-            {WEAPON_SWORD}
+            {WEAPON_AXE}
         },
         .weapon_count = 1
     },
     
     
     // Roman Infantry
-    [UNIT_SPEARMAN] = {
-        .type = UNIT_SPEARMAN,
+    [UNIT_LEGIONARE] = {
+        .type = UNIT_LEGIONARE,
         .faction = FACTION_ROMAN,
         .hp = 1,
         .hp_per_soldier = 1,
@@ -92,8 +92,8 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         },
         .weapon_count = 1
     },
-    [UNIT_ELITE_SPEARMAN] = {
-        .type = UNIT_ELITE_SPEARMAN,
+    [UNIT_CENTURION] = {
+        .type = UNIT_CENTURION,
         .faction = FACTION_ROMAN,
         .hp = 2,
         .hp_per_soldier = 2,
@@ -109,8 +109,8 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         },
         .weapon_count = 1
     },
-    [UNIT_BOWMAN] = {
-        .type = UNIT_BOWMAN,
+    [UNIT_ARCHER] = {
+        .type = UNIT_ARCHER,
         .faction = FACTION_ROMAN,
         .hp = 1,
         .hp_per_soldier = 1,
@@ -126,8 +126,8 @@ const UnitBlueprint unit_blueprints[UNIT_TYPE_COUNT] = {
         },
         .weapon_count = 1
     },
-    [UNIT_CAVALRY] = {
-        .type = UNIT_CAVALRY,
+    [UNIT_ROMAN_CAVALRY] = {
+        .type = UNIT_ROMAN_CAVALRY,
         .faction = FACTION_ROMAN,
         .hp = 2,
         .hp_per_soldier = 2,
