@@ -44,8 +44,11 @@ static float win_rate_against_reference (UnitType test_type, Faction test_factio
         }
 
         int winner = run_battle(&field, MAX_TURNS);
-        if      (test_faction == FACTION_GERMAN && winner == 0) test_wins++;
-        else if (test_faction == FACTION_ROMAN  && winner == 1) test_wins++;
+        if (test_faction == FACTION_GERMAN && winner == 0) {
+            test_wins++;
+        } else if (test_faction == FACTION_ROMAN  && winner == 1) {
+            test_wins++;
+        }
 
         cleanup_battlefield(&field);
     }
@@ -54,63 +57,70 @@ static float win_rate_against_reference (UnitType test_type, Faction test_factio
 
 static float measure_mixed_value (ForceComposition* mixed, int mixed_count, UnitType meter_type, Faction meter_faction,
     float meter_unit_cost, int battles) {
-    int lo = 1, hi = 40;
-    while (hi - lo > 1) {
-        int mid = (lo + hi) / 2;
+    int low = 1, high = 40;
+    while (high - low > 1) {
+        int mid = (low + high) / 2;
         float wr = win_rate_against_reference(meter_type, meter_faction, mid, mixed, mixed_count, battles);
         printf("      %2d %s vs mixed -> %.1f%%\n", mid, get_unit_type_name(meter_type), wr * 100.0f);
-        if (wr >= 0.5f) hi = mid;
-        else            lo = mid;
+        if (wr >= 0.5f) {
+            high = mid;
+        } else {
+            low = mid;
+        }
     }
-    return (float)hi * meter_unit_cost;
+    return (float)high * meter_unit_cost;
 }
 
 // Binomial standard error on a win rate.
 static float win_rate_stderr(float wr, int n) {
-    if (n <= 0) return 0.0f;
+    if (n <= 0) {
+        return 0.0f;
+    }
     return sqrtf(wr * (1.0f - wr) / (float)n);
 }
 
 static int find_crossover (UnitType test_type, Faction test_faction, ForceComposition* ref, int ref_count,
     int min_count, int max_count, int battles_per_step, float* out_fractional, int* out_integer, float* out_winrate) {
-    int lo = min_count;
-    int hi = max_count;
+    int low = min_count;
+    int high = max_count;
 
-    while (hi - lo > 1) {
-        int mid = (lo + hi) / 2;
-        float wr = win_rate_against_reference(test_type, test_faction, mid, ref, ref_count, battles_per_step);
-        float se = win_rate_stderr(wr, battles_per_step);
+    while (high - low > 1) {
+        int mid = (low + high) / 2;
+        float winrate = win_rate_against_reference(test_type, test_faction, mid, ref, ref_count, battles_per_step);
+        float se = win_rate_stderr(winrate, battles_per_step);
 
-        printf("      N=%2d -> %.1f%% (±%.1f%%)\n", mid,
-               wr * 100.0f, se * 200.0f);
+        printf("      N=%2d -> %.1f%% (±%.1f%%)\n", mid, winrate * 100.0f, se * 200.0f);
 
-        if (wr >= 0.5f) hi = mid;
-        else            lo = mid;
+        if (winrate >= 0.5f) {
+            high = mid;
+        } else {
+            low = mid;
+        }
     }
 
-    // Interpolation: run one final high-precision batch at lo and hi.
+    // Interpolation: run one final high-precision batch at low and hi.
     // 3x battles gives tighter estimates.
     int final_battles = battles_per_step * 3;
 
-    float wr_lo = win_rate_against_reference(test_type, test_faction, lo, ref, ref_count, final_battles);
-    float wr_hi = win_rate_against_reference(test_type, test_faction, hi, ref, ref_count, final_battles);
+    float winrate_low = win_rate_against_reference(test_type, test_faction, low, ref, ref_count, final_battles);
+    float winrate_high = win_rate_against_reference(test_type, test_faction, high, ref, ref_count, final_battles);
 
-    printf("      Interpolation: N=%d -> %.1f%%, N=%d -> %.1f%%\n", lo, wr_lo * 100.0f, hi, wr_hi * 100.0f);
+    printf("      Interpolation: N=%d -> %.1f%%, N=%d -> %.1f%%\n", low, winrate_low * 100.0f, high, winrate_high * 100.0f);
 
-    // Linear interpolation. Assumes wr_lo < 0.5 <= wr_hi, which the
+    // Linear interpolation. Assumes winrate_low < 0.5 <= winrate_high, which the
     // binary-search invariant guarantees.
-    float fractional = (float)hi;
-    if (wr_hi > wr_lo && wr_lo < 0.5f && wr_hi >= 0.5f) {
-        fractional = (float)lo + (0.5f - wr_lo) / (wr_hi - wr_lo);
+    float fractional = (float)high;
+    if (winrate_high > winrate_low && winrate_low < 0.5f && winrate_high >= 0.5f) {
+        fractional = (float)low + (0.5f - winrate_low) / (winrate_high - winrate_low);
     }
 
     printf("      => fractional crossover = %.2f units\n", fractional);
 
     if (out_fractional) *out_fractional = fractional;
-    if (out_integer)    *out_integer = hi;
-    if (out_winrate)    *out_winrate = wr_hi;
+    if (out_integer)    *out_integer = high;
+    if (out_winrate)    *out_winrate = winrate_high;
 
-    return hi;
+    return high;
 }
 
 static float calibrate_unit(UnitType type, Faction test_faction, ForceComposition* ref, int ref_count,

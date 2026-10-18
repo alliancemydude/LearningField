@@ -76,10 +76,9 @@ int main() {
         printf("Choose which way to run the program.\n");
         printf("1. Normal combat (n)\n");
         printf("2. Full screen battle (f)\n");
-        printf("3. Verbose analysis (v)\n");
-        printf("4. Strategic evolution (e)\n");
-        printf("5. Run debug test (r)\n");
-        printf("6. Run point calibration (c)\n");
+        printf("3. Strategic evolution (e)\n");
+        printf("4. Run debug test (r)\n");
+        printf("5. Run point calibration (c)\n");
 
         char battle_type = getchar();
 
@@ -100,13 +99,6 @@ int main() {
 
         } else if (battle_type == 'f') {
             turn_based = true;
-
-            load_strategy_from_file(STRATEGY_FILE);
-            start_match();
-
-            print_results();
-        } else if (battle_type == 'v') {
-            turn_based = true;
             print_battle_summary_flag = true;
 
             load_strategy_from_file(STRATEGY_FILE);
@@ -125,11 +117,8 @@ int main() {
         } else if (battle_type == 'c') {
             run_point_calibration(500);
         } else { 
-            printf("Listen man just hit the right button\n");
+            printf("\n");
         }
-
-        printf("\n");
-        printf("\n");
         printf("\n");
     }
     return 0;

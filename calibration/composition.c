@@ -12,7 +12,9 @@ int build_composition(const CompositionGenome* genes, Faction faction, ForceComp
             roster[roster_n++] = (UnitType)i;
         }
     }
-    if (roster_n == 0) return 0;
+    if (roster_n == 0) {
+        return 0;
+    }
 
     // Sum of shares for normalization.
     float total = 0.0f;
@@ -24,14 +26,20 @@ int build_composition(const CompositionGenome* genes, Faction faction, ForceComp
     int spent = 0;
     for (int i = 0; i < roster_n; i++) {
         float share = (total > 0.0f) ? genes->share[i] : 1.0f / (float)roster_n;
-        if (share < 0.0f) share = 0.0f;
+        if (share < 0.0f) {
+            share = 0.0f;
+        }
 
         float points_for_type = COMPOSITION_BUDGET * (share / ((total > 0.0f) ? total : 1.0f));
         int cost = unit_point_values[roster[i]];
-        if (cost <= 0) cost = 1;
+        if (cost <= 0) {
+            cost = 1;
+        }
 
         int count = (int)(points_for_type / cost);
-        if (count < 0) count = 0;
+        if (count < 0) {
+            count = 0;
+        }
 
         out[i].type  = roster[i];
         out[i].count = count;
@@ -43,7 +51,9 @@ int build_composition(const CompositionGenome* genes, Faction faction, ForceComp
     int cheapest_cost = unit_point_values[roster[0]];
     for (int i = 1; i < roster_n; i++) {
         int c = unit_point_values[roster[i]];
-        if (c > 0 && c < cheapest_cost) { cheapest_cost = c; cheapest_idx = i; }
+        if (c > 0 && c < cheapest_cost) {
+            cheapest_cost = c; cheapest_idx = i;
+        }
     }
     while (cheapest_cost > 0 && spent + cheapest_cost <= COMPOSITION_BUDGET) {
         out[cheapest_idx].count++;
