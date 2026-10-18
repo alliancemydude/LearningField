@@ -24,6 +24,11 @@ extern const size_t GERMAN_GENE_COUNT;
 extern const GeneInfo ROMAN_GENES[];
 extern const size_t ROMAN_GENE_COUNT;
 
+extern int pop_size;
+extern int num_generations;
+extern int battles_min;
+extern int battles_max;
+
 void run_evolution(void);
 void print_genome(const float* w, const GeneInfo* genes, size_t gene_count, const char* name);
 void save_genomes(const float* german_weights, size_t german_count,

@@ -3,28 +3,129 @@
 #include "queries.h"
 #include "utils.h"
 #include "unit.h"
+#include "unit_utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
-#define REFERENCE_POINTS 200
+#define REFERENCE_POINTS 1000
+
+// Unit count per side for the matrix
+#define PAIRWISE_COUNT 15
+
+#define PAIRWISE_POINTS 1000
 
 // Mixed reference armies.
-static ForceComposition mixed_roman[] = {
-    { UNIT_LEGIONARE,        10},
-    { UNIT_CENTURION,        5},
-    { UNIT_ARCHER,           5},
-    { UNIT_ROMAN_CAVALRY,    2},
-};
+static ForceComposition mixed_roman[4];
 static int mixed_roman_count = 4;
 
-static ForceComposition mixed_german[] = {
-    { UNIT_BARBARIAN,         10},
-    { UNIT_ELITE_BARBARIAN,   5},
-    { UNIT_JAVELIN_THROWER,   5},
-    { UNIT_GERMAN_CAVALRY,    2},
-};
+static ForceComposition mixed_german[4];
 static int mixed_german_count = 4;
+
+static void init_reference_armies(void) {
+    // Base proportions: 40 / 10 / 5 / 10 units
+    const int base_counts[4] = { 40, 10, 5, 10 };
+    const UnitType german_types[4] = {
+        UNIT_BARBARIAN, UNIT_ELITE_BARBARIAN,
+        UNIT_JAVELIN_THROWER, UNIT_GERMAN_CAVALRY
+    };
+    const UnitType roman_types[4] = {
+        UNIT_LEGIONARE, UNIT_CENTURION,
+        UNIT_ARCHER, UNIT_ROMAN_CAVALRY
+    };
+
+    // Cost of the base army at current point values
+    int german_pts = 0;
+    int roman_pts  = 0;
+    for (int i = 0; i < 4; i++) {
+        german_pts += base_counts[i] * unit_point_values[german_types[i]];
+        roman_pts  += base_counts[i] * unit_point_values[roman_types[i]];
+    }
+
+    // Scale to fill the current budget
+    float german_scale = (german_pts > 0) ? (float)composition_budget / german_pts : 1.0f;
+    float roman_scale  = (roman_pts  > 0) ? (float)composition_budget / roman_pts  : 1.0f;
+
+    for (int i = 0; i < 4; i++) {
+        int g_count = (int)(base_counts[i] * german_scale);
+        int r_count = (int)(base_counts[i] * roman_scale);
+        if (g_count < 1) g_count = 1;
+        if (r_count < 1) r_count = 1;
+
+        mixed_german[i].type  = german_types[i];
+        mixed_german[i].count = g_count;
+
+        mixed_roman[i].type   = roman_types[i];
+        mixed_roman[i].count  = r_count;
+    }
+    mixed_german_count = 4;
+    mixed_roman_count  = 4;
+}
+
+static int run_pair(UnitType german_type, UnitType roman_type, int battles) {
+    int german_cost = unit_point_values[german_type];
+    int roman_cost  = unit_point_values[roman_type];
+    if (german_cost <= 0 || roman_cost <= 0) return 0;
+
+    int german_count = PAIRWISE_POINTS / german_cost;
+    int roman_count  = PAIRWISE_POINTS / roman_cost;
+    if (german_count < 1) german_count = 1;
+    if (roman_count  < 1) roman_count  = 1;
+
+    ForceComposition german_comp[1] = { { german_type, german_count } };
+    ForceComposition roman_comp[1]  = { { roman_type,  roman_count  } };
+
+    int german_wins = 0;
+    for (int i = 0; i < battles; i++) {
+        Battlefield field;
+        initialize_battlefield(&field);
+        spawn_german_forces(&field, german_comp, 1);
+        spawn_roman_forces(&field, roman_comp, 1);
+
+        int winner = run_battle(&field, MAX_TURNS);
+        if (winner == 0) german_wins++;
+
+        cleanup_battlefield(&field);
+    }
+    return german_wins;
+}
+
+void run_pairwise_matrix(int battles_per_pair) {
+    // Gather rosters by faction
+    UnitType german_roster[UNIT_TYPE_COUNT];
+    UnitType roman_roster[UNIT_TYPE_COUNT];
+    int gn = 0, rn = 0;
+
+    for (int i = 0; i < UNIT_TYPE_COUNT; i++) {
+        Faction f = get_faction_of_unit((UnitType)i);
+        if (f == FACTION_GERMAN)      german_roster[gn++] = (UnitType)i;
+        else if (f == FACTION_ROMAN)  roman_roster[rn++]  = (UnitType)i;
+    }
+
+    printf("\n=== PAIRWISE MATRIX ===\n");
+    printf("Each cell: win rate of German (row) vs Roman (column)\n");
+    printf("%dv%d, %d battles per cell\n\n", PAIRWISE_COUNT, PAIRWISE_COUNT, battles_per_pair);
+
+    // Header row
+    printf("%-12s", "");
+    for (int j = 0; j < rn; j++) {
+        int cnt = PAIRWISE_POINTS / unit_point_values[roman_roster[j]];
+        printf("%6s(%2d)", short_unit_name(roman_roster[j]), cnt);
+    }
+    printf("\n");
+
+    // Body
+    for (int i = 0; i < gn; i++) {
+        printf("%-12s", short_unit_name(german_roster[i]));
+        for (int j = 0; j < rn; j++) {
+            int wins = run_pair(german_roster[i], roman_roster[j], battles_per_pair);
+            float wr = 100.0f * wins / battles_per_pair;
+            printf("%9.1f%%", wr);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
 
 static float win_rate_against_reference (UnitType test_type, Faction test_faction, int test_count,
     ForceComposition* ref, int ref_count, int num_battles) {
@@ -55,18 +156,23 @@ static float win_rate_against_reference (UnitType test_type, Faction test_factio
     return (float)test_wins / (float)num_battles;
 }
 
-static float measure_mixed_value (ForceComposition* mixed, int mixed_count, UnitType meter_type, Faction meter_faction,
-    float meter_unit_cost, int battles) {
-    int low = 1, high = 40;
+static float measure_mixed_value(ForceComposition* mixed, int mixed_count, UnitType meter_type, Faction meter_faction,
+                                 float meter_unit_cost, int battles) {
+    // Search wide enough to reach the full budget
+    int max_units = 2 * composition_budget / (int)meter_unit_cost + 10;
+    int low = 1, high = max_units;
+
     while (high - low > 1) {
         int mid = (low + high) / 2;
         float wr = win_rate_against_reference(meter_type, meter_faction, mid, mixed, mixed_count, battles);
-        printf("      %2d %s vs mixed -> %.1f%%\n", mid, get_unit_type_name(meter_type), wr * 100.0f);
-        if (wr >= 0.5f) {
-            high = mid;
-        } else {
-            low = mid;
-        }
+        printf("      %2d %s vs mixed -> %.1f%%\n", mid,
+               get_unit_type_name(meter_type), wr * 100.0f);
+        if (wr >= 0.5f) high = mid;
+        else            low = mid;
+    }
+
+    if (high == max_units) {
+        printf("      WARNING: search saturated at N=%d\n", max_units);
     }
     return (float)high * meter_unit_cost;
 }
@@ -81,7 +187,8 @@ static float win_rate_stderr(float wr, int n) {
 
 static int find_crossover (UnitType test_type, Faction test_faction, ForceComposition* ref, int ref_count,
     int min_count, int max_count, int battles_per_step, float* out_fractional, int* out_integer, float* out_winrate) {
-    int low = min_count;
+    
+        int low = min_count;
     int high = max_count;
 
     while (high - low > 1) {
@@ -114,6 +221,12 @@ static int find_crossover (UnitType test_type, Faction test_faction, ForceCompos
         fractional = (float)low + (0.5f - winrate_low) / (winrate_high - winrate_low);
     }
 
+    if (high == max_count && winrate_high < 0.5f) {
+        printf("      WARNING: crossover saturated at N=%d (winrate %.1f%%) — "
+            "result unreliable, increase max_count\n",
+            max_count, winrate_high * 100.0f);
+    }
+
     printf("      => fractional crossover = %.2f units\n", fractional);
 
     if (out_fractional) *out_fractional = fractional;
@@ -127,13 +240,15 @@ static float calibrate_unit(UnitType type, Faction test_faction, ForceCompositio
                             float reference_value, int battles_per_step, int* out_crossover) {
     printf("  %-20s (ref value %.0f):\n", get_unit_type_name(type), reference_value);
 
+    // Each unit's crossover is roughly reference_value / cost.
+    int max_units = 2 * (int)(reference_value / 5.0f) + 10;
+
     float fractional = 0.0f;
     int   integer    = 0;
 
-    find_crossover(type, test_faction, ref, ref_count, 1, 40, battles_per_step, &fractional, &integer, NULL);
+    find_crossover(type, test_faction, ref, ref_count, 1, max_units, battles_per_step, &fractional, &integer, NULL);
 
     float cost = reference_value / fractional;
-
     printf("    => N=%.2f (integer %d), cost = %.2f points\n\n", fractional, integer, cost);
 
     if (out_crossover) *out_crossover = integer;
@@ -156,6 +271,8 @@ static void verify_cost(UnitType type, Faction test_faction, ForceComposition* r
 void run_point_calibration(int battles_per_step) {
     printf("\n=== POINT CALIBRATION v3 (mixed references) ===\n");
     printf("Battles per binary-search step: %d\n\n", battles_per_step);
+
+    init_reference_armies();
 
     // Mixed armies need their own value measured first
     printf("--- Phase 0: Valuing mixed reference armies ---\n\n");

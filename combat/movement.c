@@ -5,6 +5,13 @@
 #include <math.h>
 #include <stdlib.h>
 
+static int dir_from_delta(int dx, int dy) {
+    if (dx > 0) return FACE_EAST;
+    if (dx < 0) return FACE_WEST;
+    if (dy > 0) return FACE_SOUTH;
+    return FACE_NORTH;
+}
+
 static int step_axis(Unit* unit, Battlefield* field, int* cur_x, int* cur_y, int target, bool is_x_axis, int steps) {
     int taken = 0;
     while (steps > 0) {
@@ -18,6 +25,12 @@ static int step_axis(Unit* unit, Battlefield* field, int* cur_x, int* cur_y, int
         if (is_tile_walkable(field, next_x, next_y, unit)) {
             *cur_x = next_x;
             *cur_y = next_y;
+            // Record this step
+            if (unit->path_len < (int)(sizeof(unit->path_x) / sizeof(unit->path_x[0]))) {
+                unit->path_x[unit->path_len] = next_x;
+                unit->path_y[unit->path_len] = next_y;
+                unit->path_len++;
+            }
             steps--;
             taken++;
         } else {
@@ -25,13 +38,6 @@ static int step_axis(Unit* unit, Battlefield* field, int* cur_x, int* cur_y, int
         }
     }
     return taken;
-}
-
-static int dir_from_delta(int dx, int dy) {
-    if (dx > 0) return FACE_EAST;
-    if (dx < 0) return FACE_WEST;
-    if (dy > 0) return FACE_SOUTH;
-    return FACE_NORTH;
 }
 
 void execute_move(Unit* unit, Battlefield* field, int target_x, int target_y, int max_steps) {

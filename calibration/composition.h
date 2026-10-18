@@ -4,7 +4,7 @@
 #include "config.h"
 
 // Total points each faction can spend per battle.
-#define COMPOSITION_BUDGET 400
+extern int composition_budget;
 
 // Total number of units from both factions
 #define COMPOSITION_MAX_TYPES 8

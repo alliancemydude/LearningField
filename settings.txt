@@ -1,0 +1,19 @@
+# Learning Field settings
+
+# Battles per run
+battles 1000
+
+# Which saved genome file to load (n/f modes)
+strategy_file strategy.txt
+
+# Evolution parameters
+pop_size 30
+generations 60
+battles_min 20
+battles_max 40
+mutation_start 0.50
+mutation_end 0.15
+crossover 0.80
+
+# Composition budget per faction
+budget 1000

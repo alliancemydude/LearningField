@@ -3,6 +3,8 @@
 #include "unit_utils.h"
 #include <stdio.h>
 
+int composition_budget = 1000;
+
 int build_composition(const CompositionGenome* genes, Faction faction, ForceComposition* out) {
     // Enumerate the faction's roster in enum order.
     UnitType roster[COMPOSITION_MAX_TYPES];
@@ -30,7 +32,7 @@ int build_composition(const CompositionGenome* genes, Faction faction, ForceComp
             share = 0.0f;
         }
 
-        float points_for_type = COMPOSITION_BUDGET * (share / ((total > 0.0f) ? total : 1.0f));
+        float points_for_type = composition_budget * (share / total);
         int cost = unit_point_values[roster[i]];
         if (cost <= 0) {
             cost = 1;
@@ -55,7 +57,7 @@ int build_composition(const CompositionGenome* genes, Faction faction, ForceComp
             cheapest_cost = c; cheapest_idx = i;
         }
     }
-    while (cheapest_cost > 0 && spent + cheapest_cost <= COMPOSITION_BUDGET) {
+    while (cheapest_cost > 0 && spent + cheapest_cost <= composition_budget) {
         out[cheapest_idx].count++;
         spent += cheapest_cost;
     }

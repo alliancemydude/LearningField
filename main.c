@@ -1,5 +1,6 @@
 #include "battlefield.h"
 #include "unit.h"
+#include "unit_utils.h"
 #include "ai.h"
 #include "strategy.h"
 #include "evolution.h"
@@ -8,6 +9,7 @@
 #include "calibration.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <stdbool.h>
 
@@ -19,8 +21,36 @@ int roman_wins = 0;
 int timeouts = 0;
 
 // Basic adjustable values
-int battles                     = 10000;
+int battles                     = 1000;
 bool track_actions              = true;
+
+static void load_settings(const char* filename) {
+    FILE* f = fopen(filename, "r");
+    if (!f) {
+        printf("No settings file found, using defaults.\n");
+        return;
+    }
+
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        char* nl = strchr(line, '\n');
+        if (nl) *nl = '\0';
+
+        if (line[0] == '\0' || line[0] == '#') continue;
+
+        char key[64];
+        char val[192];
+        if (sscanf(line, "%63s %191[^\n]", key, val) != 2) continue;
+
+        if      (strcmp(key, "battles")        == 0) battles         = atoi(val);
+        else if (strcmp(key, "pop_size")       == 0) pop_size        = atoi(val);
+        else if (strcmp(key, "generations")    == 0) num_generations = atoi(val);
+        else if (strcmp(key, "battles_min")    == 0) battles_min     = atoi(val);
+        else if (strcmp(key, "battles_max")    == 0) battles_max     = atoi(val);
+        else if (strcmp(key, "budget")         == 0) composition_budget = atoi(val);
+    }
+    fclose(f);
+}
 
 void start_match() {
     if (track_actions) {
@@ -69,57 +99,104 @@ void print_results() {
     printf("\n");
 }
 
-int main() {
+void print_menu(void) {
+    printf("\n");
+    printf("=== Learning Field ===\n\n");
+    printf("  Battles per run:    %d\n", battles);
+    printf("  Loaded strategy:    %s\n", STRATEGY_FILE);
+    printf("  Evolution settings: pop %d, %d generations\n\n", pop_size, num_generations);
+    printf("  [1] Run %d battles (fast)         — watch the win rate\n", battles);
+    printf("  [2] Run 1 battle with animation    — see the fight\n");
+    printf("  [3] Evolve a new strategy          — improve the AI\n");
+    printf("  [4] Calibrate unit point values    — balance units\n");
+    printf("  [5] Run automated tests            — check for bugs\n");
+    printf("  [6] Pairwise unit matrix           — see which units dominate\n");
+    printf("  [q] Quit\n\n");
+    printf("  Choice: ");
+}
+
+void print_loaded_composition(void) {
+    printf("\n  German army: ");
+    for (int i = 0; i < default_german_composition_count; i++) {
+        if (default_german_composition[i].count > 0) {
+            printf("%d %s ",
+                   default_german_composition[i].count,
+                   short_unit_name(default_german_composition[i].type));
+        }
+    }
+    printf("\n  Roman army:  ");
+    for (int i = 0; i < default_roman_composition_count; i++) {
+        if (default_roman_composition[i].count > 0) {
+            printf("%d %s ",
+                   default_roman_composition[i].count,
+                   short_unit_name(default_roman_composition[i].type));
+        }
+    }
+    printf("\n\n");
+}
+
+int main(void) {
+    load_settings("settings.txt");
     while (true) {
         srand(time(NULL));
 
-        printf("Choose which way to run the program.\n");
-        printf("1. Normal combat (n)\n");
-        printf("2. Full screen battle (f)\n");
-        printf("3. Strategic evolution (e)\n");
-        printf("4. Run debug test (r)\n");
-        printf("5. Run point calibration (c)\n");
+        print_menu();
 
         char battle_type = getchar();
-
         int c;
         while ((c = getchar()) != '\n' && c != EOF);
 
-        if (battle_type == 'n') {
-            clock_t start = clock();
-
-            load_strategy_from_file(STRATEGY_FILE);
-            start_match();
-
-            clock_t end = clock();
-            print_action_stats();
-            print_results();
-            float time_taken = ((float)(end - start)) / CLOCKS_PER_SEC;
-            printf("\nAll battles took %.1f seconds.\n", time_taken);
-
-        } else if (battle_type == 'f') {
-            turn_based = true;
-            print_battle_summary_flag = true;
-
-            load_strategy_from_file(STRATEGY_FILE);
-            start_match();
-
-            print_results();
-        } else if (battle_type == 'e') {
-            clock_t start = clock();
-            run_evolution();
-
-            clock_t end = clock();
-            float time_taken = ((float)(end - start)) / CLOCKS_PER_SEC;
-            printf("\nEvolution took %.1f seconds.\n", time_taken);
-        } else if (battle_type == 'r') {
-            run_tests();
-        } else if (battle_type == 'c') {
-            run_point_calibration(500);
-        } else { 
-            printf("\n");
+        switch (battle_type) {
+            case 'n': case '1': {
+                clock_t start = clock();
+                german_wins = 0;
+                roman_wins = 0;
+                timeouts = 0;
+                load_strategy_from_file(STRATEGY_FILE);
+                print_loaded_composition();
+                start_match();
+                clock_t end = clock();
+                print_action_stats();
+                print_results();
+                printf("\nAll battles took %.1f seconds.\n", (float)(end - start) / CLOCKS_PER_SEC);
+                break;
+            }
+            case 'f': case '2': {
+                turn_based = true;
+                print_battle_summary_flag = true;
+                german_wins = roman_wins = timeouts = 0;
+                load_strategy_from_file(STRATEGY_FILE);
+                print_loaded_composition();
+                start_match();
+                print_results();
+                turn_based = false;
+                break;
+            }
+            case 'e': case '3': {
+                clock_t start = clock();
+                run_evolution();
+                clock_t end = clock();
+                printf("\nEvolution took %.1f seconds.\n", (float)(end - start) / CLOCKS_PER_SEC);
+                break;
+            }
+            case 'c': case '4': {
+                run_point_calibration(100);
+                break;
+            }
+            case 'r': case '5': {
+                run_tests();
+                break;
+            }
+            case '6': case 'm': {
+                run_pairwise_matrix(100);
+                break;
+            }
+            case 'q': case 'Q':
+                return 0;
+            default:
+                printf("  Unrecognized option '%c'. Try again.\n", battle_type);
+                break;
         }
-        printf("\n");
     }
     return 0;
 }

@@ -8,9 +8,7 @@
 // AI action types
 typedef enum {
     ACTION_FIRE,
-    ACTION_ADVANCE_FIRE,
     ACTION_ATTACK,
-    ACTION_ADVANCE_ATTACK,
     ACTION_RALLY,
     ACTION_DASH
 } ActionType;
@@ -19,6 +17,7 @@ typedef enum {
 Unit* select_enemy_by_preference(Unit* unit, Battlefield* field, int max_range, StrategicGenome* strat);
 
 // Strategy
-void unit_turn(Unit* unit, Battlefield* field);
+void unit_move_phase(Unit* unit, Battlefield* field);
+void unit_attack_phase(Unit* unit, Battlefield* field);
 
 #endif

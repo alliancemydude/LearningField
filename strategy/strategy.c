@@ -135,6 +135,9 @@ static void set_strategy_gene(FactionStrategy* strat, const char* gene, float va
     else if (strcmp(gene, "flank_depth")              == 0) strat->strategic.flank_depth = value;
     else if (strcmp(gene, "deploy_horizontal_spread") == 0) strat->deployment.deploy_horizontal_spread = value;
     else if (strcmp(gene, "deploy_vertical_offset")   == 0) strat->deployment.deploy_vertical_offset = value;
+    else if (strcmp(gene, "face_threat_weight")       == 0) strat->strategic.face_threat_weight = value;
+    else if (strcmp(gene, "flank_targeting_weight")   == 0) strat->strategic.flank_targeting_weight = value;
+    else if (strcmp(gene, "cohesion_weight")          == 0) strat->strategic.cohesion_weight = value;
 }
 
 static void set_unit_gene(UnitType type, const char* gene, float value) {
@@ -146,12 +149,49 @@ static void set_unit_gene(UnitType type, const char* gene, float value) {
     else if (strcmp(gene, "local_force_ratio") == 0) ug->local_force_ratio = value;
 }
 
+// Find which slot in the faction's composition genome a given unit type occupies.
+static int roster_slot(UnitType type, Faction f) {
+    int slot = 0;
+    for (int i = 0; i < UNIT_TYPE_COUNT; i++) {
+        if (get_faction_of_unit((UnitType)i) == f) {
+            if ((UnitType)i == type) return slot;
+            slot++;
+        }
+    }
+    return -1;
+}
+
+// Set or append a composition count for a faction.
+static void set_composition_count(Faction f, UnitType type, int count) {
+    ForceComposition* arr;
+    int* n;
+    if (f == FACTION_GERMAN) { arr = default_german_composition; n = &default_german_composition_count; }
+    else                     { arr = default_roman_composition;  n = &default_roman_composition_count;  }
+
+    for (int i = 0; i < *n; i++) {
+        if (arr[i].type == type) { arr[i].count = count; return; }
+    }
+    if (*n < COMPOSITION_MAX_TYPES) {
+        arr[*n].type = type;
+        arr[*n].count = count;
+        (*n)++;
+    }
+}
+
+// Reset both compositions so a fresh load starts from zero.
+static void reset_loaded_compositions(void) {
+    default_german_composition_count = 0;
+    default_roman_composition_count  = 0;
+}
+
 void load_strategy_from_file(const char* filename) {
     FILE* f = fopen(filename, "r");
     if (!f) {
         printf("Error: Could not open strategy file '%s'\n", filename);
         return;
     }
+
+    reset_loaded_compositions();
 
     FactionStrategy* current_strat = NULL;
 
@@ -184,6 +224,28 @@ void load_strategy_from_file(const char* filename) {
 
         if (strcmp(prefix, "strategy") == 0) {
             set_strategy_gene(current_strat, gene, value);
+        } else if (strcmp(prefix, "composition") == 0) {
+            Faction f = (current_strat == &german_strategy) ? FACTION_GERMAN : FACTION_ROMAN;
+            size_t len = strlen(gene);
+
+            if (len > 6 && strcmp(gene + len - 6, "_count") == 0) {
+                char unit_name[64];
+                snprintf(unit_name, sizeof(unit_name), "%.*s", (int)(len - 6), gene);
+                UnitType type = parse_unit_type(unit_name);
+                if (type != UNIT_TYPE_COUNT) {
+                    set_composition_count(f, type, (int)value);
+                }
+            } else if (len > 6 && strcmp(gene + len - 6, "_share") == 0) {
+                char unit_name[64];
+                snprintf(unit_name, sizeof(unit_name), "%.*s", (int)(len - 6), gene);
+                UnitType type = parse_unit_type(unit_name);
+                if (type != UNIT_TYPE_COUNT) {
+                    int slot = roster_slot(type, f);
+                    if (slot >= 0 && slot < COMPOSITION_MAX_TYPES) {
+                        current_strat->composition.share[slot] = value;
+                    }
+                }
+            }
         } else {
             UnitType type = parse_unit_type(prefix);
             if (type != UNIT_TYPE_COUNT) {

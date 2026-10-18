@@ -3,28 +3,36 @@
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
+#include <unistd.h>
 #include "battlefield.h"
 #include "ai.h"
 #include "strategy.h"
 #include "utils.h"
 #include "queries.h"
 
-// Default force compositions
-ForceComposition default_german_composition[] = {
-    {UNIT_BARBARIAN,        20},
-    {UNIT_ELITE_BARBARIAN,  5},
-    {UNIT_JAVELIN_THROWER,  5},
-    {UNIT_GERMAN_CAVALRY,   5}
-};
-int default_german_composition_count = sizeof(default_german_composition) / sizeof(default_german_composition[0]);
+#ifdef _WIN32
+  #include <windows.h>
+  #define SLEEP_MS(x) Sleep(x)
+#else
+  #define SLEEP_MS(x) usleep((x) * 1000)
+#endif
 
-ForceComposition default_roman_composition[] = {
-    {UNIT_LEGIONARE,        20},
-    {UNIT_CENTURION,        5},
-    {UNIT_ARCHER,           5},
-    {UNIT_ROMAN_CAVALRY,    5}
+// Default force compositions
+ForceComposition default_german_composition[COMPOSITION_MAX_TYPES] = {
+    {UNIT_BARBARIAN,        84},
+    {UNIT_ELITE_BARBARIAN,  8},
+    {UNIT_JAVELIN_THROWER,  0},
+    {UNIT_GERMAN_CAVALRY,   0}
 };
-int default_roman_composition_count = sizeof(default_roman_composition) / sizeof(default_roman_composition[0]);
+int default_german_composition_count = 4;
+
+ForceComposition default_roman_composition[COMPOSITION_MAX_TYPES] = {
+    {UNIT_LEGIONARE,        46},
+    {UNIT_CENTURION,        25},
+    {UNIT_ARCHER,           1},
+    {UNIT_ROMAN_CAVALRY,    0}
+};
+int default_roman_composition_count = 4;
 
 bool is_unit_used_in_composition(UnitType type) {
     // Check German composition
@@ -366,11 +374,14 @@ int run_battle(Battlefield* field, int max_turns) {
             return 0;
         }
 
-        // Reset if units have acted
+        // Reset if units have acted, moved, or rallied, and their pathing
         for (int i = 0; i < field->unit_count; i++) {
-            if (field->units[i]->hp > 0) {
-                field->units[i]->has_acted = false;
-            }
+            Unit* u = field->units[i];
+            if (!u || u->hp <= 0) continue;
+            u->has_acted = false;
+            u->moved_this_turn = false;
+            u->rallied_this_turn = false;
+            u->path_len = 0;
         }
 
         // Populate local enemies and allies
@@ -382,15 +393,21 @@ int run_battle(Battlefield* field, int max_turns) {
             u->cohesion_allies = count_same_facing_allies(u, field, 2);   // NEW
         }
 
+        // Get closest enemy distances
         compute_closest_enemy_distances(field);
 
+        // MOVE PHASE
         bool german_turn = (roll(1, 2) == 1);
         int acted_this_turn = 0;
         int total_active = german_count + roman_count;
-
         bool toggled_once = false;  // track if we already tried both sides
-
         int safety = 0; // infinite loop prevention
+
+        if (turn_based) {
+            print_screen(field);
+            printf("-- start of turn %d, press any key to begin move phase --\n", turn_count);
+            getchar();
+        }
 
         while (acted_this_turn < total_active && safety++ < total_active * 2) {
             Faction current_faction = german_turn ? FACTION_GERMAN : FACTION_ROMAN;
@@ -406,25 +423,80 @@ int run_battle(Battlefield* field, int max_turns) {
             toggled_once = false;  // reset toggled flag when we find a unit
 
             acting_unit->has_acted = true;
-            unit_turn(acting_unit, field);
+            unit_move_phase(acting_unit, field);
             acted_this_turn++;
-
             german_turn = !german_turn;
-
-            if (turn_based) {
-                print_screen(field);
-                if (strlen(battle_action_log) > 0) {
-                    printf("%s", battle_action_log);
-                    battle_action_log[0] = '\0';
-                }
-                printf("Press any key to advance... ");
-                char press_next = getchar();
-                if (press_next) printf("\n");
-            }
         }
 
-        if (safety >= total_active * 2) break;
+        if (turn_based) {
+            // Find the longest path any unit took this phase
+            int max_path = 0;
+            for (int i = 0; i < field->unit_count; i++) {
+                Unit* u = field->units[i];
+                if (!u || u->hp <= 0) continue;
+                if (u->path_len > max_path) max_path = u->path_len;
+            }
 
+            // Play back one tile per frame
+            for (int frame = 0; frame < max_path; frame++) {
+                for (int i = 0; i < field->unit_count; i++) {
+                    Unit* u = field->units[i];
+                    if (!u || u->hp <= 0) continue;
+                    if (u->path_len == 0) continue;
+
+                    int step = (frame < u->path_len) ? frame : (u->path_len - 1);
+                    u->x = u->path_x[step];
+                    u->y = u->path_y[step];
+                }
+                print_screen(field);
+                SLEEP_MS(80);
+            }
+
+            // Final resting state
+            print_screen(field);
+            printf("-- end of move phase, press any key for attack phase --\n");
+            getchar();
+        }
+
+        // Reset has_acted for the attack phase
+        for (int i = 0; i < field->unit_count; i++) {
+            if (field->units[i] && field->units[i]->hp > 0) {
+                field->units[i]->has_acted = false;
+            }
+        }
+        compute_closest_enemy_distances(field);
+
+        // ATTACK PHASE
+        german_turn = (roll(1, 2) == 1);
+        acted_this_turn = 0;
+        toggled_once = false;
+        safety = 0;
+
+        while (acted_this_turn < total_active && safety++ < total_active * 2) {
+            Faction current = german_turn ? FACTION_GERMAN : FACTION_ROMAN;
+            Unit* acting = select_closest_unit(field, current);
+
+            if (!acting) {
+                if (toggled_once) break;
+                german_turn = !german_turn;
+                toggled_once = true;
+                continue;
+            }
+            toggled_once = false;
+
+            acting->has_acted = true;
+            unit_attack_phase(acting, field);
+            acted_this_turn++;
+            german_turn = !german_turn;
+        }
+
+        if (turn_based) {
+            print_screen(field);
+            printf("-- end of turn, press any key to continue --\n");
+            getchar();
+        }
+
+        compact_dead_units(field);
         turn_count++;
     }
 
@@ -435,6 +507,25 @@ int run_battle(Battlefield* field, int max_turns) {
 
 
 // Cleanup
+void compact_dead_units(Battlefield* field) {
+    int write = 0;
+    for (int read = 0; read < field->unit_count; read++) {
+        Unit* u = field->units[read];
+        if (u == NULL) continue;
+
+        if (u->hp <= 0) {
+            if (u->x >= 0 && u->x < field->width &&
+                u->y >= 0 && u->y < field->height) {
+                field->occupancy[u->y][u->x] = NULL;
+            }
+            free(u);
+        } else {
+            field->units[write++] = u;
+        }
+    }
+    field->unit_count = write;
+}
+
 void cleanup_battlefield(Battlefield* field) {
     // Free all units (no memory leaks pleaseeeee)
     for (int i = 0; i < field->unit_count; i++) {
@@ -450,9 +541,7 @@ void reset_stats() {
     
     // Reset action_counts
     action_counts.fire = 0;
-    action_counts.advance_fire = 0;
     action_counts.attack = 0;
-    action_counts.advance_attack = 0;
     action_counts.rally = 0;
     action_counts.dash = 0;
     action_counts.total = 0;
@@ -469,7 +558,7 @@ void print_action_stats() {
     printf("\n");
     
     // Categories
-    int aggressive = action_counts.fire + action_counts.advance_fire + action_counts.attack + action_counts.advance_attack;
+    int aggressive = action_counts.fire + action_counts.attack;
     int movement = action_counts.dash;
     int defensive = action_counts.rally;
     
@@ -485,12 +574,8 @@ void print_action_stats() {
     printf("Detailed breakdown:\n");
     printf("  Fire:                 %.1f%%\n", 
            (action_counts.fire * 100.0f) / action_counts.total);
-    printf("  Advance+Fire:         %.1f%%\n", 
-           (action_counts.advance_fire * 100.0f) / action_counts.total);
     printf("  Attack:               %.1f%%\n", 
            (action_counts.attack * 100.0f) / action_counts.total);
-    printf("  Advance+Attack:       %.1f%%\n", 
-           (action_counts.advance_attack * 100.0f) / action_counts.total);
     printf("  Dash:                 %.1f%%\n", 
            (action_counts.dash * 100.0f) / action_counts.total);
     printf("  Rally:                %.1f%%\n", 

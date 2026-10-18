@@ -45,7 +45,7 @@ typedef struct {
 #define MAX_UNITS 200
 #define MAX_ROWS 60
 #define MAX_COLS 48
-#define MAX_TURNS 35
+#define MAX_TURNS 40
 #define RANDOM_SEED true
 
 extern bool track_actions;

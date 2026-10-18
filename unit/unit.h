@@ -20,6 +20,8 @@ typedef enum {
     ROLE_RANGED
 } UnitRole;
 
+#define MAX_PATH 24
+
 // Unit struct
 typedef struct Unit {
     // Identity
@@ -61,6 +63,8 @@ typedef struct Unit {
     bool has_acted;
     bool is_stunned;
     bool is_immobilized;
+    bool moved_this_turn;
+    bool rallied_this_turn;
 
     // Role
     UnitRole role;
@@ -71,6 +75,11 @@ typedef struct Unit {
     int local_enemies;
     int facing; // 0 = N, 1 = E, 2 = S, 3 = W
     int cohesion_allies;
+
+    // Pathing
+    int path_len;
+    int path_x[MAX_PATH];
+    int path_y[MAX_PATH];
 
     // Weapons
     Weapon weapons[WEAPON_COUNT];

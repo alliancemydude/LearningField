@@ -71,17 +71,12 @@ void print_screen(Battlefield* field) {
         printf("%2d ", y);
         for (int x = 0; x < field->width; x++) {
             Unit* unit_on_tile = NULL;
-            bool is_dead = false;
 
             for (int i = 0; i < field->unit_count; i++) {
                 Unit* u = field->units[i];
-                if (u == NULL) continue;
+                if (u == NULL || u->hp <= 0) continue;
                 if (u->x == x && u->y == y) {
-                    if (u->hp <= 0) {
-                        is_dead = true;
-                    } else {
-                        unit_on_tile = u;
-                    }
+                    unit_on_tile = u;
                     break;
                 }
             }
@@ -95,16 +90,14 @@ void print_screen(Battlefield* field) {
                     case FACE_EAST:  facing_char = ">"; break;
                     case FACE_SOUTH: facing_char = "v"; break;
                     case FACE_WEST:  facing_char = "<"; break;
-                    default:         facing_char = "^"; break;   // FACE_NORTH
+                    default:         facing_char = "^"; break;
                 }
 
                 char buf[16];
                 snprintf(buf, sizeof(buf), "%s%s", symbol, facing_char);
                 printf("%s%2s%s ", color, buf, COLOR_RESET);
-            } else if (is_dead) {
-                printf(" $ ");
             } else {
-                printf(" . ");   // empty tile
+                printf(" . ");
             }
         }
         printf("\n");

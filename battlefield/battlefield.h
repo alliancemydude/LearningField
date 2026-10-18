@@ -13,9 +13,7 @@ extern int default_roman_composition_count;
 // Action tracking struct
 typedef struct {
     int fire;
-    int advance_fire;
     int attack;
-    int advance_attack;
     int rally;
     int retreat;
     int dash;
@@ -69,6 +67,7 @@ bool is_unit_used_in_composition(UnitType type);
 int run_battle(Battlefield* field, int max_turns);
 
 // Cleanup and stats:
+void compact_dead_units(Battlefield* field);
 void cleanup_battlefield(Battlefield* field);
 void reset_stats(void);
 void print_action_stats(void);
