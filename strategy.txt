@@ -31,14 +31,14 @@ german_cavalry.preferred_range 0.02
 german_cavalry.spacing_x 3.83
 german_cavalry.spacing_y 5.88
 german_cavalry.local_force_ratio 0.75
-composition.barbarian_share 0.99
-composition.elite_barbarian_share 0.20
-composition.javelin_thrower_share 0.01
-composition.german_cavalry_share 0.01
-composition.barbarian_count 84
-composition.elite_barb_count 8
-composition.javelin_count 0
-composition.g_cav_count 0
+composition.barbarian_share 0.5
+composition.elite_barbarian_share 0.1
+composition.javelin_thrower_share 0.1
+composition.german_cavalry_share 0.25
+composition.barbarian_count 50
+composition.elite_barb_count 10
+composition.javelin_count 10
+composition.g_cav_count 15
 
 [ROMAN]
 strategy.aggression_bias 1.02
@@ -71,11 +71,11 @@ roman_cavalry.preferred_range 0.55
 roman_cavalry.spacing_x 6.36
 roman_cavalry.spacing_y 1.02
 roman_cavalry.local_force_ratio 1.43
-composition.legionare_share 0.78
-composition.centurion_share 0.95
-composition.archer_share 0.11
-composition.roman_cavalry_share 0.02
-composition.legionare_count 46
-composition.centurion_count 25
-composition.archer_count 1
-composition.r_cav_count 0
+composition.legionare_share 0.5
+composition.centurion_share 0.1
+composition.archer_share 0.1
+composition.roman_cavalry_share 0.25
+composition.legionare_count 50
+composition.centurion_count 10
+composition.archer_count 10
+composition.r_cav_count 15

@@ -19,18 +19,18 @@
 
 // Default force compositions
 ForceComposition default_german_composition[COMPOSITION_MAX_TYPES] = {
-    {UNIT_BARBARIAN,        84},
-    {UNIT_ELITE_BARBARIAN,  8},
-    {UNIT_JAVELIN_THROWER,  0},
-    {UNIT_GERMAN_CAVALRY,   0}
+    {UNIT_BARBARIAN,        50},
+    {UNIT_ELITE_BARBARIAN,  10},
+    {UNIT_JAVELIN_THROWER,  10},
+    {UNIT_GERMAN_CAVALRY,   15}
 };
 int default_german_composition_count = 4;
 
 ForceComposition default_roman_composition[COMPOSITION_MAX_TYPES] = {
-    {UNIT_LEGIONARE,        46},
-    {UNIT_CENTURION,        25},
-    {UNIT_ARCHER,           1},
-    {UNIT_ROMAN_CAVALRY,    0}
+    {UNIT_LEGIONARE,        50},
+    {UNIT_CENTURION,        10},
+    {UNIT_ARCHER,           10},
+    {UNIT_ROMAN_CAVALRY,    15}
 };
 int default_roman_composition_count = 4;
 
