@@ -7,6 +7,8 @@
 #include "utils.h"
 #include "tests.h"
 #include "calibration.h"
+#include "spawn.h"
+#include "battle_stats.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

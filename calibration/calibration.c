@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "unit.h"
 #include "unit_utils.h"
+#include "spawn.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

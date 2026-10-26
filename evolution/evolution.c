@@ -16,6 +16,7 @@
 #include "utils.h"
 #include "queries.h"
 #include "unit.h"
+#include "spawn.h"
 
 // Gene definitions
 const GeneInfo GERMAN_GENES[] = {

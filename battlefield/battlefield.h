@@ -56,11 +56,7 @@ extern bool turn_based;
 extern bool print_battle_summary_flag;
 
 // Initialization:
-void resolve_overlaps(Battlefield* field);
-void place_unit(Battlefield* field, Unit* u, int new_x, int new_y);
 void initialize_battlefield(Battlefield* field);
-void spawn_german_forces(Battlefield* field, ForceComposition forces[], int force_count);
-void spawn_roman_forces(Battlefield* field, ForceComposition forces[], int force_count);
 bool is_unit_used_in_composition(UnitType type);
 
 // Start of battle:
@@ -69,9 +65,5 @@ int run_battle(Battlefield* field, int max_turns);
 // Cleanup and stats:
 void compact_dead_units(Battlefield* field);
 void cleanup_battlefield(Battlefield* field);
-void reset_stats(void);
-void print_action_stats(void);
-void print_battle_summary();
-void print_battle_summary_and_wait(void);
 
 #endif
