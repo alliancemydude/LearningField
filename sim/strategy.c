@@ -3,6 +3,7 @@
 #include "unit.h"
 #include "queries.h"
 #include "utils.h"
+#include "spawn.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

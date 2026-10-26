@@ -5,6 +5,7 @@
 #include "battlefield.h"
 #include "queries.h"
 #include "unit.h"
+#include "spawn.h"
 #include "combat.h"
 #include "movement.h"
 #include "utils.h"
