@@ -39,8 +39,8 @@ static void init_reference_armies(void) {
     int german_pts = 0;
     int roman_pts  = 0;
     for (int i = 0; i < 4; i++) {
-        german_pts += base_counts[i] * unit_point_values[german_types[i]];
-        roman_pts  += base_counts[i] * unit_point_values[roman_types[i]];
+        german_pts += base_counts[i] * get_unit_point_value(german_types[i]);
+        roman_pts  += base_counts[i] * get_unit_point_value(roman_types[i]);
     }
 
     // Scale to fill the current budget
@@ -64,8 +64,8 @@ static void init_reference_armies(void) {
 }
 
 static int run_pair(UnitType german_type, UnitType roman_type, int battles) {
-    int german_cost = unit_point_values[german_type];
-    int roman_cost  = unit_point_values[roman_type];
+    int german_cost = get_unit_point_value(german_type);
+    int roman_cost  = get_unit_point_value(roman_type);
     if (german_cost <= 0 || roman_cost <= 0) return 0;
 
     int german_count = PAIRWISE_POINTS / german_cost;
@@ -110,7 +110,7 @@ void run_pairwise_matrix(int battles_per_pair) {
     // Header row
     printf("%-12s", "");
     for (int j = 0; j < rn; j++) {
-        int cnt = PAIRWISE_POINTS / unit_point_values[roman_roster[j]];
+        int cnt = PAIRWISE_POINTS / get_unit_point_value(roman_roster[j]);
         printf("%6s(%2d)", short_unit_name(roman_roster[j]), cnt);
     }
     printf("\n");

@@ -4,6 +4,7 @@
 #include "queries.h"
 #include "utils.h"
 #include "spawn.h"
+#include "unit_registry.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -116,17 +117,6 @@ void set_roman_strategy(const float weights[10]) {
 }
 
 // Load strategies
-static UnitType parse_unit_type(const char* name) {
-    if (strcmp(name, "barbarian")      == 0) return UNIT_BARBARIAN;
-    if (strcmp(name, "elite_barbarian")== 0) return UNIT_ELITE_BARBARIAN;
-    if (strcmp(name, "javelin_thrower")== 0) return UNIT_JAVELIN_THROWER;
-    if (strcmp(name, "german_cavalry") == 0) return UNIT_GERMAN_CAVALRY;
-    if (strcmp(name, "legionare")       == 0) return UNIT_LEGIONARE;
-    if (strcmp(name, "centurion") == 0) return UNIT_CENTURION;
-    if (strcmp(name, "archer")         == 0) return UNIT_ARCHER;
-    if (strcmp(name, "roman_cavalry")        == 0) return UNIT_ROMAN_CAVALRY;
-    return UNIT_TYPE_COUNT;   // sentinel: not found
-}
 
 static void set_strategy_gene(FactionStrategy* strat, const char* gene, float value) {
     if      (strcmp(gene, "aggression_bias")          == 0) strat->strategic.aggression_bias = value;
@@ -232,14 +222,14 @@ void load_strategy_from_file(const char* filename) {
             if (len > 6 && strcmp(gene + len - 6, "_count") == 0) {
                 char unit_name[64];
                 snprintf(unit_name, sizeof(unit_name), "%.*s", (int)(len - 6), gene);
-                UnitType type = parse_unit_type(unit_name);
+                UnitType type = parse_unit_type_from_name(unit_name);
                 if (type != UNIT_TYPE_COUNT) {
                     set_composition_count(f, type, (int)value);
                 }
             } else if (len > 6 && strcmp(gene + len - 6, "_share") == 0) {
                 char unit_name[64];
                 snprintf(unit_name, sizeof(unit_name), "%.*s", (int)(len - 6), gene);
-                UnitType type = parse_unit_type(unit_name);
+                UnitType type = parse_unit_type_from_name(unit_name);
                 if (type != UNIT_TYPE_COUNT) {
                     int slot = roster_slot(type, f);
                     if (slot >= 0 && slot < COMPOSITION_MAX_TYPES) {
@@ -248,7 +238,7 @@ void load_strategy_from_file(const char* filename) {
                 }
             }
         } else {
-            UnitType type = parse_unit_type(prefix);
+            UnitType type = parse_unit_type_from_name(prefix);
             if (type != UNIT_TYPE_COUNT) {
                 set_unit_gene(type, gene, value);
             }

@@ -1,28 +1,14 @@
 #include "queries.h"
 #include "utils.h"
 #include "battlefield.h"
+#include "unit_registry.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 // Handle finding overall parameters
 Faction get_faction_of_unit(UnitType type) {
-    switch (type) {
-        case UNIT_BARBARIAN:
-        case UNIT_ELITE_BARBARIAN:
-        case UNIT_JAVELIN_THROWER:
-        case UNIT_GERMAN_CAVALRY:
-            return FACTION_GERMAN;
-
-        case UNIT_LEGIONARE:
-        case UNIT_CENTURION:
-        case UNIT_ARCHER:
-        case UNIT_ROMAN_CAVALRY:
-            return FACTION_ROMAN;
-
-        default:
-            return FACTION_UNKNOWN;
-    }
+    return unit_registry[type].faction;
 }
 
 Faction enemy_faction(Faction f) {

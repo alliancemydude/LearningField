@@ -33,7 +33,7 @@ int build_composition(const CompositionGenome* genes, Faction faction, ForceComp
         }
 
         float points_for_type = composition_budget * (share / total);
-        int cost = unit_point_values[roster[i]];
+        int cost = get_unit_point_value(roster[i]);
         if (cost <= 0) {
             cost = 1;
         }
@@ -50,9 +50,9 @@ int build_composition(const CompositionGenome* genes, Faction faction, ForceComp
 
     // Spend any rounding leftover on the cheapest unit type.
     int cheapest_idx  = 0;
-    int cheapest_cost = unit_point_values[roster[0]];
+    int cheapest_cost = get_unit_point_value(roster[0]);
     for (int i = 1; i < roster_n; i++) {
-        int c = unit_point_values[roster[i]];
+        int c = get_unit_point_value(roster[i]);
         if (c > 0 && c < cheapest_cost) {
             cheapest_cost = c; cheapest_idx = i;
         }

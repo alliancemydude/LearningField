@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "ui.h"
 #include <time.h>
 #include <math.h>
 #include <stdio.h>
@@ -36,73 +37,84 @@ void clamp_unit_position(Unit* unit, Battlefield* field) {
 }
 
 void print_screen(Battlefield* field) {
-    // Clear screen and move cursor home
-    printf("\033[2J\033[H");
+    ui_clear_screen();
 
-    // turn count and faction summary
+    int term_w = ui_width();
+    bool show_unit_type = (term_w >= 150);
+    int cell_w = show_unit_type ? 3 : 2;
+
+    // Natural width of the grid including the "%2d  " row-label prefix.
+    int grid_w = 4 + field->width * cell_w;
+    int rule_w = grid_w;
+
+    // Counts for the header
     int german_count = 0, roman_count = 0;
     float german_hp = 0.0f, roman_hp = 0.0f;
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
-        if (u->hp <= 0) continue;
+        if (!u || u->hp <= 0) continue;
         if (u->faction == FACTION_GERMAN) {
-            german_count++;
-            german_hp += u->hp;
+            german_count++; german_hp += u->hp;
         } else {
-            roman_count++;
-            roman_hp += u->hp;
+            roman_count++;  roman_hp += u->hp;
         }
     }
-    printf("Turn %d | German: %d units (HP: %.1f) | Roman: %d units (HP: %.1f)\n",
-           turn_count, german_count, german_hp, roman_count, roman_hp);
-    printf("German Units: B=Barbarian, E=Elite, J=Javelin Thrower, C=Cavalry\n");
-    printf("Roman Units: L=Legionare, C=Centurion, A=Archer, H=Cavalry\n");
-    printf("Arrows show facing: ^ north, > east, v south, < west\n");
-    printf("Blue = German, Red = Roman, . open\n\n");
 
-    // Print column headers
-    printf("   ");
+    // ── Header ─────────────────────────────────────────────────────────────
+    ui_hr(UI_RULE_HEAVY, rule_w);
+    printf("  %sTURN %d%s   %sGerman %d%s   %sRoman %d%s\n",
+           ui_color(UI_HEADER), turn_count, ui_color(UI_RESET),
+           ui_color(UI_GERMAN), german_count, ui_color(UI_RESET),
+           ui_color(UI_ROMAN),  roman_count,  ui_color(UI_RESET));
+    ui_hr(UI_RULE_HEAVY, rule_w);
+    printf("\n");
+
+    // ── Column numbers ────────────────────────────────────────────────────
+    printf("    ");
     for (int x = 0; x < field->width; x++) {
-        printf("%2d ", x % 10);
+        if (show_unit_type) printf("%2d ", x % 10);
+        else                printf("%d ",  x % 10);
     }
     printf("\n");
 
+    // ── Grid ──────────────────────────────────────────────────────────────
     for (int y = 0; y < field->height; y++) {
-        printf("%2d ", y);
+        printf("%2d  ", y);
         for (int x = 0; x < field->width; x++) {
-            Unit* unit_on_tile = NULL;
-
-            for (int i = 0; i < field->unit_count; i++) {
-                Unit* u = field->units[i];
-                if (u == NULL || u->hp <= 0) continue;
-                if (u->x == x && u->y == y) {
-                    unit_on_tile = u;
-                    break;
+            Unit* u = field->occupancy[y][x];
+            if (u && u->hp > 0) {
+                UiColor col = (u->faction == FACTION_GERMAN) ? UI_GERMAN : UI_ROMAN;
+                const char* fc = "^";
+                switch (u->facing) {
+                    case FACE_EAST:  fc = ">"; break;
+                    case FACE_SOUTH: fc = "v"; break;
+                    case FACE_WEST:  fc = "<"; break;
                 }
-            }
-
-            if (unit_on_tile != NULL) {
-                const char* symbol = get_unit_symbol(unit_on_tile);
-                const char* color = get_unit_color(unit_on_tile);
-
-                const char* facing_char = "^";
-                switch (unit_on_tile->facing) {
-                    case FACE_EAST:  facing_char = ">"; break;
-                    case FACE_SOUTH: facing_char = "v"; break;
-                    case FACE_WEST:  facing_char = "<"; break;
-                    default:         facing_char = "^"; break;
+                if (show_unit_type) {
+                    printf("%s%s%s%s ", ui_color(col), get_unit_symbol(u), fc,
+                                       ui_color(UI_RESET));
+                } else {
+                    printf("%s%s%s ", ui_color(col), fc, ui_color(UI_RESET));
                 }
-
-                char buf[16];
-                snprintf(buf, sizeof(buf), "%s%s", symbol, facing_char);
-                printf("%s%2s%s ", color, buf, COLOR_RESET);
             } else {
-                printf(" . ");
+                printf(show_unit_type ? " . " : ". ");
             }
         }
         printf("\n");
     }
     printf("\n");
+
+    // ── Legend ────────────────────────────────────────────────────────────
+    ui_hr(UI_RULE_LIGHT, rule_w);
+    if (show_unit_type) {
+        printf("  %sLEGEND%s  B Barbarian  E Elite  J Javelin  C Cavalry  "
+               "L Legionare  A Archer  H Cavalry\n",
+               ui_color(UI_HINT), ui_color(UI_RESET));
+    } else {
+        printf("  %sArrows show facing:  ^ north   > east   v south   < west%s\n",
+               ui_color(UI_HINT), ui_color(UI_RESET));
+    }
+    ui_hr(UI_RULE_LIGHT, rule_w);
 }
 
 void print_screen_summary(Battlefield* field) {
@@ -110,17 +122,17 @@ void print_screen_summary(Battlefield* field) {
     float german_hp = 0.0f, roman_hp = 0.0f;
     for (int i = 0; i < field->unit_count; i++) {
         Unit* u = field->units[i];
-        if (u->hp <= 0) continue;
+        if (!u || u->hp <= 0) continue;
         if (u->faction == FACTION_GERMAN) {
-            german_count++;
-            german_hp += u->hp;
+            german_count++; german_hp += u->hp;
         } else {
-            roman_count++;
-            roman_hp += u->hp;
+            roman_count++;  roman_hp += u->hp;
         }
     }
-    printf("Turn %d | German: %d units (HP: %.1f) | Roman: %d units (HP: %.1f)\n",
-           turn_count, german_count, german_hp, roman_count, roman_hp);
+    printf("  %sTURN %d%s   %sGerman %d%s (HP %.1f)   %sRoman %d%s (HP %.1f)\n",
+           ui_color(UI_HEADER), turn_count, ui_color(UI_RESET),
+           ui_color(UI_GERMAN), german_count, ui_color(UI_RESET), german_hp,
+           ui_color(UI_ROMAN),  roman_count,  ui_color(UI_RESET), roman_hp);
 }
 
 const char* get_unit_symbol(Unit* unit) {

@@ -9,6 +9,7 @@
 #include "calibration.h"
 #include "spawn.h"
 #include "battle_stats.h"
+#include "ui.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,12 +45,13 @@ static void load_settings(const char* filename) {
         char val[192];
         if (sscanf(line, "%63s %191[^\n]", key, val) != 2) continue;
 
-        if      (strcmp(key, "battles")        == 0) battles         = atoi(val);
+        if (strcmp(key, "battles")        == 0) battles         = atoi(val);
         else if (strcmp(key, "pop_size")       == 0) pop_size        = atoi(val);
         else if (strcmp(key, "generations")    == 0) num_generations = atoi(val);
         else if (strcmp(key, "battles_min")    == 0) battles_min     = atoi(val);
         else if (strcmp(key, "battles_max")    == 0) battles_max     = atoi(val);
         else if (strcmp(key, "budget")         == 0) composition_budget = atoi(val);
+        else if (strcmp(key, "theme")          == 0) ui_set_theme(val);
     }
     fclose(f);
 }
@@ -138,6 +140,7 @@ void print_loaded_composition(void) {
 }
 
 int main(void) {
+    ui_init();
     load_settings("settings.txt");
     while (true) {
         srand(time(NULL));

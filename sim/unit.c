@@ -1,5 +1,5 @@
 #include "unit.h"
-#include "unit_blueprint.h"
+#include "unit_registry.h"
 #include "unit_utils.h"
 #include "battlefield.h"
 #include "queries.h"
@@ -8,30 +8,30 @@
 Unit* create_unit(UnitType type, int id, int x, int y) {
     if (type < 0 || type >= UNIT_TYPE_COUNT) return NULL;
 
-    const UnitBlueprint* bp = &unit_blueprints[type];
+    const UnitDefinition* def = &unit_registry[type];
     Unit* unit = calloc(1, sizeof(Unit));
     if (!unit) return NULL;
 
     // Identity + stats (unchanged)
     unit->id = id;
     unit->type = type;
-    unit->faction = bp->faction;
-    unit->hp = bp->hp;
-    unit->max_hp = bp->hp;
-    unit->hp_per_soldier = bp->hp_per_soldier;
-    unit->movement = bp->movement;
-    unit->half_movement = bp->movement / 2;
-    unit->morale = bp->morale;
-    unit->armor_class = bp->armor_class;
-    unit->point_value = unit_point_values[type];
-    unit->is_ranged = bp->is_ranged;
-    unit->units_count = bp->units_count;
-    unit->attacks_per_unit = bp->attacks_per_unit;
+    unit->faction = def->faction;
+    unit->hp = def->hp;
+    unit->max_hp = def->hp;
+    unit->hp_per_soldier = def->hp_per_soldier;
+    unit->movement = def->movement;
+    unit->half_movement = def->movement / 2;
+    unit->morale = def->morale;
+    unit->armor_class = def->armor_class;
+    unit->point_value = get_unit_point_value(type);
+    unit->is_ranged = def->is_ranged;
+    unit->units_count = def->units_count;
+    unit->attacks_per_unit = def->attacks_per_unit;
 
     // Weapons FIRST, so max_range can be computed correctly
     clear_weapons(unit);
-    for (int i = 0; i < bp->weapon_count; i++) {
-        add_weapon(unit, bp->weapons[i].type);
+    for (int i = 0; i < def->weapon_count; i++) {
+        add_weapon(unit, def->weapons[i]);
     }
 
     // Now max_range is meaningful
@@ -44,7 +44,7 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
     unit->spacing_x = ug->spacing_x;
     unit->spacing_y = ug->spacing_y;
     unit->effective_local_force_ratio = ug->local_force_ratio;
-    FactionStrategy* strat = (bp->faction == FACTION_GERMAN)
+    FactionStrategy* strat = (def->faction == FACTION_GERMAN)
                              ? &german_strategy : &roman_strategy;
     unit->effective_cohesion_weight = strat->strategic.cohesion_weight;
 
@@ -73,18 +73,7 @@ Unit* create_unit(UnitType type, int id, int x, int y) {
 // General Use Functions
 
 const char* get_unit_type_name(UnitType type) {
-    switch(type) {
-        case UNIT_BARBARIAN: return "UNIT_BARBARIAN";
-        case UNIT_ELITE_BARBARIAN: return "UNIT_ELITE_BARBARIAN";
-        case UNIT_JAVELIN_THROWER: return "UNIT_JAVELIN_THROWER";
-        case UNIT_GERMAN_CAVALRY: return "UNIT_GERMAN_CAVALRY";
-
-        case UNIT_LEGIONARE: return "UNIT_LEGIONARE";
-        case UNIT_CENTURION: return "UNIT_CENTURION";
-        case UNIT_ARCHER: return "UNIT_ARCHER";
-        case UNIT_ROMAN_CAVALRY: return "UNIT_ROMAN_CAVALRY";
-        default: return "UNKNOWN";
-    }
+    return unit_registry[type].long_name;
 }
 
 void add_weapon(Unit* unit, WeaponType type) {

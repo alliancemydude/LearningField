@@ -8,9 +8,9 @@ strategy_file strategy.txt
 
 # Evolution parameters
 pop_size 30
-generations 60
-battles_min 20
-battles_max 40
+generations 80
+battles_min 40
+battles_max 60
 mutation_start 0.50
 mutation_end 0.15
 crossover 0.80

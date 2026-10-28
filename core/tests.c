@@ -8,8 +8,9 @@
 #include "spawn.h"
 #include "combat.h"
 #include "movement.h"
+#include "ui.h"
+#include "unit_registry.h"
 #include "utils.h"
-#include "unit_blueprint.h"
 
 static int tests_run = 0;
 static int tests_failed = 0;
@@ -25,7 +26,7 @@ static int tests_failed = 0;
     printf("  %-40s", #test);                                               \
     tests_run++;                                                            \
     if (test() != 0) { tests_failed++; printf(" FAIL\n"); }                 \
-    else printf(" ok\n");                                                   \
+    else printf(" functional\n");                                           \
 } while (0)
 
 static int test_faction_of_unit(void) {
@@ -46,20 +47,20 @@ static int test_enemy_faction(void) {
     return 0;
 }
 
-static int test_create_unit_matches_blueprint(void) {
+static int test_create_unit_matches_registry(void) {
     Unit* u = create_unit(UNIT_BARBARIAN, 1, 10, 10);
     ASSERT(u != NULL, "create returned NULL");
 
-    const UnitBlueprint* bp = &unit_blueprints[UNIT_BARBARIAN];
+    const UnitDefinition* def = &unit_registry[UNIT_BARBARIAN];
     ASSERT(u->type == UNIT_BARBARIAN, "wrong type");
-    ASSERT(u->faction == bp->faction, "faction mismatch");
-    ASSERT(u->hp == bp->hp, "hp mismatch");
-    ASSERT(u->max_hp == bp->hp, "max_hp mismatch");
-    ASSERT(u->movement == bp->movement, "movement mismatch");
-    ASSERT(u->half_movement == bp->movement / 2, "half_movement mismatch");
-    ASSERT(u->armor_class == bp->armor_class, "armor mismatch");
-    ASSERT(u->units_count == bp->units_count, "units_count mismatch");
-    ASSERT(u->weapon_count == bp->weapon_count, "weapon_count mismatch");
+    ASSERT(u->faction == def->faction, "faction mismatch");
+    ASSERT(u->hp == def->hp, "hp mismatch");
+    ASSERT(u->max_hp == def->hp, "max_hp mismatch");
+    ASSERT(u->movement == def->movement, "movement mismatch");
+    ASSERT(u->half_movement == def->movement / 2, "half_movement mismatch");
+    ASSERT(u->armor_class == def->armor_class, "armor mismatch");
+    ASSERT(u->units_count == def->units_count, "units_count mismatch");
+    ASSERT(u->weapon_count == def->weapon_count, "weapon_count mismatch");
     ASSERT(u->x == 10 && u->y == 10, "position mismatch");
 
     destroy_unit(u);
@@ -188,6 +189,16 @@ static int test_movement_updates_grid(void) {
     return 0;
 }
 
+static int test_ui_basics(void) {
+    ui_init();
+    ASSERT(ui_width()  >= UI_MIN_WIDTH, "ui_width below minimum");
+    ASSERT(ui_height() >  0,             "ui_height should be positive");
+    ASSERT(ui_color(UI_RESET) != NULL,   "reset color must exist");
+    ASSERT(ui_color(UI_GERMAN) != NULL,  "german color must exist");
+    ASSERT(ui_color(UI_ROMAN)  != NULL,  "roman color must exist");
+    return 0;
+}
+
 int run_tests(void) {
     srand(42);   // fixed seed for reproducible failures
 
@@ -197,7 +208,7 @@ int run_tests(void) {
     printf("\n=== RUNNING TESTS ===\n");
     RUN(test_faction_of_unit);
     RUN(test_enemy_faction);
-    RUN(test_create_unit_matches_blueprint);
+    RUN(test_create_unit_matches_registry);
     RUN(test_take_damage_invariants);
     RUN(test_soldier_count_recompute);
     RUN(test_is_tile_walkable_bounds);
@@ -205,6 +216,7 @@ int run_tests(void) {
     RUN(test_battle_completes);
     RUN(test_distance_squared);
     RUN(test_movement_updates_grid);
+    RUN(test_ui_basics);
 
     printf("\n%d/%d passed.\n\n", tests_run - tests_failed, tests_run);
     return tests_failed == 0 ? 0 : 1;
